@@ -1,0 +1,12 @@
+mysql:
+  image: yobasystems/alpine-mariadb
+  environment:
+    MYSQL_ROOT_PASSWORD: root_password
+    MYSQL_DATABASE: timeseries
+    MYSQL_USER: dbuser
+    MYSQL_PASSWORD: user_password
+  expose:
+    - "3306"
+  volumes:
+    - data/mysql:/var/lib/mysql
+  restart: always

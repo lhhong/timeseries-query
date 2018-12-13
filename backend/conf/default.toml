@@ -1,0 +1,9 @@
+[database]
+hostname = "localhost"
+port = 3306
+username = "dbuser"
+password = "user_password"
+database = "timeseries"
+
+[httpServer]
+port = 8080

@@ -1,4 +1,6 @@
 docker/data/
+backend/server
+
 
 # Created by https://www.gitignore.io/api/go,vim,node
 # Edit at https://www.gitignore.io/?templates=go,vim,node

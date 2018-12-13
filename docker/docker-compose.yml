@@ -8,5 +8,5 @@ mysql:
   expose:
     - "3306"
   volumes:
-    - data/mysql:/var/lib/mysql
+    - ./data/mysql:/var/lib/mysql
   restart: always

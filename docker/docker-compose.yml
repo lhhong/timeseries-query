@@ -7,6 +7,8 @@ mysql:
     MYSQL_PASSWORD: user_password
   expose:
     - "3306"
+  ports:
+    - "3306:3306"
   volumes:
     - ./data/mysql:/var/lib/mysql
   restart: always
@@ -15,5 +17,7 @@ redis:
   image: redis:5.0.2-alpine
   expose:
     - "6379"
+  ports:
+    - "6379:6379"
   restart: always
 

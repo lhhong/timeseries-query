@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/lhhong/timeseries-query/backend/pkg/config"
 	"github.com/lhhong/timeseries-query/backend/pkg/http"
+	"github.com/lhhong/timeseries-query/backend/pkg/repository"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -20,14 +21,18 @@ func RootCommand() *cobra.Command {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	c, _ := config.GetConfig(cmd)
-	log.Println(c.Database.Hostname)
-	log.Println(c.HttpServer.Port)
-	http.StartServer(&c.HttpServer)
+	config.LoadConfig(cmd)
+	repository.LoadDb()
 }
 
-func main() {
+func init() {
+	log.Println("Started init")
 	if err := RootCommand().Execute(); err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Finished init")
+}
+func main() {
+	log.Println("Starting server")
+	http.StartServer()
 }

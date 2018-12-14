@@ -7,3 +7,7 @@ database = "timeseries"
 
 [httpServer]
 port = 8080
+
+[redis]
+hostname = "localhost"
+port = 6379

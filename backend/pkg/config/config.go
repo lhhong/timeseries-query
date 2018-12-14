@@ -8,8 +8,9 @@ import (
 	"strings"
 )
 
-type Config struct {
+type ConfigModel struct {
 	Database   DatabaseConfig
+	Redis      RedisConfig
 	HttpServer HttpConfig
 }
 
@@ -21,13 +22,20 @@ type DatabaseConfig struct {
 	Database string
 }
 
+type RedisConfig struct {
+	Hostname string
+	Port     int
+}
+
 type HttpConfig struct {
 	Port int
 }
 
-func GetConfig(cmd *cobra.Command) (Config, error) {
+var Config *ConfigModel
 
-	var c Config
+func LoadConfig(cmd *cobra.Command) (ConfigModel, error) {
+
+	var c ConfigModel
 
 	err := viper.BindPFlags(cmd.Flags())
 	if err != nil {
@@ -73,6 +81,8 @@ func GetConfig(cmd *cobra.Command) (Config, error) {
 	if err := viper.Unmarshal(&c); err != nil {
 		log.Fatalln("couldn't read config", err)
 	}
+
+	Config = &c
 
 	return c, nil
 

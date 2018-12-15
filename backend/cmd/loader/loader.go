@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func RootCommand() *cobra.Command {
+func rootCommand() *cobra.Command {
 	rootCmd := cobra.Command{
 		Use: "example",
 		Run: run,
@@ -27,18 +27,13 @@ func RootCommand() *cobra.Command {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	config.LoadConfig(cmd)
-	repository.LoadDb()
-	loader.LoadData(cmd)
+	conf := config.GetConfig(cmd)
+	repo := repository.LoadDb(&conf.Database)
+	loader.LoadData(cmd, repo)
 }
 
-func init() {
-	log.Println("Started init")
-	if err := RootCommand().Execute(); err != nil {
+func main() {
+	if err := rootCommand().Execute(); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Finished init")
-}
-func main() {
-	log.Println("Starting server")
 }

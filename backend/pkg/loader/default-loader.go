@@ -9,9 +9,11 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
-func LoadData(cmd *cobra.Command) {
+// LoadData Loads data from commands
+func LoadData(cmd *cobra.Command, repo *repository.Repository) {
 
 	var err error
 
@@ -33,11 +35,12 @@ func LoadData(cmd *cobra.Command) {
 	if err == io.EOF {
 		return
 	}
+
 	batchSize := 10000
-	valueArgs := make([]interface{}, 0, batchSize*4)
+	valueArgs := make([]interface{}, 0, batchSize*repository.NRawDataEle)
 	for {
+		valueArgs = valueArgs[:0]
 		for i := 0; i < batchSize; i++ {
-			valueArgs = valueArgs[:0]
 			line, err := reader.Read()
 			if err == io.EOF {
 				goto SaveAndExit
@@ -50,21 +53,28 @@ func LoadData(cmd *cobra.Command) {
 					log.Println(err)
 					continue
 				}
+				t, err := time.Parse("2006-01-02", line[dateCol])
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				seq := t.Unix()
 				valueArgs = append(valueArgs, group)
 				valueArgs = append(valueArgs, line[seriesCol])
-				valueArgs = append(valueArgs, line[dateCol])
+				valueArgs = append(valueArgs, 0) // Smooth iteration
+				valueArgs = append(valueArgs, seq)
 				valueArgs = append(valueArgs, value)
 			}
-			bulkSave(valueArgs)
 		}
+		bulkSave(valueArgs, repo)
 	}
 SaveAndExit:
-	bulkSave(valueArgs)
+	bulkSave(valueArgs, repo)
 }
 
-func bulkSave(vals []interface{}) {
+func bulkSave(vals []interface{}, repo *repository.Repository) {
 	if len(vals) > 0 {
-		err := repository.Repo.BulkSaveRawData(vals)
+		err := repo.BulkSaveRawData(vals)
 		if err != nil {
 			log.Println(err)
 		}

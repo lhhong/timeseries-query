@@ -8,31 +8,26 @@ import (
 	"log"
 )
 
-func RootCommand() *cobra.Command {
+func rootCommand() *cobra.Command {
 	rootCmd := cobra.Command{
 		Use: "example",
 		Run: run,
 	}
 
-	// this is where we will configure everything!
 	rootCmd.Flags().StringP("config", "c", "", "Configuration file to use")
 
 	return &rootCmd
 }
 
 func run(cmd *cobra.Command, args []string) {
-	config.LoadConfig(cmd)
-	repository.LoadDb()
+	conf := config.GetConfig(cmd)
+	repo := repository.LoadDb(&conf.Database)
+	http.StartServer(&conf.HTTPServer, repo)
 }
 
-func init() {
-	log.Println("Started init")
-	if err := RootCommand().Execute(); err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Finished init")
-}
 func main() {
 	log.Println("Starting server")
-	http.StartServer()
+	if err := rootCommand().Execute(); err != nil {
+		log.Fatal(err)
+	}
 }

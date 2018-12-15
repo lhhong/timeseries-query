@@ -8,12 +8,14 @@ import (
 	"strings"
 )
 
-type ConfigModel struct {
+// Config Main Configuration Model
+type Config struct {
 	Database   DatabaseConfig
 	Redis      RedisConfig
-	HttpServer HttpConfig
+	HTTPServer HTTPConfig
 }
 
+// DatabaseConfig Database Config Model
 type DatabaseConfig struct {
 	Hostname string
 	Port     int
@@ -22,25 +24,27 @@ type DatabaseConfig struct {
 	Database string
 }
 
+// RedisConfig Redis Config Model
 type RedisConfig struct {
 	Hostname string
 	Port     int
 }
 
-type HttpConfig struct {
+// HTTPConfig Http Config Model
+type HTTPConfig struct {
 	Port int
 }
 
-var Config *ConfigModel
+// GetConfig Returns Config given cobra.Command which can contain config file
+// panic on failure
+func GetConfig(cmd *cobra.Command) *Config {
 
-func LoadConfig(cmd *cobra.Command) (ConfigModel, error) {
+	var c Config
 
-	var c ConfigModel
-
-	err := viper.BindPFlags(cmd.Flags())
-	if err != nil {
-		return c, err
-	}
+	//err := viper.BindPFlags(cmd.Flags())
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	viper.SetEnvPrefix("TSQ")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -48,42 +52,48 @@ func LoadConfig(cmd *cobra.Command) (ConfigModel, error) {
 
 	// Set viper path and read configuration
 	if configFile, _ := cmd.Flags().GetString("config"); configFile != "" {
-		viper.SetConfigFile(configFile)
-		err := viper.ReadInConfig()
-
-		// Handle errors reading the config file
-		if err != nil {
-			log.Fatalln("Fatal error config file", err)
-			return c, err
-		}
+		readConfigFromFile(configFile)
 	} else {
-
-		viper.AddConfigPath("conf")
-		viper.SetConfigName("default")
-		err := viper.ReadInConfig()
-
-		// Handle errors reading the config file
-		if err != nil {
-			log.Fatalln("Fatal error config file", err)
-			return c, err
-		}
-
-		if os.Getenv("ENV") == "prod" {
-			viper.SetConfigName("production")
-			err := viper.MergeInConfig()
-			if err != nil {
-				log.Fatalln("Fatal error config file", err)
-				return c, err
-			}
-		}
+		readConfigFromDefault()
 	}
 
 	if err := viper.Unmarshal(&c); err != nil {
 		log.Fatalln("couldn't read config", err)
+		panic(err)
 	}
 
-	Config = &c
+	return &c
 
-	return c, nil
+}
 
+func readConfigFromDefault() {
+
+	viper.AddConfigPath("conf")
+	viper.SetConfigName("default")
+	err := viper.ReadInConfig()
+
+	// Handle errors reading the config file
+	if err != nil {
+		log.Fatalln("Fatal error config file", err)
+		panic(err)
+	}
+
+	if os.Getenv("ENV") == "prod" {
+		viper.SetConfigName("production")
+		err := viper.MergeInConfig()
+		if err != nil {
+			log.Fatalln("Fatal error config file", err)
+			panic(err)
+		}
+	}
+}
+
+func readConfigFromFile(fileName string) {
+	viper.SetConfigFile(fileName)
+	err := viper.ReadInConfig()
+
+	if err != nil {
+		log.Fatalln("Fatal error reading from provided file", err)
+		panic(err)
+	}
 }

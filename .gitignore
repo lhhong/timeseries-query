@@ -1,5 +1,6 @@
 docker/data/
 backend/server
+backend/loader
 
 
 # Created by https://www.gitignore.io/api/go,vim,node

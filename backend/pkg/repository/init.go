@@ -1,10 +1,11 @@
 package repository
 
 func createTables() {
-	Repo.db.MustExec(`CREATE TABLE IF NOT EXISTS data_points (
-		name VARCHAR(30), 
+	Repo.db.MustExec(`CREATE TABLE IF NOT EXISTS RawData (
+		groupname VARCHAR(30),
+		series VARCHAR(30), 
 		date DATE,
-		value FLOAT NOT NULL,
-		PRIMARY KEY (name, date)
+		value DOUBLE NOT NULL,
+		PRIMARY KEY (groupname, series, date)
 	);`)
 }

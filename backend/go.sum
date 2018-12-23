@@ -55,6 +55,7 @@ github.com/koron/iferr v0.0.0-20180615142939-bb332a3b1d91 h1:hunjgdb3b21ZdRmzDPX
 github.com/koron/iferr v0.0.0-20180615142939-bb332a3b1d91/go.mod h1:C2tFh8w3I6i4lnUJfoBx2Hwku3mgu4wPNTtUNp1i5KI=
 github.com/lhhong/timeseries-query v0.0.0-20181213171602-d2252f099d79 h1:Oe1bGRHcd/J6oNI/gFuAbOgNBfvdBTXcS4D1TIsfj1w=
 github.com/lhhong/timeseries-query v0.0.0-20181214162223-29225d6f2715 h1:kSXApvsncnL9S3sSAwRowfp6GQRyAoSlY8HrleMTuCM=
+github.com/lhhong/timeseries-query v0.0.0-20181215153517-8b888c226e63 h1:DmHsebPZj6FwDx4qlN2MBCgYKTCP8gufrBCxzTJVO10=
 github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/magiconair/properties v1.8.0 h1:LLgXmsheXeRoUOBOjtwPQCWIYqM/LU1ayDtDePerRcY=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=

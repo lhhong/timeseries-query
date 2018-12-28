@@ -4,6 +4,7 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
+// SmoothData takes in a slice of values and returns slice of slice, each slice represents 1 smooth iteration
 func SmoothData(rawData []repository.Values) [][]repository.Values {
 	// TODO extract constants
 	minimumSignVarations := 10          //SMOOTH_MINIMUM_SIGN_VARIATIONS_NUM
@@ -121,11 +122,11 @@ func smooth(data []repository.Values, iterations int, space int) {
 			for s := 1; s <= space; s++ {
 				if i-s >= 0 {
 					valuesSum += data[i-s].Value
-					count += 1
+					count++
 				}
 				if i+s < len(data) {
 					valuesSum += data[i+s].Value
-					count += 1
+					count++
 				}
 			}
 			data[i].Value = valuesSum / float64(count)

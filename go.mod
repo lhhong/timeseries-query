@@ -10,6 +10,7 @@ require (
 	github.com/fatih/motion v0.0.0-20180408211639-218875ebe238 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/shlex v0.0.0-20181106134648-c34317bd91bf // indirect
+	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.1.3
 	github.com/jmoiron/sqlx v1.2.0

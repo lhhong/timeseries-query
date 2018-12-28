@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/lhhong/timeseries-query/pkg/config"
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -16,15 +17,18 @@ import (
 // StartServer Starts http server
 func StartServer(conf *config.HTTPConfig, repo *repository.Repository) {
 
-	http.Handle("/test", testHandler(repo))
-	http.Handle("/", http.FileServer(http.Dir("static")))
+	r := mux.NewRouter().PathPrefix("/api/").Subrouter()
+	r.HandleFunc("/test", testHandler(repo))
+	http.Handle("/api/", r)
+
 	http.Handle("/libs/", http.StripPrefix("/libs/", http.FileServer(http.Dir("bower_components"))))
+	http.Handle("/", http.FileServer(http.Dir("static")))
 
 	log.Fatal(http.ListenAndServe(":"+fmt.Sprint(conf.Port), nil))
 }
 
-func testHandler(repo *repository.Repository) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func testHandler(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		queryCookie, err := r.Cookie("query_id")
 		var queryID string
 		if err == http.ErrNoCookie {
@@ -40,5 +44,5 @@ func testHandler(repo *repository.Repository) http.Handler {
 		log.Println(repo)
 
 		fmt.Fprintf(w, "Query Id: %s", queryID)
-	})
+	}
 }

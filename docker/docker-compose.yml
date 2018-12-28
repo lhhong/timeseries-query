@@ -1,5 +1,6 @@
 mysql:
   image: yobasystems/alpine-mariadb
+  command: ['--max_allowed_packet=2G']
   environment:
     MYSQL_ROOT_PASSWORD: root_password
     MYSQL_DATABASE: timeseries

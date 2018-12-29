@@ -4,6 +4,7 @@ Dataset.factory('Dataset_Resource', function($resource) {
   return $resource('/datasets/:key/:snum', null, {
     definition: {
       method: 'GET',
+      isArray: true,
       url: '/datasets/definition'
     },
     newDatasetSeries: {

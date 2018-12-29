@@ -17,9 +17,10 @@ import (
 // StartServer Starts http server
 func StartServer(conf *config.HTTPConfig, repo *repository.Repository) {
 
-	r := mux.NewRouter().PathPrefix("/api/").Subrouter()
-	r.HandleFunc("/test", testHandler(repo))
-	http.Handle("/api/", r)
+	datasetRouter := mux.NewRouter().PathPrefix("/datasets/").Subrouter()
+	datasetRouter.HandleFunc("/test", testHandler(repo))
+	datasetRouter.HandleFunc("/definition", getDefinition(repo)).Methods("GET")
+	http.Handle("/datasets/", datasetRouter)
 
 	http.Handle("/libs/", http.StripPrefix("/libs/", http.FileServer(http.Dir("bower_components"))))
 	http.Handle("/", http.FileServer(http.Dir("static")))

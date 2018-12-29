@@ -72,7 +72,7 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
       for (j in datadef.series) {
         series = datadef.series[j];
         if (snum) {
-          if (series.snum !== snum) continue;
+          if (series.key !== snum) continue;
           this.dataset.desc += ': ' + series.desc;
         }
         this.dataset.series.push(series);
@@ -80,7 +80,7 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
 
       // Loads the data from the server
       async.each(this.dataset.series, function (series, it) {
-        Dataset_Resource.get({key: key, snum: series.snum}, function (data) {
+        Dataset_Resource.get({key: key, snum: series.key}, function (data) {
           series.values = data.values;
           it();
         });

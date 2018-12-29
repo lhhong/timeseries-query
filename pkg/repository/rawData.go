@@ -20,8 +20,8 @@ type RawData struct {
 
 // Values x, y pair for each point of time series
 type Values struct {
-	Seq   int64
-	Value float64
+	Seq   int64   `json:"x"`
+	Value float64 `json:"y"`
 }
 
 // SaveRawData Saves a single RawData into database

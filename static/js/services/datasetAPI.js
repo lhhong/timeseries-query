@@ -112,7 +112,7 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
     $rootScope.$broadcast(
       Parameters.DATASET_EVENTS.DATA_CHANGED,
       seriesNum,
-      this.dataset.series[seriesNum].values,
+      this.dataset.series[seriesNum].values[0],
       {xAxis: this.dataset.xAxis, yAxis: this.dataset.yAxis}
     );
   };
@@ -216,20 +216,22 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
         d3.time.scale().range([0, this.displaySize.width]) :
         d3.scale.linear().range([0, this.displaySize.width]);
       var yScale = d3.scale.linear().range([this.displaySize.height, 0]);
-      xScale.domain(d3.extent(this.dataset.series[i].values, function (p) { return p.x; }));
-      yScale.domain(d3.extent(this.dataset.series[i].values, function (p) { return p.y; }));
-      this.data[i] = [
-        _.map(this.dataset.series[i].values, function (el) {
+      xScale.domain(d3.extent(this.dataset.series[i].values[0], function (p) { return p.x; }));
+      yScale.domain(d3.extent(this.dataset.series[i].values[0], function (p) { return p.y; }));
+      this.data[i] = []
+      for (j in this.dataset.series[i].values)
+      this.data[i].push(
+        _.map(this.dataset.series[i].values[j], function (el) {
           return new Qetch.Point(xScale(el.x), self.displaySize.height - yScale(el.y), el.x, el.y);
         })
-      ];
+      );
 
       // update smooth iterations
-      Data_Utils.smoothData(this.data[i],
-        Parameters.SMOOTH_MINIMUM_SIGN_VARIATIONS_NUM,
-        Parameters.SMOOTH_MIN_SIGN_VARIATION_RATIO,
-        undefined,
-        Parameters.SMOOTH_SMOOTHED_HEIGHT_HEIGHT_MIN_RATIO);
+      // Data_Utils.smoothData(this.data[i],
+      //   Parameters.SMOOTH_MINIMUM_SIGN_VARIATIONS_NUM,
+      //   Parameters.SMOOTH_MIN_SIGN_VARIATION_RATIO,
+      //   undefined,
+      //   Parameters.SMOOTH_SMOOTHED_HEIGHT_HEIGHT_MIN_RATIO);
       this.displayHeight = Data_Utils.dataHeight(this.data[i][0]);
     }
   };

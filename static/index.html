@@ -40,7 +40,7 @@
 	<script type="text/javascript" src="/js/services/dataUtilsAPI.js"></script>
 	<script type="text/javascript" src="/js/controllers/dataSetViewer.js"></script>
 	<script type="text/javascript" src="/js/controllers/qetchQueryResults.js"></script>
-	<script type="text/javascript" src="/js/controllers/dataManagement.js"></script>
+	<!-- <script type="text/javascript" src="/js/controllers/dataManagement.js"></script> -->
 	<script type="text/javascript" src="/js/controllers/queryPaper.js"></script>
 	<script type="text/javascript" src="/js/directives/qetchQueryPaper.js"></script>
 	<script type="text/javascript" src="/js/directives/datasetPlot.js"></script>
@@ -54,18 +54,6 @@
 		<!-- Button trigger modal -->
 		<div class="pull-right settings-button">
 			<button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#settingsModal"><i class="glyphicon glyphicon-cog"></i>&nbsp;Settings</button>
-		</div>
-		<div class="pull-right">&nbsp;</div>
-		<div class="pull-right dropdown settings-button">
-			<button class="btn btn-default dropdown-toggle btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-				Load new data
-				<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li><a href="#" data-toggle="modal" data-target="#definingSeriesType"><i class="glyphicon glyphicon-tasks"></i>&nbsp;Define new time series type</a></li>
-				<li><a href="#" data-toggle="modal" data-target="#loadingDataDialog"><i class="glyphicon glyphicon-cloud-upload"></i>&nbsp;Load time series</a></li>
-				<li><a href="#" data-toggle="modal" data-target="#dataManagmentExistingData"><i class="glyphicon glyphicon-wrench"></i>&nbsp;Managing existing data</a></li>
-			</ul>
 		</div>
 	</div>
 	<div class="row">
@@ -366,9 +354,6 @@
 
 <div ng-include="'/fragments/settings-modal.html'" include-replace></div>
 <div ng-include="'/fragments/progress-bar.html'" include-replace></div>
-<div ng-include="'/fragments/loading-data-dialog.html'" include-replace></div>
-<div ng-include="'/fragments/defining-series-type-dialog.html'" include-replace></div>
-<div ng-include="'/fragments/data-management-existing-data-dialog.html'" include-replace></div>
 
 </body>
 

@@ -634,22 +634,6 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
     return -1;
   };
 
-  /**
-   * Calculate the euclidean distance between the two sequences
-   * Since the x values of series1 and series2 are the same (they should be two time series with the same
-   * number of elements) the euclidean distance formula can be semplified in an absolute difference.
-   *
-   * relativeheight is used only by euclidean distance (with Qetch section partitioning)
-   */
-  this.euclideanDistance = function (series1, series2, relativeHeight) {
-    if (relativeHeight === undefined) relativeHeight = 1;
-    var res = 0;
-    for (var i = 0; i < series1.length; i++) {
-      res += Math.pow((series1[i] - series2[i]) / relativeHeight, 2);
-    }
-    return Math.sqrt(res);
-  };
-
   this.checkQueryLength = function (queryLength) {
     if (this.queryLength === null) return true;
     var min = this.queryLength - this.queryLength * this.queryLengthTolerance;

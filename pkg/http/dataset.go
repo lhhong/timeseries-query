@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/repository"
-	"github.com/lhhong/timeseries-query/pkg/smoother"
 )
 
 type seriesResponse struct {
@@ -50,7 +50,7 @@ func getSeries(repo *repository.Repository) func(http.ResponseWriter, *http.Requ
 		vars := mux.Vars(r)
 
 		values, err := repo.GetRawDataOfSmoothedSeries(vars["gkey"], vars["skey"], 0)
-		smoothed := smoother.SmoothData(values)
+		smoothed := datautils.SmoothData(values)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -1,4 +1,4 @@
-package smoother
+package datautils
 
 import (
 	"github.com/lhhong/timeseries-query/pkg/repository"

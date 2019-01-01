@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/repository"
-	"github.com/lhhong/timeseries-query/pkg/smoother"
 )
 
 func SmoothAllInGroup(repo *repository.Repository, group string) {
@@ -43,7 +43,7 @@ func smoothAndSave(repo *repository.Repository, s repository.SeriesInfo) {
 		return
 	}
 
-	smoothedData := smoother.SmoothData(values)
+	smoothedData := datautils.SmoothData(values)
 
 	if len(smoothedData) == 1 {
 		log.Println("data not smoothed")

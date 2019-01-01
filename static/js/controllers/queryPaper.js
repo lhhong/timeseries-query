@@ -7,47 +7,12 @@ QetchQuery.controller('QetchQuery_PaperCtrl',
       $scope.historyVisible = false;
       $scope.historyHtmlContent = $('<div class="content"></div>');
 
-      $scope.predefinedQueriesVisible = false;
-      $scope.predefinedQuerySuggestion = null;
-      $scope.predefiendQueryHtmlContent = $('<div class="content"></div>');
-
-      $scope.queryFnSuggestionVisible = false;
-      $scope.queryFnSuggestion = null;
-      $scope.queryFnSuggestionHtmlContent = $('<div class="content"></div>');
-      $scope.queryFnSuggestionConstants = {};
-
-      $scope.predefinedQueriesToggle = function () {
-        $scope.predefinedQueriesVisible = !$scope.predefinedQueriesVisible;
-        $scope.updateUIForPredefinedQueries();
-      };
-      $scope.updateUIForPredefinedQueries = function () {
-        if ($scope.predefinedQueriesVisible) {
-          if ($scope.historyVisible) $scope.historyQueriesToggle();
-          if ($scope.queryFnSuggestionVisible) $scope.queryFnSuggestionToggle();
-          $('#quickDrawPanel').find('.scroll-container').append($scope.predefiendQueryHtmlContent);
-        } else {
-          $scope.predefiendQueryHtmlContent.detach();
-        }
-      };
-      $scope.showSuggestedPredefinedQuery = function () {
-        $scope.predefinedQueriesVisible = true;
-        $scope.updateUIForPredefinedQueries();
-        $timeout(function () {
-          var $qrContainer = $('#queryAndResultsContainer');
-          var $sc = $qrContainer.find('.scroll-container');
-          var hightlightedQueryLeft = $qrContainer.find('.query-preview.hightlighted').offset().left - $sc.offset().left;
-          $sc.scrollLeft(hightlightedQueryLeft);
-        });
-      };
-
       $scope.historyQueriesToggle = function () {
         $scope.historyVisible = !$scope.historyVisible;
         $scope.updateUIForHistoryQueries();
       };
       $scope.updateUIForHistoryQueries = function () {
         if ($scope.historyVisible) {
-          if ($scope.predefinedQueriesVisible) $scope.predefinedQueriesToggle();
-          if ($scope.queryFnSuggestionVisible) $scope.queryFnSuggestionToggle();
           var scrollContainer = $('#quickDrawPanel').find('.scroll-container');
           scrollContainer.append($scope.historyHtmlContent);
           setTimeout(function () {
@@ -58,97 +23,11 @@ QetchQuery.controller('QetchQuery_PaperCtrl',
         }
       };
 
-      $scope.$watchCollection('queryFnSuggestionConstants', function () {
-        if (!$scope.queryFnSuggestion) return;
-        var fpoints = QetchQuery_DrawRefining.generatePointsForFn($scope.queryFnSuggestion.fn, $scope.queryFnSuggestionConstants);
-        $scope.queryFnSuggestion.points = fpoints;
-        $scope.$broadcast(Parameters.QUERY_EVENTS.DRAW_PREVIEW, fpoints, true);
-      });
-
-      $scope.drawQueryFnSuggestion = function () {
-        var points = $scope.queryFnSuggestion.points;
-        $scope.clearQuerySuggestions();
-        $scope.$broadcast(Parameters.QUERY_EVENTS.DRAW, points, true, true);
-      };
-
-      $scope.showSuggestedQueryFn = function () {
-        $scope.queryFnSuggestionVisible = true;
-        $scope.updateUIForSuggestedQueryFn();
-        $timeout(function () {
-          $scope.queryFnSuggestionConstants = $scope.queryFnSuggestion.cons;
-          var fnElStr = '<form class="pull-left" ng-submit="drawQueryFnSuggestion()"><div class="binline">' +
-            $scope.queryFnSuggestion.fn.fStr + '</div>' +
-            ' <button type="submit" class="btn btn-default btn-xs binline">OK</button></form>';
-          for (var c in $scope.queryFnSuggestionConstants) {
-            fnElStr = fnElStr.replace('#' + c + '#', '<input type="number" step="0.001" ng-model="queryFnSuggestionConstants.' + c + '"/>');
-          }
-          $scope.queryFnSuggestionHtmlContent.empty();
-          $scope.queryFnSuggestionHtmlContent.append($compile(fnElStr)($scope));
-        });
-      };
-      $scope.queryFnSuggestionToggle = function () {
-        $scope.queryFnSuggestionVisible = !$scope.queryFnSuggestionVisible;
-        $scope.updateUIForSuggestedQueryFn();
-      };
-      $scope.updateUIForSuggestedQueryFn = function () {
-        if ($scope.queryFnSuggestionVisible) {
-          if ($scope.historyVisible) $scope.historyQueriesToggle();
-          if ($scope.predefinedQueriesVisible) $scope.predefinedQueriesToggle();
-          $('#quickDrawPanel').find('.scroll-container').append($scope.queryFnSuggestionHtmlContent);
-        } else {
-          $scope.queryFnSuggestionHtmlContent.detach();
-        }
-      };
 
       $scope.updateUIClosingAll = function () {
         $scope.historyVisible = false;
         $scope.updateUIForHistoryQueries();
-        $scope.queryFnSuggestionVisible = false;
-        $scope.updateUIForSuggestedQueryFn();
-        $scope.predefinedQueriesVisible = false;
-        $scope.updateUIForPredefinedQueries();
       };
-
-      $scope.$on(Parameters.QUERY_REFINEMENT_EVENTS.QUERY_FN_SUGGESTION, function (event, pattern) {
-        $scope.queryFnSuggestion = pattern;
-        if ($scope.queryFnSuggestionVisible) {
-          if (pattern === null) {
-            $scope.$broadcast(Parameters.QUERY_EVENTS.CLEAN_DRAW_PREVIEW);
-            $scope.queryFnSuggestionToggle();
-          }
-          else $scope.showSuggestedQueryFn();
-        }
-        $scope.$apply();
-      });
-
-      $scope.$on(Parameters.QUERY_REFINEMENT_EVENTS.PREDEFINED_QUERIES_LOADED, function (event, predefinedQueries) {
-        for (var i = 0; i < predefinedQueries.length; i++) {
-          var canv = $scope.createCanvasForPoints(predefinedQueries[i].points, predefinedQueries[i].bounds);
-          canv.data('data-query', i);
-          canv.click(function () {
-            $scope.clearQuerySuggestions();
-            var query = QetchQuery_DrawRefining.predefinedQueries[$(this).data('data-query')];
-            $scope.$broadcast(Parameters.QUERY_EVENTS.DRAW, query.points, true, true);
-            $scope.$apply();
-          });
-          canv.on('mouseleave', function () {
-            $scope.$broadcast(Parameters.QUERY_EVENTS.CLEAN_DRAW_PREVIEW);
-          });
-          canv.on('mouseenter', function () {
-            var query = QetchQuery_DrawRefining.predefinedQueries[$(this).data('data-query')];
-            $scope.$broadcast(Parameters.QUERY_EVENTS.DRAW_PREVIEW, query.points, true);
-          });
-          $scope.predefiendQueryHtmlContent.append(canv);
-        }
-      });
-
-      $scope.$on(Parameters.QUERY_REFINEMENT_EVENTS.SUGGEST_PREDEFINED_QUERY, function (event, id) {
-        var queryPreviews = $scope.predefiendQueryHtmlContent.find('.query-preview');
-        queryPreviews.removeClass('hightlighted');
-        if (id !== null) queryPreviews.eq(id).addClass('hightlighted');
-        $scope.predefinedQuerySuggestion = id;
-        $scope.$apply();
-      });
 
       $scope.$on(Parameters.QUERY_REFINEMENT_EVENTS.QUERY_HISTORY_UPDATE, function (event, history) {
         $scope.historyHtmlContent.each(function (i, el) {

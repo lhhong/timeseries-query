@@ -34,7 +34,6 @@
 	<script type="text/javascript" src="/libs/angular-bootstrap-slider/slider.js"></script>
 	<script type="text/javascript" src="/js/app.js"></script>
 	<script type="text/javascript" src="/js/resources/dataset.js"></script>
-	<script type="text/javascript" src="/js/resources/queries.js"></script>
 	<script type="text/javascript" src="/js/services/qetchQueryAPI.js"></script>
 	<script type="text/javascript" src="/js/services/datasetAPI.js"></script>
 	<script type="text/javascript" src="/js/services/queryDrawRefiningAPI.js"></script>
@@ -249,13 +248,9 @@
 						<query-canvas id="queryCanvas" resize></query-canvas>
 					</div>
 					<div id="quickDrawPanel" class="query-panel-tab-bottom">
-						<div class="btn btn-default btn-xs" ng-click="predefinedQueriesToggle()">
-							Predefined queries <span style="top: 2px;" class="glyphicon" ng-class="predefinedQueriesVisible ? 'glyphicon-chevron-down' : 'glyphicon-chevron-up'"></span></div>
 						<div class="btn btn-default btn-xs" ng-click="historyQueriesToggle()">
 							History <span style="top: 2px;" class="glyphicon" ng-class="historyVisible ? 'glyphicon-chevron-down' : 'glyphicon-chevron-up'"></span></div>
-						<div class="qdp-label clickable" ng-click="showSuggestedPredefinedQuery()" ng-hide="predefinedQuerySuggestion === null">Similar predefined query available</div>
-						<div class="qdp-label clickable" ng-click="showSuggestedQueryFn()" ng-hide="queryFnSuggestion === null">Similar query pattern available</div>
-						<div class="scroll-container" ng-show="predefinedQueriesVisible || historyVisible || queryFnSuggestionVisible"></div>
+						<div class="scroll-container" ng-show="historyVisible"></div>
 					</div>
 				</div>
 			</div>

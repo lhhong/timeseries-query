@@ -43,7 +43,7 @@ func (repo *Repository) BulkSaveRawData(valueArgs []interface{}) error {
 	return err
 }
 
-// BulkSaveRawData WARNING: Unsafe call to SQL, Prone to injections. Used for efficient bulk loading to database as there is maximum number of placeholder for prepared statement
+// BulkSaveRawDataUnsafe WARNING: Unsafe call to SQL, Prone to injections. Used for efficient bulk loading to database as there is maximum number of placeholder for prepared statement
 func (repo *Repository) BulkSaveRawDataUnsafe(data []RawData) error {
 	valueStrings := make([]string, 0, len(data))
 	for _, v := range data {

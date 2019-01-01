@@ -169,6 +169,7 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
     $scope.adjustMatches = function () {
       var match, i;
       if ($scope.feedbacks.length > 0) {
+    /*
         var feedbacksDecisionTree = new dt.DecisionTree({
           trainingSet: $scope.feedbacks,
           categoryAttr: 'feedback',
@@ -188,6 +189,7 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
           }
           match.adjMatch = match.match; // * (match.feedback ? 0.5 : 1.5);
         }
+        */
 
       } else {
         for (i = 0; i < $scope.matches.length; i++) {
@@ -198,6 +200,7 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
       }
     };
 
+    /*
     $scope.feedback = function (matchId, feedback) {
       var match = $scope.matches[matchId];
       match.feedback = feedback ? 2 : -2;
@@ -217,6 +220,7 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
       $scope.feedbacks = [];
       $scope.adjustMatches();
     }
+    */
 
   }
 

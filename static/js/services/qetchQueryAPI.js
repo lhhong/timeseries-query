@@ -55,12 +55,7 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
     // DEBUG --------
 
     var matches;
-    if (Parameters.ALGORITHM_TO_USE == 'dtw' || Parameters.ALGORITHM_TO_USE == 'ed') {
-      // matches = this.queryLength ? this.executeQueryVDTWorVED() : this.executeQueryDTWorED();
-      matches = this.queryLength ? this.executeQueryVDTWorVED() : [];
-    } else {
-      matches = this.executeQuery();
-    }
+    matches = this.executeQuery();
 
     DatasetAPI.setMatches(matches);
     DatasetAPI.notifyMatchesChanged();
@@ -236,7 +231,6 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
     if (qSections.length > Parameters.MAX_REGEX_IT) return false;
     var matchValue, i, sectsBlock = [currSect];
 
-	console.log(JSON.stringify(currSect));
     // Translate the query that is always in a regexp-form (even when there are no repetitions) in an array of sections
     // This until there is only one next element
     while (currSect.next.length === 1 && currSect != lastQuerySect) {
@@ -261,20 +255,8 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
     }
     var newQSections = qSections.concat(sectsBlock);
 
-    // DEBUG
-    // var sxs = [], sids = [];
-    // for (i = 0; i < newQSections.length; i++) {
-    //   sids.push(newQSections[i].id);
-    //   for (var j = 0; j < newQSections[i].points.length; j++) {
-    //     sxs.push(parseInt((newQSections[i].points[j].x).toFixed(2)));
-    //   }
-    // }
-    // // console.log('x: ', sxs);
-    // console.log('ids: ', sids);
-
     var dataSectsForQ = dataSections.slice(dsi, dsi + newQSections.length);
 
-	console.log(JSON.stringify(currSect));
     // If we reached the end of the query we can actually use it
     if (currSect == lastQuerySect &&
       (currSect.next.length === 0 || !currSect.next[0].size || currSect.next[0].size == currSect.next[0].times)) {
@@ -638,84 +620,6 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
     return points;
   };
 
-  /**
-   * Execute the query in DTW (deprecated)
-   */
-  // this.executeQueryDTWorED = function () {
-  //   var startingTime = new Date();
-  //   var matches = [];
-  //   var j, i;
-  //   var datasetSize = null;
-  //
-  //   for (var datasetIdx = 0; datasetIdx < DatasetAPI.getDatasetsNum(); datasetIdx++) {
-  //     var smoothIterationsNum = DatasetAPI.getSmoothIterationsNum(datasetIdx);
-  //     if (smoothIterationsNum === 0) throw 'No data to query'; // should be controlled by the UI
-  //     for (var smoothi = 0; smoothi < smoothIterationsNum; smoothi++) {
-  //
-  //       var points = DatasetAPI.getData(datasetIdx, smoothi);
-  //
-  //       if (datasetSize === null) {
-  //         datasetSize = _.last(points).x - points[0].x;
-  //       }
-  //       var dataTangents = this.extractTangents(points);
-  //       var dataSections = this.findCurveSections(dataTangents, points, Parameters.DIVIDE_SECTION_MIN_HEIGHT_DATA);
-  //
-  //       if (this.sections.length > dataSections.length) continue;
-  //
-  //       for (i = 0; i < dataSections.length - this.sections.length + 1; i++) {
-  //         var valid = false;
-  //         var matchedSections = [];
-  //         var debugSectionNumbers = '';
-  //
-  //         // calculating the scale factor agreement
-  //         for (j = 0; j < this.sections.length; j++) {
-  //           valid = true;
-  //           matchedSections.push(dataSections[j + i]);
-  //           debugSectionNumbers += (j + i) + ', ';
-  //         }
-  //         if (!valid) continue;
-  //
-  //         var cost = this.executeDTWorED(this.sections, matchedSections);
-  //
-  //         var matchedPoints = this.extractPointsFromSections(matchedSections);
-  //         var minPos = matchedPoints[0].x;
-  //         var maxPos = _.last(matchedPoints).x;
-  //         var matchSize = (maxPos - minPos) / datasetSize;
-  //         var matchTimeSpan = this.calculateMatchTimeSpan(matchedPoints[0], _.last(matchedPoints));
-  //
-  //         var newMatch = {
-  //           snum: datasetIdx,
-  //           smoothIteration: smoothi,
-  //           match: cost,
-  //           timespan: matchTimeSpan,
-  //           size: matchSize,
-  //           points: matchedPoints,
-  //           minPos: minPos,
-  //           maxPos: maxPos
-  //         };
-  //
-  //         var duplicateMatchIdx = this.searchEqualMatch(newMatch, matches);
-  //         if (duplicateMatchIdx === -1) {
-  //           newMatch.id = matches.length; // new id for the new match
-  //           matches.push(newMatch);
-  //         } else if (matches[duplicateMatchIdx].match > newMatch.match) {
-  //           newMatch.id = matches.length; // new id for the new match
-  //           matches.push(newMatch);
-  //           newMatch.id = matches[duplicateMatchIdx].id; // we leave the old id for the match
-  //           matches[duplicateMatchIdx] = newMatch;
-  //         }
-  //
-  //       }
-  //
-  //     }
-  //   }
-  //
-  //   var finishingTime = new Date();
-  //   Qetch.DEBUG_LAST_EXECUTING_TIME = finishingTime - startingTime;
-  //
-  //   return matches;
-  // };
-
   /* Return the index of a match that starts and ends in the same positions of the targetMatch, 
    * returns -1 if nothing has been found. */
   this.searchEqualMatch = function (targetMatch, matches) {
@@ -731,98 +635,6 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
   };
 
   /**
-   * DTW for generic query length (deprecated)
-   */
-  // this.executeDTWorED = function (querySections, matchedSections) {
-  //   var si, pi, querySection, dataSection, cy;
-  //
-  //   /* Compute the scale factor to perform an uniform scaling. */
-  //   var minDataX = matchedSections[0].points[0].x;
-  //   var maxDataX = _.last(_.last(matchedSections).points).x;
-  //
-  //   var minQueryX = querySections[0].points[0].x;
-  //   var maxQueryX = _.last(_.last(querySections).points).x;
-  //
-  //   var scaleFactor = (maxQueryX - minQueryX) / (maxDataX - minDataX);
-  //
-  //   var minDataY = null, maxDataY = null;
-  //   var minQueryY = null, maxQueryY = null;
-  //
-  //   var numQueryPoints = 0;
-  //
-  //   var dataAvgY = {sum: 0, num: 0};
-  //   var queryAvgY = {sum: 0, num: 0};
-  //   for (si = 0; si < querySections.length; si++) {
-  //     querySection = querySections[si];
-  //     for (pi = 0; pi < querySection.points.length; pi++) {
-  //       numQueryPoints++;
-  //       cy = querySection.points[pi].y;
-  //       if (minQueryY === null || minQueryY > cy) minQueryY = cy;
-  //       if (maxQueryY === null || maxQueryY < cy) maxQueryY = cy;
-  //       queryAvgY.sum += cy;
-  //       queryAvgY.num++;
-  //     }
-  //   }
-  //
-  //   for (si = 0; si < matchedSections.length; si++) {
-  //     dataSection = matchedSections[si];
-  //     for (pi = 0; pi < dataSection.points.length; pi++) {
-  //       cy = dataSection.points[pi].y * scaleFactor;
-  //       if (minDataY === null || minDataY > cy) minDataY = cy;
-  //       if (maxDataY === null || maxDataY < cy) maxDataY = cy;
-  //       dataAvgY.sum += cy;
-  //       dataAvgY.num++;
-  //     }
-  //   }
-  //   dataAvgY = dataAvgY.sum / dataAvgY.num;
-  //   queryAvgY = queryAvgY.sum / queryAvgY.num;
-  //   var translation = dataAvgY - queryAvgY;
-  //   var step;
-  //
-  //   var d1 = [], d2 = [];
-  //   for (si = 0; si < matchedSections.length; si++) {
-  //     querySection = querySections[si];
-  //     dataSection = matchedSections[si];
-  //     step = querySection.points.length / dataSection.points.length;
-  //     for (pi = 0; pi < querySection.points.length; pi += step) {
-  //       d1.push(querySection.points[Math.floor(pi)].y);
-  //     }
-  //     for (pi = 0; pi < dataSection.points.length; pi++) {
-  //       d2.push(dataSection.points[pi].y * scaleFactor - translation);
-  //     }
-  //   }
-  //
-  //   // Re-interpolate
-  //   // since [1,3,5] and [1,2,3,4,5] express the same trend with different aspect ratio
-  //   // we normalize the two sequences to have almost the same length. In this way we prevent
-  //   // the problems that DTW has with those different sequences
-  //   var diff = d2.length / d1.length;
-  //   var newD = [];
-  //   for (pi = 0; pi < d2.length; pi += diff) {
-  //     newD.push(d2[Math.floor(pi)]);
-  //   }
-  //   d2 = newD;
-  //
-  //   var currSectsHeight = maxDataY - minDataY;
-  //   var currQSectsHeight = maxQueryY - minQueryY;
-  //   var cmpHeight = Math.max(currSectsHeight, currQSectsHeight);
-  //
-  //   var cost;
-  //   if (Parameters.ALGORITHM_TO_USE == 'dtw') {
-  //     var dtw = new DTW({
-  //       distanceFunction: function (x1, x2) {
-  //         return Math.abs((x1 - x2) / cmpHeight);
-  //       }
-  //     });
-  //     cost = dtw.compute(d1, d2);
-  //   } else {
-  //     cost = this.euclideanDistance(d1, d2, cmpHeight);
-  //   }
-  //
-  //   return cost;
-  // };
-
-  /**
    * Calculate the euclidean distance between the two sequences
    * Since the x values of series1 and series2 are the same (they should be two time series with the same
    * number of elements) the euclidean distance formula can be semplified in an absolute difference.
@@ -836,182 +648,6 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
       res += Math.pow((series1[i] - series2[i]) / relativeHeight, 2);
     }
     return Math.sqrt(res);
-  };
-
-  /**
-   * Execute the query in DTW or ED (query length version)
-   */
-  this.executeQueryVDTWorVED = function () {
-    var startingTime = new Date();
-
-    var matches = [];
-    var j, i, pi;
-    var queryValues = [];
-
-    for (var datasetIdx = 0; datasetIdx < DatasetAPI.getDatasetsNum(); datasetIdx++) {
-      var dataPoints = DatasetAPI.getData(datasetIdx, 0); // only smooth 0, DTW can deal with noises
-
-      var dataStep = (_.last(dataPoints).origX - dataPoints[0].origX) / dataPoints.length;
-
-      var queryLength = Math.ceil(this.queryLength / dataStep);
-
-      // query sampling to adapt it to be the same size of the dataset (re-interpolate)
-      var groupSize = Math.ceil(this.points.length / queryLength);
-      var acc = 0, accc = 0;
-      for (i = 0; i < this.points.length; i++) {
-        acc += this.points[i].y;
-        accc++;
-        if ((i + 1) % groupSize === 0) {
-          queryValues.push(acc / accc);
-          acc = accc = 0;
-        }
-      }
-
-      // normalize query values
-      // if (Parameters.ALGORITHM_TO_USE == 'dtw') {
-      //   var stdQ = math.std(queryValues), meanQ = math.mean(queryValues);
-      //   for (pi = 0; pi < queryValues.length; pi++) {
-      //     queryValues[pi] = (queryValues[pi] - meanQ) / stdQ;
-      //   }
-      // }
-
-      // calculate the query y average
-      var queryAvgY = math.mean(queryValues);
-
-      // calculate the width of the dataset of a subsequence with that query size
-      var queryWidth = _.last(this.points).x - this.points[0].x;
-      var queryHeight = _.max(this.points, 'y').y - _.min(this.points, 'y').y;
-      var slidingWindowStep = Math.ceil(queryLength / 100) * Parameters.QUERYLENGTH_SLIDING_WINDOW_STEP;
-
-      // Sliding window through the data to find matches
-      for (i = 0; i < dataPoints.length - queryLength - 1; i += slidingWindowStep) {
-        var subSequencePoints = [];
-        var subSequenceValues = [];
-        for (j = 0; j < queryLength; j++) {
-          subSequencePoints.push(dataPoints[i + j]);
-          subSequenceValues.push(dataPoints[i + j].y);
-        }
-
-        var datasetQuerySizeWidth = subSequencePoints[subSequencePoints.length - 1].x - subSequencePoints[0].x;
-        var datasetQuerySizeHeight = _.max(subSequenceValues) - _.min(subSequenceValues);
-        var scaleFactorX = queryWidth / datasetQuerySizeWidth;
-        var scaleFactorY = queryHeight / datasetQuerySizeHeight;
-
-        for (j = 0; j < subSequenceValues.length; j++) {
-          subSequenceValues[j] *= Parameters.RESCALING_Y ? scaleFactorY : scaleFactorX;
-        }
-
-        // normalize sub sequence values
-        // if (Parameters.ALGORITHM_TO_USE == 'dtw') {
-        //   var stdD = math.std(subSequenceValues), meanD = math.mean(subSequenceValues);
-        //   for (pi = 0; pi < subSequenceValues.length; pi++) {
-        //     subSequenceValues[pi] = (subSequenceValues[pi] - meanD) / stdD;
-        //   }
-        // }
-
-        // calculate the center point of the dataset subsection (those are rescaled points, so we don't need to multiply
-        // datasetAvgY by the scale factor)
-        var datasetAvgY = math.mean(subSequenceValues);
-
-        // offset translation (move the subsection of the dataset to have the same height of the query)
-        var datasetQueryDifference = queryAvgY - datasetAvgY;
-        for (j = 0; j < subSequenceValues.length; j++) subSequenceValues[j] += datasetQueryDifference;
-
-        var cost;
-        if (Parameters.ALGORITHM_TO_USE == 'dtw') {
-          cost = new DTW().compute(queryValues, subSequenceValues);
-        } else {
-          cost = this.euclideanDistance(queryValues, subSequenceValues, queryHeight);
-        }
-
-        var matchTimeSpan = this.calculateMatchTimeSpan(subSequencePoints[0], _.last(subSequencePoints));
-        var minPos = subSequencePoints[0].x;
-        var maxPos = _.last(subSequencePoints).x;
-
-        var newMatch = {
-          snum: datasetIdx,
-          id: matches.length,
-          smoothIteration: 0,
-          match: cost,
-          timespan: matchTimeSpan,
-          size: this.queryLength,
-          points: subSequencePoints,
-          minPos: minPos,
-          maxPos: maxPos
-        };
-        matches.push(newMatch);
-      }
-    }
-
-    var finishingTime = new Date();
-    Qetch.DEBUG_LAST_EXECUTING_TIME = finishingTime - startingTime;
-
-    return matches;
-  };
-
-  /* Used by 1NN */
-  this.calculateDTWorED = function (queryPoints, dataPoints, alg) {
-    var datasetPtsStep = dataPoints.length / queryPoints.length;
-
-    var datasetValues = [];
-    for (var i = 0; i < queryPoints.length; i++) {
-      var dataPt = dataPoints[Math.floor(i * datasetPtsStep)];
-      datasetValues.push(dataPt.y);
-    }
-
-    // // dataset sampling to adapt it to be the same size of the query
-    // var datasetValues = [];
-    // var groupSize = Math.ceil(dataPoints.length / queryLength);
-    // var i, acc = 0, accc = 0;
-    // for (i = 0; i < dataPoints.length; i++) {
-    //   acc += dataPoints[i].y;
-    //   accc++;
-    //   if ((i + 1) % groupSize === 0) {
-    //     datasetValues.push(acc / accc);
-    //     acc = accc = 0;
-    //   }
-    // }
-
-    var queryValues = [];
-    for (i = 0; i < queryPoints.length; i++) queryValues.push(queryPoints[i].y);
-
-    // calculate the width of the dataset of a subsequence with that query size
-    var queryWidth = _.last(queryPoints).x - queryPoints[0].x;
-    var queryHeight = _.max(queryPoints, 'y').y - _.min(queryPoints, 'y').y;
-
-    // calculate the dataset y average
-    var queryAvgY = 0;
-    for (i = 0; i < queryPoints.length; i++) queryAvgY += queryValues[i];
-    queryAvgY /= queryPoints.length;
-
-    // calculate the width of the dataset of a subsequence with that query size
-    var dsWidth = _.last(dataPoints).x - dataPoints[0].x;
-    var dsHeight = _.max(dataPoints, 'y').y - _.min(dataPoints, 'y').y;
-
-    var scaleFactorY = queryHeight / dsHeight;
-
-    for (var j = 0; j < datasetValues.length; j++) {
-      datasetValues[j] *= scaleFactorY;
-    }
-
-    // calculate the center point of the dataset subection (those are rescaled points, so we don't need to multiply
-    // datasetAvgY by the scale factor)
-    var datasetAvgY = 0;
-    for (j = 0; j < datasetValues.length; j++) datasetAvgY += datasetValues[j];
-    datasetAvgY /= datasetValues.length;
-
-    // move the subsection of the dataset to have the same amplitude of the query
-    var datasetQueryDifference = queryAvgY - datasetAvgY;
-    for (j = 0; j < datasetValues.length; j++) datasetValues[j] += datasetQueryDifference;
-
-    var cost;
-    if (alg == 'dtw') {
-      cost = new DTW().compute(queryValues, datasetValues);
-    } else {
-      cost = this.euclideanDistance(queryValues, datasetValues);
-    }
-
-    return {match: cost};
   };
 
   this.checkQueryLength = function (queryLength) {

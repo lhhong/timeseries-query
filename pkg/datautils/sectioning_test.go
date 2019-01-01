@@ -19,6 +19,6 @@ func TestFindCurveSections(t *testing.T) {
 	tangents := extractTangents(testData)
 	sections := findCurveSections(tangents, testData, 0.01)
 
-	jsonByte, _ := json.MarshalIndent(sections, "", "  ")
+	jsonByte, _ := json.Marshal(sections)
 	fmt.Println(string(jsonByte))
 }

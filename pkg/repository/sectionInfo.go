@@ -6,7 +6,6 @@ type SectionInfo struct {
 	Series     string
 	Smooth     int
 	StartSeq   int64
-	Clusters   []int
 	Sign       int
 	Height     float64
 	Width      int64

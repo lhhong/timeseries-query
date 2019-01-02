@@ -17,4 +17,13 @@ func createTables(repo *Repository) {
 		type VARCHAR(30),
 		PRIMARY KEY (groupname, series)
 	);`)
+
+	repo.db.MustExec(`CREATE TABLE IF NOT EXISTS ClusterCentroid (
+		groupname VARCHAR(30),
+		sign INT, 
+		clusterindex INT,
+		seq INT,
+		value DOUBLE NOT NULL
+		PRIMARY KEY (groupname, sign, clusterindex, seq)
+	);`)
 }

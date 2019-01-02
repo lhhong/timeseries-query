@@ -16,9 +16,19 @@ var testData = []repository.Values{
 }
 
 func TestFindCurveSections(t *testing.T) {
+
 	tangents := extractTangents(testData)
 	sections := findCurveSections(tangents, testData, 0.01)
 
-	jsonByte, _ := json.Marshal(sections)
+	centroids, weights := Cluster(sections)
+
+	jsonByte, _ := json.Marshal(centroids)
 	fmt.Println(string(jsonByte))
+
+	jsonByte, _ = json.Marshal(weights)
+	fmt.Println(string(jsonByte))
+	//json.Marshal(sections)
+
+	// jsonByte, _ := json.Marshal(sections)
+	// fmt.Println(string(jsonByte))
 }

@@ -55,6 +55,8 @@ github.com/klauspost/asmfmt v1.2.0/go.mod h1:RAoUvqkWr2rUa2I19qKMEVZQe4BVtcHGTMC
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/koron/iferr v0.0.0-20180615142939-bb332a3b1d91 h1:hunjgdb3b21ZdRmzDPXii0EcnHpjH7uCP+kODoE1JH0=
 github.com/koron/iferr v0.0.0-20180615142939-bb332a3b1d91/go.mod h1:C2tFh8w3I6i4lnUJfoBx2Hwku3mgu4wPNTtUNp1i5KI=
+github.com/lhhong/go-fcm v0.0.0-20181231171440-0619f165e5c8 h1:MBvvAdOLakF66kKTc303jP8VaaqWh7rEXwO0TniFEt8=
+github.com/lhhong/go-fcm v0.0.0-20181231171440-0619f165e5c8/go.mod h1:9X5pckQROCjmhbpDQe5xQnf8CeLXQ6uZK/nJ/OUUWSQ=
 github.com/lhhong/timeseries-query v0.0.0-20181213171602-d2252f099d79 h1:Oe1bGRHcd/J6oNI/gFuAbOgNBfvdBTXcS4D1TIsfj1w=
 github.com/lhhong/timeseries-query v0.0.0-20181214162223-29225d6f2715 h1:kSXApvsncnL9S3sSAwRowfp6GQRyAoSlY8HrleMTuCM=
 github.com/lhhong/timeseries-query v0.0.0-20181215153517-8b888c226e63 h1:DmHsebPZj6FwDx4qlN2MBCgYKTCP8gufrBCxzTJVO10=

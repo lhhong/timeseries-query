@@ -19,6 +19,7 @@ require (
 	github.com/kisielk/errcheck v1.1.0 // indirect
 	github.com/klauspost/asmfmt v1.2.0 // indirect
 	github.com/koron/iferr v0.0.0-20180615142939-bb332a3b1d91 // indirect
+	github.com/lhhong/go-fcm v0.0.0-20181231171440-0619f165e5c8
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mdempsky/gocode v0.0.0-20181212191131-9c77a290fde2 // indirect
 	github.com/nicksnyder/go-i18n v1.10.0 // indirect

@@ -8,7 +8,13 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func getIndexDetails(repo *repository.Repository, group string) ([]*repository.ClusterCentroid, []*repository.ClusterMember, []*repository.SectionInfo) {
+func IndexAndSave(repo *repository.Repository, group string) {
+
+	//posCentroids, negCentroids, clusterMembers, sectionInfos := getIndexDetails(repo, group)
+	_, _, _, _ = getIndexDetails(repo, group)
+}
+
+func getIndexDetails(repo *repository.Repository, group string) ([][]float64, [][]float64, []*repository.ClusterMember, []*repository.SectionInfo) {
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
 
@@ -18,17 +24,25 @@ func getIndexDetails(repo *repository.Repository, group string) ([]*repository.C
 	negCentroids, negWeights := datautils.Cluster(negSections)
 
 	membershipThreshold := 0.5
-	posClusterMembers := datautils.GetMembership(posCentroids, posWeights, membershipThreshold)
-	negClusterMembers := datautils.GetMembership(negCentroids, negWeights, membershipThreshold)
+	posClusterMembers := datautils.GetMembership(posSections, posWeights, membershipThreshold)
+	negClusterMembers := datautils.GetMembership(negSections, negWeights, membershipThreshold)
 
 	sectionInfos := make([]*repository.SectionInfo, len(posSections)+len(negSections))
 	for i, section := range posSections {
-		sectionInfos[i] = section.SectionInfo
+		sectionInfos[i] = &section.SectionInfo
 	}
 	for i, section := range negSections {
-		sectionInfos[len(posSections)+i] = section.SectionInfo
+		sectionInfos[len(posSections)+i] = &section.SectionInfo
 	}
-	return append(posCentroids, negCentroids...), append(posClusterMembers, negClusterMembers...), sectionInfos
+	rawPosCentroids := make([][]float64, len(posCentroids))
+	for i, c := range posCentroids {
+		rawPosCentroids[i] = c
+	}
+	rawNegCentroids := make([][]float64, len(negCentroids))
+	for i, c := range negCentroids {
+		rawNegCentroids[i] = c
+	}
+	return rawPosCentroids, rawNegCentroids, append(posClusterMembers, negClusterMembers...), sectionInfos
 }
 
 func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesValues [][]repository.Values) ([]*datautils.Section, []*datautils.Section) {
@@ -41,17 +55,19 @@ func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesV
 	posSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 	negSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 	for seriesIndex, values := range seriesValues {
-		smoothedValues := datautils.SmoothData(values)
-		for smoothIndex, values := range seriesValues {
-			tangents := datautils.ExtractTangents(values)
-			currentSections := datautils.FindCurveSections(tangents, values, divideSectionMinimumHeightData)
-			for i, section := range currentSections {
-				section.AppendInfo(seriesInfos[seriesIndex].Groupname, seriesInfos[seriesIndex].Series, smoothIndex)
+		go func(seriesIndex int, values []repository.Values) {
+			smoothedValues := datautils.SmoothData(values)
+			for smoothIndex, values := range smoothedValues {
+				tangents := datautils.ExtractTangents(values)
+				currentSections := datautils.FindCurveSections(tangents, values, divideSectionMinimumHeightData)
+				for _, section := range currentSections {
+					section.AppendInfo(seriesInfos[seriesIndex].Groupname, seriesInfos[seriesIndex].Series, smoothIndex)
+				}
+				pos, neg := datautils.SortPositiveNegative(currentSections)
+				posSections = append(posSections, pos...)
+				negSections = append(negSections, neg...)
 			}
-			pos, neg := datautils.SortPositiveNegative(currentSections)
-			posSections = append(posSections, pos...)
-			negSections = append(negSections, neg...)
-		}
+		}(seriesIndex, values)
 	}
 	return posSections, negSections
 }
@@ -80,5 +96,5 @@ func retrieveAllSeriesInGroup(repo *repository.Repository, group string) ([]repo
 	}
 	wg.Wait()
 
-	return seriesInfo, seriesValues
+	return seriesInfos, allSeriesValues
 }

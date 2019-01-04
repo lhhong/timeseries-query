@@ -103,7 +103,7 @@ func Cluster(sections []*Section) ([]FcmSection, [][]float64) {
 	return centroids, weights
 }
 
-func GetMembership(sections []*Section, centroids [][]float64, weights [][]float64, membershipThreshold float64) []*repository.ClusterMember {
+func GetMembership(sections []*Section, weights [][]float64, membershipThreshold float64) []*repository.ClusterMember {
 	res := make([]*repository.ClusterMember, 0, len(sections)*2)
 	for clusterIndex, sectionWeights := range weights {
 		for sectionIndex, weight := range sectionWeights {

@@ -23,7 +23,7 @@ func createTables(repo *Repository) {
 		sign INT, 
 		clusterindex INT,
 		seq INT,
-		value DOUBLE NOT NULL
+		value DOUBLE NOT NULL,
 		PRIMARY KEY (groupname, sign, clusterindex, seq)
 	);`)
 }

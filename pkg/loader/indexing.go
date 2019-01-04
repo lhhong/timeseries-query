@@ -10,8 +10,18 @@ import (
 
 func IndexAndSave(repo *repository.Repository, group string) {
 
-	//posCentroids, negCentroids, clusterMembers, sectionInfos := getIndexDetails(repo, group)
-	_, _, _, _ = getIndexDetails(repo, group)
+	posCentroids, negCentroids, _, _ := getIndexDetails(repo, group)
+
+	var err error
+
+	err = repo.BulkSaveClusterCentroidsUnsafe(group, 1, posCentroids)
+	if err != nil {
+		log.Println("failed to save positive centroids")
+	}
+	err = repo.BulkSaveClusterCentroidsUnsafe(group, 1, negCentroids)
+	if err != nil {
+		log.Println("failed to save negative centroids")
+	}
 }
 
 func getIndexDetails(repo *repository.Repository, group string) ([][]float64, [][]float64, []*repository.ClusterMember, []*repository.SectionInfo) {

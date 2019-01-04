@@ -2,6 +2,7 @@ package repository
 
 import (
 	"log"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql" // load drivers for sqlx
 	"github.com/jmoiron/sqlx"
@@ -15,14 +16,25 @@ type Repository struct {
 
 // LoadDb Opens database connection and returns Repository
 func LoadDb(conf *config.DatabaseConfig) *Repository {
-	connString := conf.Username + ":" + conf.Password + "@/" + conf.Database
+
+	repo := Repository{}
+	repo.LoadDb(conf.Username, conf.Password, conf.Hostname, conf.Port, conf.Database)
+
+	createTables(&repo)
+	return &repo
+}
+
+func (repo *Repository) LoadDb(username string, password string, host string, port int, database string) {
+	connString := username + ":" + password + "@(" + host + ":" + strconv.Itoa(port) + ")/" + database
+
 	db := sqlx.MustConnect("mysql", connString)
 
 	log.Println("Database connected")
 
-	repo := &Repository{db}
+	repo.db = db
 
-	createTables(repo)
+}
 
-	return repo
+func (repo *Repository) CloseDb() error {
+	return repo.db.Close()
 }

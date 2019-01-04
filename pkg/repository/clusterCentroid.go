@@ -35,3 +35,8 @@ func (repo *Repository) BulkSaveClusterCentroidsUnsafe(groupname string, sign in
 	_, err := repo.db.Exec(stmt)
 	return err
 }
+
+func (repo *Repository) deleteAllClusterCentroids() error {
+	_, err := repo.db.Exec("DELETE FROM ClusterCentroid")
+	return err
+}

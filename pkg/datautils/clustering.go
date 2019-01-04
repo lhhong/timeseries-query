@@ -6,9 +6,10 @@ import (
 	"sync"
 
 	"github.com/lhhong/go-fcm/fcm"
+	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-var numPointsForCluster = 10
+var numPointsForCluster = 30
 
 // FcmSection implements fcm.Interface
 type FcmSection []float64
@@ -100,4 +101,24 @@ func Cluster(sections []*Section) ([]FcmSection, [][]float64) {
 		centroids[i] = c.(FcmSection)
 	}
 	return centroids, weights
+}
+
+func GetMembership(sections []*Section, centroids [][]float64, weights [][]float64, membershipThreshold float64) []*repository.ClusterMember {
+	res := make([]*repository.ClusterMember, 0, len(sections)*2)
+	for clusterIndex, sectionWeights := range weights {
+		for sectionIndex, weight := range sectionWeights {
+			if weight > membershipThreshold {
+				section := sections[sectionIndex]
+				res = append(res, &repository.ClusterMember{
+					Groupname:    section.SectionInfo.Groupname,
+					Sign:         section.SectionInfo.Sign,
+					ClusterIndex: clusterIndex,
+					Series:       section.SectionInfo.Series,
+					Smooth:       section.SectionInfo.Smooth,
+					StartSeq:     section.SectionInfo.StartSeq,
+				})
+			}
+		}
+	}
+	return res
 }

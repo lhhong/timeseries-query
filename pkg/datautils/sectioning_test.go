@@ -17,8 +17,10 @@ var testData = []repository.Values{
 
 func TestFindCurveSections(t *testing.T) {
 
-	tangents := extractTangents(testData)
-	sections := findCurveSections(tangents, testData, 0.01)
+	tangents := ExtractTangents(testData)
+	sections := FindCurveSections(tangents, testData, 0.01)
+
+	sections, _ = SortPositiveNegative(sections)
 
 	centroids, weights := Cluster(sections)
 

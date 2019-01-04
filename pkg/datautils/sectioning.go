@@ -4,7 +4,7 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func extractTangents(points []repository.Values) []float64 {
+func ExtractTangents(points []repository.Values) []float64 {
 	tangents := make([]float64, len(points)-1)
 	if len(points) < 2 {
 		return tangents
@@ -24,6 +24,12 @@ type Section struct {
 	Points      []repository.Values
 	Tangents    []float64
 	SectionInfo repository.SectionInfo
+}
+
+func (s *Section) AppendInfo(groupname string, series string, smooth int) {
+	s.SectionInfo.Groupname = groupname
+	s.SectionInfo.Series = series
+	s.SectionInfo.Smooth = smooth
 }
 
 func constructSection(sign int, startSeq int64, prevSeq int64, prevHeight float64, prevWidth int64) *Section {
@@ -57,7 +63,7 @@ func finalizeSection(pt repository.Values, sections []*Section, lastSectHeight f
 	}
 }
 
-func findCurveSections(tangents []float64, points []repository.Values, minHeightPerc float64) []*Section {
+func FindCurveSections(tangents []float64, points []repository.Values, minHeightPerc float64) []*Section {
 
 	sections := make([]*Section, 0, 20)
 
@@ -105,4 +111,19 @@ func findCurveSections(tangents []float64, points []repository.Values, minHeight
 
 	return sections
 
+}
+
+func SortPositiveNegative(sections []*Section) ([]*Section, []*Section) {
+	positive := make([]*Section, 0, len(sections)*2/3)
+	negative := make([]*Section, 0, len(sections)*2/3)
+
+	for _, section := range sections {
+		if section.SectionInfo.Sign < 0 {
+			negative = append(negative, section)
+		} else {
+			positive = append(positive, section)
+		}
+	}
+
+	return positive, negative
 }

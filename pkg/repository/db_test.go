@@ -4,10 +4,22 @@ import (
 	"testing"
 )
 
-var IndexTestRepo *Repository
+var (
+	IndexTestRepo *Repository
+	QueryTestRepo *Repository
+)
 
 func init() {
 	IndexTestRepo = newIndexTestRepo()
+	QueryTestRepo = newQueryTestRepo()
+}
+
+func newQueryTestRepo() *Repository {
+
+	repo := &Repository{}
+	repo.LoadDb("dbuser", "user_password", "localhost", 3308, "timeseries")
+
+	return repo
 }
 
 func newIndexTestRepo() *Repository {
@@ -25,8 +37,14 @@ func resetIndexTestRepo(repo *Repository) {
 	// TODO: delete all other index data
 }
 
-func TestCreateNewIndexTestRepo(t *testing.T) {
+func TestIndexTestRepo(t *testing.T) {
 	err := IndexTestRepo.db.Ping()
+	if err != nil {
+		t.Error("Could not ping db")
+	}
+}
+func TestQueryTestRepo(t *testing.T) {
+	err := QueryTestRepo.db.Ping()
 	if err != nil {
 		t.Error("Could not ping db")
 	}

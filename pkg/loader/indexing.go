@@ -28,8 +28,10 @@ func getIndexDetails(repo *repository.Repository, group string) ([][]float64, []
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
 
+	log.Println("Sectioning data")
 	posSections, negSections := retrieveSmoothedPosNegSections(seriesInfos, seriesValues)
 
+	log.Println("Clustering data")
 	posCentroids, posWeights := datautils.Cluster(posSections)
 	negCentroids, negWeights := datautils.Cluster(negSections)
 
@@ -58,6 +60,7 @@ func getIndexDetails(repo *repository.Repository, group string) ([][]float64, []
 func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesValues [][]repository.Values) ([]*datautils.Section, []*datautils.Section) {
 
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
+	minSmoothRatio := 0.4                  // minimum smooth iteration to index
 
 	estAvgSmoothing := 4
 	estAvgSections := 50
@@ -65,19 +68,19 @@ func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesV
 	posSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 	negSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 	for seriesIndex, values := range seriesValues {
-		go func(seriesIndex int, values []repository.Values) {
-			smoothedValues := datautils.SmoothData(values)
-			for smoothIndex, values := range smoothedValues {
-				tangents := datautils.ExtractTangents(values)
-				currentSections := datautils.FindCurveSections(tangents, values, divideSectionMinimumHeightData)
-				for _, section := range currentSections {
-					section.AppendInfo(seriesInfos[seriesIndex].Groupname, seriesInfos[seriesIndex].Series, smoothIndex)
-				}
-				pos, neg := datautils.SortPositiveNegative(currentSections)
-				posSections = append(posSections, pos...)
-				negSections = append(negSections, neg...)
+		smoothedValues := datautils.SmoothData(values)
+		minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
+		for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
+			values := smoothedValues[smoothIndex]
+			tangents := datautils.ExtractTangents(values)
+			currentSections := datautils.FindCurveSections(tangents, values, divideSectionMinimumHeightData)
+			for _, section := range currentSections {
+				section.AppendInfo(seriesInfos[seriesIndex].Groupname, seriesInfos[seriesIndex].Series, smoothIndex)
 			}
-		}(seriesIndex, values)
+			pos, neg := datautils.SortPositiveNegative(currentSections)
+			posSections = append(posSections, pos...)
+			negSections = append(negSections, neg...)
+		}
 	}
 	return posSections, negSections
 }
@@ -93,13 +96,19 @@ func retrieveAllSeriesInGroup(repo *repository.Repository, group string) ([]repo
 
 	var wg sync.WaitGroup
 	allSeriesValues := make([][]repository.Values, len(seriesInfos))
+	golimit := make(chan struct{}, 4)
 	for i, seriesInfo := range seriesInfos {
 		wg.Add(1)
 		go func(i int, seriesInfo repository.SeriesInfo) {
 			defer wg.Done()
+			golimit <- struct{}{}
+			defer func() {
+				<-golimit
+			}()
 			values, err := repo.GetRawDataOfSmoothedSeries(group, seriesInfo.Series, 0)
 			if err != nil {
 				log.Printf("Cannot retrve values for %s", seriesInfo.Series)
+				log.Println(err)
 			}
 			allSeriesValues[i] = values
 		}(i, seriesInfo)

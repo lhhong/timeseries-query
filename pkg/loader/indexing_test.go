@@ -13,7 +13,7 @@ func TestIndexing(t *testing.T) {
 	repo.LoadDb("dbuser", "user_password", "localhost", 3307, "timeseries")
 
 	posCentroids, negCentroids, clusterMembers, sectionInfos := getIndexDetails(repo, "stocks")
-	_ = negCentroids
+	//_ = negCentroids
 	_ = clusterMembers
 	_ = sectionInfos
 
@@ -23,4 +23,9 @@ func TestIndexing(t *testing.T) {
 	}
 	fmt.Println(string(posJSON))
 
+	posJSON, err = json.Marshal(negCentroids)
+	if err != nil {
+		t.Fatal("error marshaling data")
+	}
+	fmt.Println(string(posJSON))
 }

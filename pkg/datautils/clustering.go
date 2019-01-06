@@ -9,7 +9,7 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-var numPointsForCluster = 30
+var numPointsForCluster = 15
 
 // FcmSection implements fcm.Interface
 type FcmSection []float64

@@ -32,19 +32,15 @@ func (s *Section) AppendInfo(groupname string, series string, smooth int) {
 	s.SectionInfo.Smooth = smooth
 }
 
-func constructSection(sign int, startSeq int64, prevSeq int64, prevHeight float64, prevWidth int64) *Section {
+func constructSection(sign int, startSeq int64, prevSeq int64) *Section {
 	return &Section{
-		Points:   make([]repository.Values, 0, 20),
-		Tangents: make([]float64, 0, 20),
+		Points:   make([]repository.Values, 0, 15),
+		Tangents: make([]float64, 0, 15),
 		SectionInfo: repository.SectionInfo{
-			Sign:       sign,
-			StartSeq:   startSeq,
-			PrevSeq:    prevSeq,
-			PrevHeight: prevHeight,
-			PrevWidth:  prevWidth,
-			NextSeq:    -1,
-			NextHeight: -1.0,
-			NextWidth:  -1,
+			Sign:     sign,
+			StartSeq: startSeq,
+			PrevSeq:  prevSeq,
+			NextSeq:  -1,
 		},
 	}
 }
@@ -58,8 +54,6 @@ func finalizeSection(pt repository.Values, sections []*Section, lastSectHeight f
 	if len(sections) > 1 {
 		lastLastSect := sections[len(sections)-2]
 		lastLastSect.SectionInfo.NextSeq = lastSect.SectionInfo.StartSeq
-		lastLastSect.SectionInfo.NextHeight = lastSect.SectionInfo.Height
-		lastLastSect.SectionInfo.NextWidth = lastSect.SectionInfo.Width
 	}
 }
 
@@ -74,7 +68,7 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 		sign := sign(tangent)
 
 		if len(sections) == 0 {
-			sections = append(sections, constructSection(sign, pt.Seq, -1, -1.0, -1))
+			sections = append(sections, constructSection(sign, pt.Seq, -1))
 		} else if sign != 0 {
 			lastSect := sections[len(sections)-1]
 			if lastSect.SectionInfo.Sign != sign {
@@ -82,7 +76,7 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 				if len(lastSect.Points) > 0 && (minHeightPerc <= 0 || lastSectHeight/totalHeight > minHeightPerc) {
 					finalizeSection(pt, sections, lastSectHeight)
 					sections = append(sections, constructSection(sign, pt.Seq,
-						lastSect.SectionInfo.StartSeq, lastSect.SectionInfo.Height, lastSect.SectionInfo.Width))
+						lastSect.SectionInfo.StartSeq))
 				} else {
 					// Move the current section to previous section
 					if len(sections) == 1 {

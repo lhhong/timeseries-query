@@ -3,12 +3,14 @@ package datautils
 import (
 	"log"
 	"math"
+	"sort"
 	"sync"
 
 	"github.com/lhhong/go-fcm/fcm"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
+// TODO pass to parameters
 var numPointsForCluster = 15
 
 // FcmSection implements fcm.Interface
@@ -43,7 +45,7 @@ func (s FcmSection) Norm(s2 fcm.Interface) float64 {
 	return math.Sqrt(res)
 }
 
-func scaleSection(section *Section, numPoints int) FcmSection {
+func scaleSection(section *Section, numPoints int) []float64 {
 	interval := float64(section.SectionInfo.Width) / (float64(numPoints) - 1) // numPoints points, (numPoints - 1) spaces
 
 	var minVal float64
@@ -92,7 +94,7 @@ func Cluster(sections []*Section) ([]FcmSection, [][]float64) {
 		wg.Add(1)
 		go func(i int, section *Section) {
 			defer wg.Done()
-			fcmSections[i] = scaleSection(section, numPointsForCluster)
+			fcmSections[i] = FcmSection(scaleSection(section, numPointsForCluster))
 		}(i, section)
 	}
 	wg.Wait()
@@ -119,6 +121,66 @@ func GetMembership(sections []*Section, weights [][]float64, membershipThreshold
 					StartSeq:     section.SectionInfo.StartSeq,
 				})
 			}
+		}
+	}
+	return res
+}
+
+// assumes all centroids from the same group and sign
+func transformCentroidsToFcmInterface(centroids []*repository.ClusterCentroid) []fcm.Interface {
+
+	sort.Slice(centroids, func(i, j int) bool {
+		if centroids[i].ClusterIndex == centroids[j].ClusterIndex {
+			return centroids[i].Seq < centroids[j].Seq
+		}
+		return centroids[i].ClusterIndex < centroids[j].ClusterIndex
+	})
+
+	res := make([]fcm.Interface, len(centroids)/numPointsForCluster)
+	for i := range res {
+		res[i] = FcmSection(make([]float64, numPointsForCluster))
+	}
+
+	for _, pt := range centroids {
+		res[pt.ClusterIndex].(FcmSection)[pt.Seq] = pt.Value
+	}
+
+	return res
+}
+
+func GetMembershipOfSingleSection(section Section, centroids []*repository.ClusterCentroid, membershipThreshold float64, fuzziness float64) []*repository.ClusterMember {
+
+	interfacedCentroids := transformCentroidsToFcmInterface(centroids)
+
+	weights := getWeightsFromSingleSection(section, interfacedCentroids, fuzziness)
+
+	return getMembershipOfSingleSectionGivenWeights(section, weights, membershipThreshold)
+}
+
+func getWeightsFromSingleSection(section Section, centroids []fcm.Interface, fuzziness float64) []float64 {
+
+	//var interfacedSection fcm.Interface
+	fcmSection := make([]float64, len(section.Points))
+	for i, values := range section.Points {
+		fcmSection[i] = values.Value
+	}
+
+	return fcm.EvaluateWeightsForOneVal(FcmSection(fcmSection), centroids, fuzziness)
+
+}
+
+func getMembershipOfSingleSectionGivenWeights(section Section, weights []float64, membershipThreshold float64) []*repository.ClusterMember {
+	res := make([]*repository.ClusterMember, 0, len(weights)/3)
+	for clusterIndex, weight := range weights {
+		if weight > membershipThreshold {
+			res = append(res, &repository.ClusterMember{
+				Groupname:    section.SectionInfo.Groupname,
+				Sign:         section.SectionInfo.Sign,
+				ClusterIndex: clusterIndex,
+				Series:       section.SectionInfo.Series,
+				Smooth:       section.SectionInfo.Smooth,
+				StartSeq:     section.SectionInfo.StartSeq,
+			})
 		}
 	}
 	return res

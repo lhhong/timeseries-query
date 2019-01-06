@@ -12,7 +12,7 @@ func TestIndexing(t *testing.T) {
 	repo := &repository.Repository{}
 	repo.LoadDb("dbuser", "user_password", "localhost", 3307, "timeseries")
 
-	posCentroids, negCentroids, clusterMembers, sectionInfos := getIndexDetails(repo, "stocks")
+	posCentroids, negCentroids, clusterMembers, sectionInfos := getIndexDetailsByFCM(repo, "stocks")
 	//_ = negCentroids
 	_ = clusterMembers
 	_ = sectionInfos

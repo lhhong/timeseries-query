@@ -11,7 +11,7 @@ import (
 
 func IndexAndSave(repo *repository.Repository, group string) {
 
-	posCentroids, negCentroids, _, _ := getIndexDetails(repo, group)
+	posCentroids, negCentroids, _, _ := getIndexDetailsByFCM(repo, group)
 
 	var err error
 
@@ -25,7 +25,22 @@ func IndexAndSave(repo *repository.Repository, group string) {
 	}
 }
 
-func getIndexDetails(repo *repository.Repository, group string) ([][]float64, [][]float64, []*repository.ClusterMember, []*repository.SectionInfo) {
+// func getIndexDetails(repo *repository.Repository, group string) ([]*repository.ClusterMember, []*repository.SectionInfo) {
+//
+// 	// TODO export to parameters
+// 	membershipThreshold := 0.5
+// 	fuzziness := 2.0
+//
+// 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
+//
+// 	posCentroids := repo.GetClusterCentroids(group, 1)
+// 	negCentroids := repo.GetClusterCentroids(group, -1)
+//
+// 	posClusterMembers := datautils.GetMembershipOfSingleSection(posSections, posCentroids, membershipThreshold, fuzziness)
+// 	posClusterMembers := datautils.GetMembershipOfSingleSection(posSections, posWeights, membershipThreshold, fuzziness)
+// }
+
+func getIndexDetailsByFCM(repo *repository.Repository, group string) ([][]float64, [][]float64, []*repository.ClusterMember, []*repository.SectionInfo) {
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
 
@@ -69,6 +84,7 @@ func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesV
 	posSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 	negSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 	for seriesIndex, values := range seriesValues {
+		log.Printf("Working on %s", seriesInfos[seriesIndex].Series)
 		smoothedValues := datautils.SmoothData(values)
 		minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
 		for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {

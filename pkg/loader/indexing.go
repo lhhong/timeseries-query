@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
 
@@ -79,6 +80,15 @@ func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesV
 			}
 			pos, neg := datautils.SortPositiveNegative(currentSections)
 			posSections = append(posSections, pos...)
+
+			for _, sec := range pos {
+				if sec.Points[len(sec.Points)-1].Value < sec.Points[0].Value {
+					data, _ := json.Marshal(sec)
+					log.Println(string(data))
+				}
+
+			}
+
 			negSections = append(negSections, neg...)
 		}
 	}

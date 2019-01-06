@@ -44,7 +44,7 @@ func (s FcmSection) Norm(s2 fcm.Interface) float64 {
 }
 
 func scaleSection(section *Section, numPoints int) FcmSection {
-	interval := float64(section.SectionInfo.Width) / float64(numPoints)
+	interval := float64(section.SectionInfo.Width) / (float64(numPoints) - 1) // numPoints points, (numPoints - 1) spaces
 
 	var minVal float64
 	if section.SectionInfo.Sign > 0 {
@@ -53,6 +53,7 @@ func scaleSection(section *Section, numPoints int) FcmSection {
 		minVal = section.Points[len(section.Points)-1].Value
 	}
 	height := section.SectionInfo.Height
+	// Function to scale height
 	scaleValue := func(val float64) float64 {
 		return (val - minVal) / height
 	}
@@ -95,7 +96,7 @@ func Cluster(sections []*Section) ([]FcmSection, [][]float64) {
 		}(i, section)
 	}
 	wg.Wait()
-	clusters, weights := fcm.Cluster(fcmSections, 3.0, 0.000001, 4)
+	clusters, weights := fcm.Cluster(fcmSections, 1.2, 0.000001, 4)
 	centroids := make([]FcmSection, len(clusters))
 	for i, c := range clusters {
 		centroids[i] = c.(FcmSection)

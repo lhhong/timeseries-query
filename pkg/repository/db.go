@@ -47,7 +47,6 @@ func LoadDb(conf *config.DatabaseConfig) *Repository {
 	repo := Repository{}
 	repo.LoadDb(conf.Username, conf.Password, conf.Hostname, conf.Port, conf.Database)
 
-	createTables(&repo)
 	return &repo
 }
 
@@ -55,6 +54,7 @@ func (repo *Repository) LoadDb(username string, password string, host string, po
 	connString := username + ":" + password + "@(" + host + ":" + strconv.Itoa(port) + ")/" + database
 
 	db := sqlx.MustConnect("mysql", connString)
+	createTables(repo)
 
 	log.Println("Database connected")
 

@@ -18,6 +18,19 @@ type SectionInfo struct {
 	PrevSeq   int64
 }
 
+var sectionInfoCreateStmt = `CREATE TABLE IF NOT EXISTS SectionInfo (
+		groupname VARCHAR(30),
+		series VARCHAR(30), 
+		nsmooth INT,
+		startseq INT,
+		sign INT,
+		height DOUBLE,
+		width INT,
+		nextseq INT,
+		prevseq INT,
+		PRIMARY KEY (groupname, series, nsmooth, startseq)
+	);`
+
 func (repo *Repository) BulkSaveSectionInfos(sectionInfos []*SectionInfo) error {
 
 	placeholders := make([]string, len(sectionInfos))

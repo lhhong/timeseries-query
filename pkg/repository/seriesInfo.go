@@ -8,6 +8,14 @@ type SeriesInfo struct {
 	Type      string // X axis type
 }
 
+var seriesInfoCreateStmt = `CREATE TABLE IF NOT EXISTS SeriesInfo (
+		groupname VARCHAR(30),
+		series VARCHAR(30), 
+		nsmooth INT,
+		type VARCHAR(30),
+		PRIMARY KEY (groupname, series)
+	);`
+
 // SaveSeriesInfo Saves a single series info
 func (repo *Repository) SaveSeriesInfo(seriesInfo *SeriesInfo) error {
 	_, err := repo.db.Exec("INSERT INTO SeriesInfo VALUES (?, ?, ?, ?)",

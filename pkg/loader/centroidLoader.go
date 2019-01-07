@@ -67,7 +67,7 @@ func readAndSaveClusterCentroids(repo *repository.Repository, groupname string, 
 		for j, value := range centroid {
 			negativeCentroids = append(negativeCentroids, &repository.ClusterCentroid{
 				Groupname:    groupname,
-				Sign:         1,
+				Sign:         -1,
 				ClusterIndex: i,
 				Seq:          j,
 				Value:        value,

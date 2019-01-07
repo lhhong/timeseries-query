@@ -16,6 +16,15 @@ type ClusterCentroid struct {
 	Value        float64
 }
 
+var clusterCentroidCreateStmt = `CREATE TABLE IF NOT EXISTS ClusterCentroid (
+		groupname VARCHAR(30),
+		sign INT, 
+		clusterindex INT,
+		seq INT,
+		value DOUBLE NOT NULL,
+		PRIMARY KEY (groupname, sign, clusterindex, seq)
+	);`
+
 func (repo *Repository) BulkSaveClusterCentroids(clusterCentroids []*ClusterCentroid) error {
 
 	numVar := 5
@@ -24,12 +33,13 @@ func (repo *Repository) BulkSaveClusterCentroids(clusterCentroids []*ClusterCent
 
 	valueArgs := make([]interface{}, len(clusterCentroids)*numVar)
 	for i, clusterCentroid := range clusterCentroids {
-		valueArgs[i*1] = clusterCentroid.Groupname
-		valueArgs[i*2] = clusterCentroid.Sign
-		valueArgs[i*3] = clusterCentroid.ClusterIndex
-		valueArgs[i*4] = clusterCentroid.Seq
-		valueArgs[i*5] = clusterCentroid.Value
+		valueArgs[i*numVar+0] = clusterCentroid.Groupname
+		valueArgs[i*numVar+1] = clusterCentroid.Sign
+		valueArgs[i*numVar+2] = clusterCentroid.ClusterIndex
+		valueArgs[i*numVar+3] = clusterCentroid.Seq
+		valueArgs[i*numVar+4] = clusterCentroid.Value
 	}
+
 	_, err := repo.db.Exec(stmt, valueArgs...)
 	return err
 }
@@ -55,7 +65,7 @@ func (repo *Repository) BulkSaveClusterCentroidsUnsafe(groupname string, sign in
 }
 
 func (repo *Repository) GetClusterCentroids(groupname string, sign int) ([]*ClusterCentroid, error) {
-	rows, err := repo.db.Queryx("SELECT * FROM ClusterCentroids WHERE Groupname = ? AND Sign = ?", groupname, sign)
+	rows, err := repo.db.Queryx("SELECT * FROM ClusterCentroids WHERE Groupname = ? AND Sign = ? ORDER BY ClusterIndex, Seq", groupname, sign)
 	var clusterCentroids []*ClusterCentroid
 	if err != nil {
 		return nil, err

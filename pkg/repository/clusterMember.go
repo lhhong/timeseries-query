@@ -14,6 +14,15 @@ type ClusterMember struct {
 	StartSeq     int64
 }
 
+var clusterMemberCreateStmt = `CREATE TABLE IF NOT EXISTS ClusterMember (
+		groupname VARCHAR(30),
+		sign INT, 
+		clusterindex INT,
+		series VARCHAR(30),
+		smooth INT,
+		startseq INT,
+	);`
+
 func (repo *Repository) BulkSaveClusterMembers(clusterMembers []*ClusterMember) error {
 
 	numVar := 6
@@ -22,12 +31,12 @@ func (repo *Repository) BulkSaveClusterMembers(clusterMembers []*ClusterMember) 
 
 	valueArgs := make([]interface{}, len(clusterMembers)*numVar)
 	for i, clusterMember := range clusterMembers {
-		valueArgs[i*1] = clusterMember.Groupname
-		valueArgs[i*2] = clusterMember.Sign
-		valueArgs[i*3] = clusterMember.ClusterIndex
-		valueArgs[i*4] = clusterMember.Series
-		valueArgs[i*5] = clusterMember.Smooth
-		valueArgs[i*6] = clusterMember.StartSeq
+		valueArgs[i*numVar+0] = clusterMember.Groupname
+		valueArgs[i*numVar+1] = clusterMember.Sign
+		valueArgs[i*numVar+2] = clusterMember.ClusterIndex
+		valueArgs[i*numVar+3] = clusterMember.Series
+		valueArgs[i*numVar+4] = clusterMember.Smooth
+		valueArgs[i*numVar+5] = clusterMember.StartSeq
 	}
 	_, err := repo.db.Exec(stmt, valueArgs...)
 	return err

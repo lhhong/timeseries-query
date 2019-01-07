@@ -18,6 +18,15 @@ type RawData struct {
 	Value     float64
 }
 
+var rawDataCreateStmt = `CREATE TABLE IF NOT EXISTS RawData (
+		groupname VARCHAR(30),
+		series VARCHAR(30), 
+		smooth INT,
+		seq INT,
+		value DOUBLE NOT NULL,
+		PRIMARY KEY (groupname, series, smooth, seq)
+	);`
+
 // Values x, y pair for each point of time series
 type Values struct {
 	Seq   int64   `json:"x"`

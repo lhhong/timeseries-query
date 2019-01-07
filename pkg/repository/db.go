@@ -16,6 +16,16 @@ type Repository struct {
 	db *sqlx.DB
 }
 
+func createTables(repo *Repository) {
+
+	repo.db.MustExec(rawDataCreateStmt)
+	repo.db.MustExec(seriesInfoCreateStmt)
+
+	repo.db.MustExec(sectionInfoCreateStmt)
+	repo.db.MustExec(clusterCentroidCreateStmt)
+	repo.db.MustExec(clusterMemberCreateStmt)
+}
+
 func getInsertionPlaceholder(numVar int, length int) string {
 	qnMarks := make([]string, numVar)
 	for i := 0; i < numVar; i++ {

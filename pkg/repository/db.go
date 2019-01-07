@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql" // load drivers for sqlx
 	"github.com/jmoiron/sqlx"
@@ -12,6 +14,21 @@ import (
 // Repository Abstracts queries and contains database connection pools
 type Repository struct {
 	db *sqlx.DB
+}
+
+func getInsertionPlaceholder(numVar int, length int) string {
+	qnMarks := make([]string, numVar)
+	for i := 0; i < numVar; i++ {
+		qnMarks[i] = "?"
+	}
+	singlePlaceholder := fmt.Sprintf("(%s)", strings.Join(qnMarks, ","))
+
+	placeholders := make([]string, length)
+	for i := 0; i < length; i++ {
+		placeholders[i] = singlePlaceholder
+	}
+
+	return strings.Join(placeholders, ",")
 }
 
 // LoadDb Opens database connection and returns Repository

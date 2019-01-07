@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"strings"
 )
 
 // ClusterMember stores membership information of sections to clusters, many-to-many mapping.
@@ -17,11 +16,7 @@ type ClusterMember struct {
 
 func (repo *Repository) BulkSaveClusterMembers(clusterMembers []*ClusterMember) error {
 
-	placeholders := make([]string, len(clusterMembers))
-	for i := 0; i < len(clusterMembers); i++ {
-		placeholders[i] = "(?,?,?,?,?,?)"
-	}
-	stmt := fmt.Sprintf("INSERT INTO ClusterMember VALUES %s", strings.Join(placeholders, ","))
+	stmt := fmt.Sprintf("INSERT INTO ClusterMember VALUES %s", getInsertionPlaceholder(6, len(clusterMembers)))
 
 	valueArgs := make([]interface{}, len(clusterMembers)*6)
 	for i, clusterMember := range clusterMembers {

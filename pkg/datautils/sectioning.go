@@ -71,17 +71,20 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 			sections = append(sections, constructSection(sign, pt.Seq, -1))
 		} else if sign != 0 {
 			lastSect := sections[len(sections)-1]
-			if lastSect.SectionInfo.Sign != sign {
+			if lastSect.SectionInfo.Sign == 0 {
+				// The first section sign is 0, change it to sign of subsequent sign
+				lastSect.SectionInfo.Sign = sign
+			} else if lastSect.SectionInfo.Sign != sign {
 				lastSectHeight := dataHeight(append(lastSect.Points, pt))
 				if len(lastSect.Points) > 0 && (minHeightPerc <= 0 || lastSectHeight/totalHeight > minHeightPerc) {
 					finalizeSection(pt, sections, lastSectHeight)
 					sections = append(sections, constructSection(sign, pt.Seq,
 						lastSect.SectionInfo.StartSeq))
 				} else {
-					// Move the current section to previous section
 					if len(sections) == 1 {
 						lastSect.SectionInfo.Sign = -lastSect.SectionInfo.Sign
 					} else {
+						// Move the current section to previous section
 						lastLastSect := sections[len(sections)-2]
 						for _, p := range lastSect.Points[1:] {
 							lastLastSect.Points = append(lastLastSect.Points, p)

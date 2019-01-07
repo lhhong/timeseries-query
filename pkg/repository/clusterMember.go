@@ -16,9 +16,11 @@ type ClusterMember struct {
 
 func (repo *Repository) BulkSaveClusterMembers(clusterMembers []*ClusterMember) error {
 
-	stmt := fmt.Sprintf("INSERT INTO ClusterMember VALUES %s", getInsertionPlaceholder(6, len(clusterMembers)))
+	numVar := 6
 
-	valueArgs := make([]interface{}, len(clusterMembers)*6)
+	stmt := fmt.Sprintf("INSERT INTO ClusterMember VALUES %s", getInsertionPlaceholder(numVar, len(clusterMembers)))
+
+	valueArgs := make([]interface{}, len(clusterMembers)*numVar)
 	for i, clusterMember := range clusterMembers {
 		valueArgs[i*1] = clusterMember.Groupname
 		valueArgs[i*2] = clusterMember.Sign

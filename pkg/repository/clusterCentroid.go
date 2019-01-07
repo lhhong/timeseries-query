@@ -16,6 +16,24 @@ type ClusterCentroid struct {
 	Value        float64
 }
 
+func (repo *Repository) BulkSaveClusterCentroids(clusterCentroids []*ClusterCentroid) error {
+
+	numVar := 5
+
+	stmt := fmt.Sprintf("INSERT INTO ClusterCentroid VALUES %s", getInsertionPlaceholder(numVar, len(clusterCentroids)))
+
+	valueArgs := make([]interface{}, len(clusterCentroids)*numVar)
+	for i, clusterCentroid := range clusterCentroids {
+		valueArgs[i*1] = clusterCentroid.Groupname
+		valueArgs[i*2] = clusterCentroid.Sign
+		valueArgs[i*3] = clusterCentroid.ClusterIndex
+		valueArgs[i*4] = clusterCentroid.Seq
+		valueArgs[i*5] = clusterCentroid.Value
+	}
+	_, err := repo.db.Exec(stmt, valueArgs...)
+	return err
+}
+
 // BulkSaveClusterCentroidsUnsafe saves a group of centroids defined by values only. CAUTION: Unsafe saving, prone to injection.
 func (repo *Repository) BulkSaveClusterCentroidsUnsafe(groupname string, sign int, centroids [][]float64) error {
 	if len(centroids) < 1 {

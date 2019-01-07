@@ -36,6 +36,24 @@ func (repo *Repository) BulkSaveClusterCentroidsUnsafe(groupname string, sign in
 	return err
 }
 
+func (repo *Repository) GetClusterCentroids(groupname string, sign int) ([]*ClusterCentroid, error) {
+	rows, err := repo.db.Queryx("SELECT * FROM ClusterCentroids WHERE Groupname = ? AND Sign = ?", groupname, sign)
+	var clusterCentroids []*ClusterCentroid
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		clusterCentroid := new(ClusterCentroid)
+		err = rows.StructScan(clusterCentroid)
+		if err != nil {
+			return nil, err
+		}
+		clusterCentroids = append(clusterCentroids, clusterCentroid)
+	}
+	return clusterCentroids, nil
+}
+
 func (repo *Repository) deleteAllClusterCentroids() error {
 	_, err := repo.db.Exec("DELETE FROM ClusterCentroid")
 	return err

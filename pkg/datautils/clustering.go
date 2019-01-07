@@ -148,7 +148,7 @@ func transformCentroidsToFcmInterface(centroids []*repository.ClusterCentroid) [
 	return res
 }
 
-func GetMembershipOfSingleSection(section Section, centroids []*repository.ClusterCentroid, membershipThreshold float64, fuzziness float64) []*repository.ClusterMember {
+func GetMembershipOfSingleSection(section *Section, centroids []*repository.ClusterCentroid, membershipThreshold float64, fuzziness float64) []*repository.ClusterMember {
 
 	interfacedCentroids := transformCentroidsToFcmInterface(centroids)
 
@@ -157,7 +157,7 @@ func GetMembershipOfSingleSection(section Section, centroids []*repository.Clust
 	return getMembershipOfSingleSectionGivenWeights(section, weights, membershipThreshold)
 }
 
-func getWeightsFromSingleSection(section Section, centroids []fcm.Interface, fuzziness float64) []float64 {
+func getWeightsFromSingleSection(section *Section, centroids []fcm.Interface, fuzziness float64) []float64 {
 
 	//var interfacedSection fcm.Interface
 	fcmSection := make([]float64, len(section.Points))
@@ -169,7 +169,7 @@ func getWeightsFromSingleSection(section Section, centroids []fcm.Interface, fuz
 
 }
 
-func getMembershipOfSingleSectionGivenWeights(section Section, weights []float64, membershipThreshold float64) []*repository.ClusterMember {
+func getMembershipOfSingleSectionGivenWeights(section *Section, weights []float64, membershipThreshold float64) []*repository.ClusterMember {
 	res := make([]*repository.ClusterMember, 0, len(weights)/3)
 	for clusterIndex, weight := range weights {
 		if weight > membershipThreshold {

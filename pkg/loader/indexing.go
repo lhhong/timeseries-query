@@ -1,7 +1,6 @@
 package loader
 
 import (
-	"encoding/json"
 	"log"
 	"sync"
 
@@ -9,43 +8,99 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func IndexAndSave(repo *repository.Repository, group string) {
+// func IndexAndSave(repo *repository.Repository, group string) {
+//
+// 	posCentroids, negCentroids, _, _ := getIndexDetailsByFCM(repo, group)
+//
+// 	var err error
+//
+// 	err = repo.BulkSaveClusterCentroidsUnsafe(group, 1, posCentroids)
+// 	if err != nil {
+// 		log.Println("failed to save positive centroids")
+// 	}
+// 	err = repo.BulkSaveClusterCentroidsUnsafe(group, 1, negCentroids)
+// 	if err != nil {
+// 		log.Println("failed to save negative centroids")
+// 	}
+// }
 
-	posCentroids, negCentroids, _, _ := getIndexDetailsByFCM(repo, group)
+func CalcAndSaveIndexDetails(repo *repository.Repository, group string) {
 
-	var err error
+	// TODO export to parameters
+	membershipThreshold := 0.5
+	fuzziness := 2.0
 
-	err = repo.BulkSaveClusterCentroidsUnsafe(group, 1, posCentroids)
+	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
+
+	posCentroids, err := repo.GetClusterCentroids(group, 1)
 	if err != nil {
-		log.Println("failed to save positive centroids")
+		log.Println("Failed to get pos centroids")
+		log.Println(err)
 	}
-	err = repo.BulkSaveClusterCentroidsUnsafe(group, 1, negCentroids)
+	negCentroids, err := repo.GetClusterCentroids(group, -1)
 	if err != nil {
-		log.Println("failed to save negative centroids")
+		log.Println("Failed to get neg centroids")
+		log.Println(err)
+	}
+
+	clusterBatchSize := 5000
+	sectionBatchSize := 3000
+
+	clusterMembers := make([]*repository.ClusterMember, 0, clusterBatchSize+1000)
+	sectionInfos := make([]*repository.SectionInfo, 0, sectionBatchSize+1000)
+	for seriesIndex, seriesInfo := range seriesInfos {
+		values := seriesValues[seriesIndex]
+		posSections, negSections := getSmoothedPosNegSections(seriesInfo, values)
+		for _, section := range posSections {
+			sectionInfos = append(sectionInfos, &section.SectionInfo)
+			members := datautils.GetMembershipOfSingleSection(section, posCentroids, membershipThreshold, fuzziness)
+			clusterMembers = append(clusterMembers, members...)
+		}
+		for _, section := range negSections {
+			sectionInfos = append(sectionInfos, &section.SectionInfo)
+			members := datautils.GetMembershipOfSingleSection(section, negCentroids, membershipThreshold, fuzziness)
+			clusterMembers = append(clusterMembers, members...)
+		}
+
+		if len(clusterMembers) > clusterBatchSize {
+			saveClusterMembers(repo, clusterMembers)
+			clusterMembers = clusterMembers[:0]
+		}
+		if len(sectionInfos) > sectionBatchSize {
+			saveSectionInfos(repo, sectionInfos)
+			sectionInfos = sectionInfos[:0]
+		}
+	}
+	if len(clusterMembers) > 0 {
+		saveClusterMembers(repo, clusterMembers)
+	}
+	if len(sectionInfos) > 0 {
+		saveSectionInfos(repo, sectionInfos)
 	}
 }
 
-// func getIndexDetails(repo *repository.Repository, group string) ([]*repository.ClusterMember, []*repository.SectionInfo) {
-//
-// 	// TODO export to parameters
-// 	membershipThreshold := 0.5
-// 	fuzziness := 2.0
-//
-// 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
-//
-// 	posCentroids := repo.GetClusterCentroids(group, 1)
-// 	negCentroids := repo.GetClusterCentroids(group, -1)
-//
-// 	posClusterMembers := datautils.GetMembershipOfSingleSection(posSections, posCentroids, membershipThreshold, fuzziness)
-// 	posClusterMembers := datautils.GetMembershipOfSingleSection(posSections, posWeights, membershipThreshold, fuzziness)
-// }
+func saveSectionInfos(repo *repository.Repository, sectionInfos []*repository.SectionInfo) {
+	err := repo.BulkSaveSectionInfos(sectionInfos)
+	if err != nil {
+		log.Println("Cannot save SectionInfos")
+		log.Println(err)
+	}
+}
+
+func saveClusterMembers(repo *repository.Repository, clusterMembers []*repository.ClusterMember) {
+	err := repo.BulkSaveClusterMembers(clusterMembers)
+	if err != nil {
+		log.Println("Cannot save ClusterMembers")
+		log.Println(err)
+	}
+}
 
 func getIndexDetailsByFCM(repo *repository.Repository, group string) ([][]float64, [][]float64, []*repository.ClusterMember, []*repository.SectionInfo) {
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
 
 	log.Println("Sectioning data")
-	posSections, negSections := retrieveSmoothedPosNegSections(seriesInfos, seriesValues)
+	posSections, negSections := retrieveSmoothedPosNegSectionsForAllSeries(seriesInfos, seriesValues)
 
 	log.Println("Clustering data")
 	posCentroids, posWeights := datautils.Cluster(posSections)
@@ -73,7 +128,31 @@ func getIndexDetailsByFCM(repo *repository.Repository, group string) ([][]float6
 	return rawPosCentroids, rawNegCentroids, append(posClusterMembers, negClusterMembers...), sectionInfos
 }
 
-func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesValues [][]repository.Values) ([]*datautils.Section, []*datautils.Section) {
+func getSmoothedPosNegSections(seriesInfo repository.SeriesInfo, values []repository.Values) ([]*datautils.Section, []*datautils.Section) {
+
+	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
+	minSmoothRatio := 0.4                  // minimum smooth iteration to index
+
+	posSections := make([]*datautils.Section, 0, 10)
+	negSections := make([]*datautils.Section, 0, 10)
+
+	smoothedValues := datautils.SmoothData(values)
+	minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
+	for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
+		values := smoothedValues[smoothIndex]
+		tangents := datautils.ExtractTangents(values)
+		currentSections := datautils.FindCurveSections(tangents, values, divideSectionMinimumHeightData)
+		for _, section := range currentSections {
+			section.AppendInfo(seriesInfo.Groupname, seriesInfo.Series, smoothIndex)
+		}
+		pos, neg := datautils.SortPositiveNegative(currentSections)
+		posSections = append(posSections, pos...)
+		negSections = append(negSections, neg...)
+	}
+	return posSections, negSections
+}
+
+func retrieveSmoothedPosNegSectionsForAllSeries(seriesInfos []repository.SeriesInfo, seriesValues [][]repository.Values) ([]*datautils.Section, []*datautils.Section) {
 
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 	minSmoothRatio := 0.4                  // minimum smooth iteration to index
@@ -96,15 +175,6 @@ func retrieveSmoothedPosNegSections(seriesInfos []repository.SeriesInfo, seriesV
 			}
 			pos, neg := datautils.SortPositiveNegative(currentSections)
 			posSections = append(posSections, pos...)
-
-			for _, sec := range pos {
-				if sec.Points[len(sec.Points)-1].Value < sec.Points[0].Value {
-					data, _ := json.Marshal(sec)
-					log.Println(string(data))
-				}
-
-			}
-
 			negSections = append(negSections, neg...)
 		}
 	}

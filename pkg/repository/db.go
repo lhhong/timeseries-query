@@ -54,11 +54,10 @@ func (repo *Repository) LoadDb(username string, password string, host string, po
 	connString := username + ":" + password + "@(" + host + ":" + strconv.Itoa(port) + ")/" + database
 
 	db := sqlx.MustConnect("mysql", connString)
-	createTables(repo)
-
-	log.Println("Database connected")
-
 	repo.db = db
+
+	log.Println("Database connected, creating tables if not exist")
+	createTables(repo)
 
 }
 

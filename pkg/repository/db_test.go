@@ -33,7 +33,7 @@ func newIndexTestRepo() *Repository {
 }
 
 func resetIndexTestRepo(repo *Repository) {
-	repo.deleteAllClusterCentroids()
+	repo.DeleteAllClusterCentroids()
 	// TODO: delete all other index data
 }
 

@@ -82,7 +82,7 @@ func (repo *Repository) GetClusterCentroids(groupname string, sign int) ([]*Clus
 	return clusterCentroids, nil
 }
 
-func (repo *Repository) deleteAllClusterCentroids() error {
+func (repo *Repository) DeleteAllClusterCentroids() error {
 	_, err := repo.db.Exec("DELETE FROM ClusterCentroid")
 	return err
 }

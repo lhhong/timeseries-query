@@ -20,7 +20,7 @@ var clusterMemberCreateStmt = `CREATE TABLE IF NOT EXISTS ClusterMember (
 		clusterindex INT,
 		series VARCHAR(30),
 		smooth INT,
-		startseq INT,
+		startseq INT
 	);`
 
 func (repo *Repository) BulkSaveClusterMembers(clusterMembers []*ClusterMember) error {

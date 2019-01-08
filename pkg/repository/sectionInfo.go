@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"strings"
 )
 
 // SectionInfo provides all necessary information of a section for query
@@ -31,25 +30,28 @@ var sectionInfoCreateStmt = `CREATE TABLE IF NOT EXISTS SectionInfo (
 		PRIMARY KEY (groupname, series, nsmooth, startseq)
 	);`
 
+func (repo *Repository) DeleteAllSectionInfos() error {
+	_, err := repo.db.Exec("DELETE FROM SectionInfo")
+	return err
+}
+
 func (repo *Repository) BulkSaveSectionInfos(sectionInfos []*SectionInfo) error {
 
-	placeholders := make([]string, len(sectionInfos))
-	for i := 0; i < len(sectionInfos); i++ {
-		placeholders[i] = "(?,?,?,?,?,?,?,?,?)"
-	}
-	stmt := fmt.Sprintf("INSERT INTO SectionInfo VALUES %s", strings.Join(placeholders, ","))
+	numVar := 9
 
-	valueArgs := make([]interface{}, len(sectionInfos)*9)
+	stmt := fmt.Sprintf("INSERT INTO SectionInfo VALUES %s", getInsertionPlaceholder(numVar, len(sectionInfos)))
+
+	valueArgs := make([]interface{}, len(sectionInfos)*numVar)
 	for i, sectionInfo := range sectionInfos {
-		valueArgs[i*1] = sectionInfo.Groupname
-		valueArgs[i*2] = sectionInfo.Series
-		valueArgs[i*3] = sectionInfo.Smooth
-		valueArgs[i*4] = sectionInfo.StartSeq
-		valueArgs[i*5] = sectionInfo.Sign
-		valueArgs[i*6] = sectionInfo.Height
-		valueArgs[i*7] = sectionInfo.Width
-		valueArgs[i*8] = sectionInfo.NextSeq
-		valueArgs[i*9] = sectionInfo.PrevSeq
+		valueArgs[i*numVar+0] = sectionInfo.Groupname
+		valueArgs[i*numVar+1] = sectionInfo.Series
+		valueArgs[i*numVar+2] = sectionInfo.Smooth
+		valueArgs[i*numVar+3] = sectionInfo.StartSeq
+		valueArgs[i*numVar+4] = sectionInfo.Sign
+		valueArgs[i*numVar+5] = sectionInfo.Height
+		valueArgs[i*numVar+6] = sectionInfo.Width
+		valueArgs[i*numVar+7] = sectionInfo.NextSeq
+		valueArgs[i*numVar+8] = sectionInfo.PrevSeq
 	}
 	_, err := repo.db.Exec(stmt, valueArgs...)
 	return err

@@ -23,6 +23,11 @@ var clusterMemberCreateStmt = `CREATE TABLE IF NOT EXISTS ClusterMember (
 		startseq INT
 	);`
 
+func (repo *Repository) DeleteAllClusterMembers() error {
+	_, err := repo.db.Exec("DELETE FROM ClusterMember")
+	return err
+}
+
 func (repo *Repository) BulkSaveClusterMembers(clusterMembers []*ClusterMember) error {
 
 	numVar := 6

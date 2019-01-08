@@ -38,6 +38,7 @@ func (s FcmSection) Multiply(w float64) fcm.Interface {
 // Norm implemets fcm.Interface
 func (s FcmSection) Norm(s2 fcm.Interface) float64 {
 	res := 0.0
+	//log.Printf("s length %d, s2 length %d", len(s), len(s2.(FcmSection)))
 	for i, pt := range s {
 		pt2 := s2.(FcmSection)[i]
 		res += math.Pow((pt - pt2), 2.0)
@@ -160,10 +161,7 @@ func GetMembershipOfSingleSection(section *Section, centroids []*repository.Clus
 func getWeightsFromSingleSection(section *Section, centroids []fcm.Interface, fuzziness float64) []float64 {
 
 	//var interfacedSection fcm.Interface
-	fcmSection := make([]float64, len(section.Points))
-	for i, values := range section.Points {
-		fcmSection[i] = values.Value
-	}
+	fcmSection := scaleSection(section, numPointsForCluster)
 
 	return fcm.EvaluateWeightsForOneVal(FcmSection(fcmSection), centroids, fuzziness)
 

@@ -65,7 +65,7 @@ func (repo *Repository) BulkSaveClusterCentroidsUnsafe(groupname string, sign in
 }
 
 func (repo *Repository) GetClusterCentroids(groupname string, sign int) ([]*ClusterCentroid, error) {
-	rows, err := repo.db.Queryx("SELECT * FROM ClusterCentroids WHERE Groupname = ? AND Sign = ? ORDER BY ClusterIndex, Seq", groupname, sign)
+	rows, err := repo.db.Queryx("SELECT * FROM ClusterCentroid WHERE Groupname = ? AND Sign = ? ORDER BY ClusterIndex, Seq", groupname, sign)
 	var clusterCentroids []*ClusterCentroid
 	if err != nil {
 		return nil, err

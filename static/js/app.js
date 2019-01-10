@@ -2,7 +2,7 @@ var Qetch = angular.module('Qetch', ['ngResource', 'ngAnimate', 'Dataset', 'Quer
 
 Qetch.value('Parameters', {
   DEBUG: false,
-  X_TICK_WIDTH: 2, // px
+  X_TICK_WIDTH: 1, // px
   MAX_MATCH_GOOD: 5,
   MAX_MATCH_MEDIUM: 40,
   MATCH_LINE_COLOR: function (match) {

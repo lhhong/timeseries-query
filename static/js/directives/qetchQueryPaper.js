@@ -491,8 +491,8 @@ QetchQuery.directive('queryCanvas', ['QetchQuery_QueryAPI', 'QetchQuery_DrawRefi
               for (var i in scope.currentQuery.points) {
                 strQuery += '(' + scope.currentQuery.points[i].x + ',' + scope.currentQuery.points[i].y + ')';
               }
-              console.log('Draw query:');
-              console.log(strQuery);
+              // console.log('Draw query:');
+              // console.log(strQuery);
               if (Parameters.DEBUG) {
                 scope.drawSections();
                 // scope.drawTangents();
@@ -615,7 +615,7 @@ QetchQuery.directive('queryCanvas', ['QetchQuery_QueryAPI', 'QetchQuery_DrawRefi
 
             // extract points
             px = scope.currentPath.getPointAt(0).x;
-            for (i = 0; i < scope.currentPath.length; i += 0.1) {
+            for (i = 0; i < scope.currentPath.length; i += 0.01) {
               p = scope.currentPath.getPointAt(i);
               if (p.x >= px) {
                 points.push(new Qetch.Point(p.x, p.y, p.x, p.y));

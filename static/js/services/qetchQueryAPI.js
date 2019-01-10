@@ -30,25 +30,12 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
 
   this.setPoints = function (points) {
     this.points = points;
-    // console.log('Query points:', this.points.length);
     this.tangents = this.extractTangents(points);
     this.sections = this.findCurveSections(this.tangents, points, Parameters.DIVIDE_SECTION_MIN_HEIGHT_QUERY);
-    // console.log('Query sections:', this.sections.length);
     this.findMatches();
   };
 
   this.findMatches = function () {
-    // if (Parameters.QSMOOTH) {
-    //   var query = [this.points];
-    //   Data_Utils.smoothData(query,
-    //     Parameters.QSMOOTH_MINIMUM_SIGN_VARIATIONS_NUM,
-    //     Parameters.QSMOOTH_MIN_SIGN_VARIATION_RATIO,
-    //     Parameters.QSMOOTH_MINIMUM_SECT_RELATIVE_WITH_MAX_RATIO);
-    //   console.log(query);
-
-    //   this.tangents = this.extractTangents(_.last(query));
-    //   this.sections = this.findCurveSections(this.tangents, points);
-    // }
 
     // DEBUG --------
     Parameters.LAST_EXECUTION_QUERY_LENGTH = this.queryLength;
@@ -448,18 +435,6 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
     // if (n > sections.length + 1) return null;
     var newSections = [];
     for (i = 0; i < sections.length - 1; i++) newSections.push(sections[i]);
-
-    // var smallestSection = null;
-    // var sectionSizeAvg = 0;
-    // for (i = 0; i < newSections.length; i++) {
-    //   sectionSizeAvg += newSections[i].sizeEucl();
-    //   if (smallestSection === null || newSections[smallestSection].sizeEucl() > newSections[i].sizeEucl()) {
-    //     smallestSection = i;
-    //   }
-    // }
-    //
-    // if (newSections[smallestSection].sizeEucl() > sectionSizeAvg * 0.8) return null;
-
     for (i = sections.length; i <= n; i++) {
       newSections.push(sections[sections.length - 1].copy());
     }

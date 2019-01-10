@@ -38,7 +38,6 @@ QetchQuery.controller('QetchQuery_PaperCtrl',
             history[i].element = $scope.createCanvasForPoints(history[i].points, history[i].bounds);
             history[i].element.data('data-query', i);
             history[i].element.click(function () {
-              $scope.clearQuerySuggestions();
               var query = QetchQuery_DrawRefining.queryHistory[$(this).data('data-query')];
               $scope.$broadcast(Parameters.QUERY_EVENTS.DRAW, query.points, false, true);
               $scope.$apply();
@@ -74,16 +73,6 @@ QetchQuery.controller('QetchQuery_PaperCtrl',
 
       $scope.clear = function () {
         QetchQuery_QueryAPI.clear();
-        $scope.clearQuerySuggestions();
-      };
-
-      $scope.clearQuerySuggestions = function () {
-        var queryPreviews = $scope.predefiendQueryHtmlContent.find('.query-preview');
-        queryPreviews.removeClass('hightlighted');
-        $scope.predefinedQuerySuggestion = null;
-        $scope.queryFnSuggestion = null;
-        $scope.queryFnSuggestionConstants = {};
-        $scope.updateUIClosingAll();
       };
 
       $scope.addRegexOp = function (op) {

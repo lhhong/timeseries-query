@@ -23,6 +23,10 @@ func StartServer(conf *config.HTTPConfig, repo *repository.Repository) {
 	datasetRouter.HandleFunc("/{gkey}/{skey}", getSeries(repo)).Methods("GET")
 	http.Handle("/datasets/", datasetRouter)
 
+	queryRouter := mux.NewRouter().PathPrefix("/query/").Subrouter()
+	queryRouter.HandleFunc("/updatepoints", updatePoints(repo)).Methods("POST")
+	http.Handle("/query/", queryRouter)
+
 	http.Handle("/libs/", http.StripPrefix("/libs/", http.FileServer(http.Dir("bower_components"))))
 	http.Handle("/", http.FileServer(http.Dir("static")))
 

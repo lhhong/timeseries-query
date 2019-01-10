@@ -1,13 +1,15 @@
 var QetchQuery = angular.module('QetchQuery');
 
-QetchQuery.directive('queryCanvas', ['QetchQuery_QueryAPI', 'QetchQuery_DrawRefining', 'DatasetAPI', 'Data_Utils', 'Parameters',
-  function (QetchQuery_QueryAPI, QetchQuery_DrawRefining, DatasetAPI, Data_Utils, Parameters) {
+QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery_DrawRefining', 'DatasetAPI', 'Data_Utils', 'Parameters',
+  function ($http, QetchQuery_QueryAPI, QetchQuery_DrawRefining, DatasetAPI, Data_Utils, Parameters) {
     return {
         restrict: 'E',
         replace: true,
         template: '<canvas></canvas>',
         scope: true,
         controller: ['$scope', function (scope) {
+          scope.pointsLength = 0;
+
           scope.currentPath = null;
           scope.segment = null;
           scope.handle = null;
@@ -53,6 +55,7 @@ QetchQuery.directive('queryCanvas', ['QetchQuery_QueryAPI', 'QetchQuery_DrawRefi
             paper.project.clear();
             paper.view.draw();
             scope.currentPath = null;
+            scope.pointsLength = 0;
 
             scope.resetCurrentShape();
             scope.resetShapes();
@@ -466,6 +469,23 @@ QetchQuery.directive('queryCanvas', ['QetchQuery_QueryAPI', 'QetchQuery_DrawRefi
             if (!scope.checkPointCompatibile(event.point)) return;
 
             scope.currentPath.add(event.point);
+
+            // TIMESERIES-QUERY FUNCTIONS
+            // lhhong
+            if (scope.currentPath && scope.currentPath.length > 50) {
+              points = scope.extractPoints()
+              if (points.length > scope.pointsLength + 10) {
+                scope.pointsLength = points.length
+                console.log("Update points")
+                $http.post('/query/updatepoints', points).then(function successCallback(response) {
+                  // this callback will be called asynchronously
+                  // when the response is available
+                }, function errorCallback(response) {
+                  // called asynchronously if an error occurs
+                  // or server returns response with an error status.
+                });
+              }
+            }
           };
 
           scope.onMouseUp = function(event) {

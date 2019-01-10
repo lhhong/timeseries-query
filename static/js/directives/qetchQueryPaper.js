@@ -472,6 +472,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
 
             // TIMESERIES-QUERY FUNCTIONS
             // lhhong
+            // TODO checkpont and start extractPoints from where last stopped to reduce processing
             if (scope.currentPath && scope.currentPath.length > 50) {
               points = scope.extractPoints()
               if (points.length > scope.pointsLength + 10) {

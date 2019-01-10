@@ -69,6 +69,8 @@ func getSeries(repo *repository.Repository) func(http.ResponseWriter, *http.Requ
 func getDefinition(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		getAndRefreshSessionID(w, r)
+
 		definitions, err := repo.GetSeriesInfo("stocks")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

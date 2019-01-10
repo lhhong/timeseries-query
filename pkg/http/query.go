@@ -22,10 +22,14 @@ func updatePoints(repo *repository.Repository) func(http.ResponseWriter, *http.R
 			log.Println(err)
 		}
 
-		var queryValues []ReqValues
-		err = json.Unmarshal(body, &queryValues)
+		var reqValues []ReqValues
+		err = json.Unmarshal(body, &reqValues)
 		if err != nil {
 			log.Println(err)
+		}
+		queryValues := make([]repository.Values, len(reqValues))
+		for i, val := range reqValues {
+			queryValues[i] = repository.Values{Seq: int64(val.X), Value: val.Y}
 		}
 
 	}

@@ -56,3 +56,17 @@ func (repo *Repository) BulkSaveSectionInfos(sectionInfos []*SectionInfo) error 
 	_, err := repo.db.Exec(stmt, valueArgs...)
 	return err
 }
+
+func (repo *Repository) GetOneSectionInfo(groupname string, series string, smooth int, startSeq int64) (*SectionInfo, error) {
+	data := []SectionInfo{}
+	err := repo.db.Select(&data, `SELECT * FROM SectionInfo
+		WHERE groupname = ? AND series = ? AND smooth = ? AND startseq = ?`,
+		groupname, series, smooth, startSeq)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) != 1 {
+		return nil, fmt.Errorf("Found %d SectionInfos when only 1 expected", len(data))
+	}
+	return &data[0], nil
+}

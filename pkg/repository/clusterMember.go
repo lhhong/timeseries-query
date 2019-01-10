@@ -46,3 +46,18 @@ func (repo *Repository) BulkSaveClusterMembers(clusterMembers []*ClusterMember) 
 	_, err := repo.db.Exec(stmt, valueArgs...)
 	return err
 }
+
+func (repo *Repository) ExistsClusterMember(groupname string, sign int, clusterIndex int, series string, smooth int, startSeq int64) (bool, error) {
+	var data []ClusterMember
+	stmt := `SELECT * FROM ClusterMember
+	WHERE groupname = ? AND sign = ? AND clusterindex = ? 
+	AND series = ? AND smooth = ? AND startseq = ?`
+	err := repo.db.Select(&data, stmt, groupname, sign, clusterIndex, series, smooth, startSeq)
+	if err != nil {
+		return false, err
+	}
+	if len(data) < 1 {
+		return false, nil
+	}
+	return true, nil
+}

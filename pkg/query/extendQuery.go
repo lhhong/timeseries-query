@@ -2,6 +2,7 @@ package query
 
 import (
 	"log"
+	"math"
 
 	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -61,18 +62,67 @@ func getWidthAndHeight(section []repository.Values) (int64, float64) {
 	return width, height
 }
 
-func getRelevantClusters(section []repository.Values, centroids []*repository.ClusterCentroid) []int {
-	return []int{}
+func getRelevantClusters(points []repository.Values, centroids []*repository.ClusterCentroid) []int {
+
+	// TODO export to parameters
+	membershipThreshold := 0.3
+	fuzziness := 2.0
+	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
+
+	sections := datautils.ConstructSectionsFromPoints(points, divideSectionMinimumHeightData)
+	if len(sections) != 1 {
+		log.Printf("Error, query section has %d sections, supposed to only have 1", len(sections))
+	}
+	return datautils.GetIndexOfRelevantCentroids(sections[0], centroids, membershipThreshold, fuzziness)
 }
 
 func getNextSection(repo *repository.Repository, prevSection *repository.SectionInfo) *repository.SectionInfo {
-	return &repository.SectionInfo{}
+	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, prevSection.Smooth, prevSection.StartSeq)
+	if err != nil {
+		log.Println("Error getting next section")
+		log.Println(err)
+	}
+	return res
 }
 
 func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int64, queryHeight float64) bool {
-	return false
+	queryWidthRatio := float64(queryWidth) / float64(partialMatch.PrevWidth)
+	queryHeightRatio := queryHeight / partialMatch.PrevHeight
+
+	dataWidthRatio := float64(nextSection.Width) / float64(partialMatch.LastSection.Width)
+	dataHeightRatio := nextSection.Height / partialMatch.LastSection.Height
+
+	//TODO export to parameters
+	//Cutoff parameters
+	widthRatioLimit := 0.3
+	heightRatioLimit := 0.3
+
+	widthAbsoluteDifferenceCutoff := 0.3
+	heightAbsoluteDifferenceCutoff := 0.3
+
+	//TODO rethink limits algo
+	widthRatioDifference := math.Abs(dataWidthRatio - queryWidthRatio)
+	if widthRatioDifference/queryWidthRatio > widthRatioLimit && widthRatioDifference > widthAbsoluteDifferenceCutoff {
+		return false
+	}
+	heightRatioDifference := math.Abs(dataHeightRatio - queryHeightRatio)
+	if heightRatioDifference/queryHeightRatio > heightRatioLimit && heightRatioDifference > heightAbsoluteDifferenceCutoff {
+		return false
+	}
+	return true
 }
 
 func inRelevantClusters(repo *repository.Repository, nextSection *repository.SectionInfo, relevantClusters []int) bool {
+	for _, clusterIndex := range relevantClusters {
+		res, err := repo.ExistsClusterMember(nextSection.Groupname, nextSection.Sign, clusterIndex,
+			nextSection.Series, nextSection.Smooth, nextSection.StartSeq)
+		if err != nil {
+			log.Println("Failed to check if ClusterMember exists")
+			log.Println(err)
+		}
+		if res {
+			return true
+		}
+	}
 	return false
 }

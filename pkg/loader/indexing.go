@@ -140,8 +140,7 @@ func getSmoothedPosNegSections(seriesInfo repository.SeriesInfo, values []reposi
 	minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
 	for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
 		values := smoothedValues[smoothIndex]
-		tangents := datautils.ExtractTangents(values)
-		currentSections := datautils.FindCurveSections(tangents, values, divideSectionMinimumHeightData)
+		currentSections := datautils.ConstructSectionsFromPoints(values, divideSectionMinimumHeightData)
 		for _, section := range currentSections {
 			section.AppendInfo(seriesInfo.Groupname, seriesInfo.Series, smoothIndex)
 		}
@@ -168,8 +167,7 @@ func retrieveSmoothedPosNegSectionsForAllSeries(seriesInfos []repository.SeriesI
 		minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
 		for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
 			values := smoothedValues[smoothIndex]
-			tangents := datautils.ExtractTangents(values)
-			currentSections := datautils.FindCurveSections(tangents, values, divideSectionMinimumHeightData)
+			currentSections := datautils.ConstructSectionsFromPoints(values, divideSectionMinimumHeightData)
 			for _, section := range currentSections {
 				section.AppendInfo(seriesInfos[seriesIndex].Groupname, seriesInfos[seriesIndex].Series, smoothIndex)
 			}

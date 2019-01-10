@@ -1,18 +1,30 @@
 package query
 
-import "github.com/lhhong/timeseries-query/pkg/repository"
+import (
+	"log"
+
+	"github.com/lhhong/timeseries-query/pkg/datautils"
+	"github.com/lhhong/timeseries-query/pkg/repository"
+)
 
 type PartialMatch struct {
 	LastSection repository.SectionInfo
 
-	PrevWidth  int
-	PrevHeight int
+	PrevWidth  int64
+	PrevHeight float64
 }
 
 func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, nextQuerySection []repository.Values) []*PartialMatch {
 
+	sign := getSign(nextQuerySection)
+	centroids, err := repo.GetClusterCentroids(partialMatches[0].LastSection.Groupname, sign)
+	if err != nil {
+		log.Println("Error getting centroids")
+		log.Println(err)
+	}
+
 	queryWidth, queryHeight := getWidthAndHeight(nextQuerySection)
-	relevantClusters := getRelevantClusters(repo, nextQuerySection)
+	relevantClusters := getRelevantClusters(nextQuerySection, centroids)
 
 	var remainingMatches []*PartialMatch
 
@@ -37,15 +49,19 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 }
 
 func getSign(section []repository.Values) int {
-	return 0
+	if section[len(section)-1].Value > section[0].Value {
+		return 1
+	}
+	return -1
 }
 
-func getWidthAndHeight(section []repository.Values) (int, int) {
-	return 0, 0.0
+func getWidthAndHeight(section []repository.Values) (int64, float64) {
+	width := section[len(section)-1].Seq - section[0].Seq
+	height := datautils.DataHeight(section)
+	return width, height
 }
 
-func getRelevantClusters(repo *repository.Repository, section []repository.Values) []int {
-	// sign := getSign(section)
+func getRelevantClusters(section []repository.Values, centroids []*repository.ClusterCentroid) []int {
 	return []int{}
 }
 
@@ -53,7 +69,7 @@ func getNextSection(repo *repository.Repository, prevSection *repository.Section
 	return &repository.SectionInfo{}
 }
 
-func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int, queryHeight int) bool {
+func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int64, queryHeight float64) bool {
 	return false
 }
 

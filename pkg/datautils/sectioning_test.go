@@ -17,8 +17,7 @@ var testData = []repository.Values{
 
 func TestFindCurveSections(t *testing.T) {
 
-	tangents := ExtractTangents(testData)
-	sections := FindCurveSections(tangents, testData, 0.01)
+	sections := ConstructSectionsFromPoints(testData, 0.01)
 
 	sections, _ = SortPositiveNegative(sections)
 

@@ -4,17 +4,6 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func ExtractTangents(points []repository.Values) []float64 {
-	tangents := make([]float64, len(points)-1)
-	if len(points) < 2 {
-		return tangents
-	}
-	for i := 0; i < len(points)-1; i++ {
-		tangents[i] = tangent(points[i], points[i+1])
-	}
-	return tangents
-}
-
 //TODO: Extract to constants
 // divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 // divideSectionMinimumHeightQuery := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_QUERY
@@ -26,13 +15,24 @@ type Section struct {
 	SectionInfo repository.SectionInfo
 }
 
+func extractTangents(points []repository.Values) []float64 {
+	tangents := make([]float64, len(points)-1)
+	if len(points) < 2 {
+		return tangents
+	}
+	for i := 0; i < len(points)-1; i++ {
+		tangents[i] = tangent(points[i], points[i+1])
+	}
+	return tangents
+}
+
 func (s *Section) AppendInfo(groupname string, series string, smooth int) {
 	s.SectionInfo.Groupname = groupname
 	s.SectionInfo.Series = series
 	s.SectionInfo.Smooth = smooth
 }
 
-func constructSection(sign int, startSeq int64, prevSeq int64) *Section {
+func newSection(sign int, startSeq int64, prevSeq int64) *Section {
 	return &Section{
 		Points:   make([]repository.Values, 0, 15),
 		Tangents: make([]float64, 0, 15),
@@ -57,7 +57,14 @@ func finalizeSection(pt repository.Values, sections []*Section, lastSectHeight f
 	}
 }
 
-func FindCurveSections(tangents []float64, points []repository.Values, minHeightPerc float64) []*Section {
+func ConstructSectionsFromPoints(points []repository.Values, minHeightPerc float64) []*Section {
+
+	tangents := extractTangents(points)
+
+	return findCurveSections(tangents, points, minHeightPerc)
+}
+
+func findCurveSections(tangents []float64, points []repository.Values, minHeightPerc float64) []*Section {
 
 	sections := make([]*Section, 0, 20)
 
@@ -68,7 +75,7 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 		sign := sign(tangent)
 
 		if len(sections) == 0 {
-			sections = append(sections, constructSection(sign, pt.Seq, -1))
+			sections = append(sections, newSection(sign, pt.Seq, -1))
 		} else if sign != 0 {
 			lastSect := sections[len(sections)-1]
 			if lastSect.SectionInfo.Sign == 0 {
@@ -78,7 +85,7 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 				lastSectHeight := DataHeight(append(lastSect.Points, pt))
 				if len(lastSect.Points) > 0 && (minHeightPerc <= 0 || lastSectHeight/totalHeight > minHeightPerc) {
 					finalizeSection(pt, sections, lastSectHeight)
-					sections = append(sections, constructSection(sign, pt.Seq,
+					sections = append(sections, newSection(sign, pt.Seq,
 						lastSect.SectionInfo.StartSeq))
 				} else {
 					if len(sections) == 1 {

@@ -151,34 +151,45 @@ func transformCentroidsToFcmInterface(centroids []*repository.ClusterCentroid) [
 
 func GetMembershipOfSingleSection(section *Section, centroids []*repository.ClusterCentroid, membershipThreshold float64, fuzziness float64) []*repository.ClusterMember {
 
-	interfacedCentroids := transformCentroidsToFcmInterface(centroids)
+	relevantIndices := GetIndexOfRelevantCentroids(section, centroids, membershipThreshold, fuzziness)
 
-	weights := getWeightsFromSingleSection(section, interfacedCentroids, fuzziness)
+	res := make([]*repository.ClusterMember, len(relevantIndices))
 
-	return getMembershipOfSingleSectionGivenWeights(section, weights, membershipThreshold)
+	for i, clusterIndex := range relevantIndices {
+		res[i] = &repository.ClusterMember{
+			Groupname:    section.SectionInfo.Groupname,
+			Sign:         section.SectionInfo.Sign,
+			ClusterIndex: clusterIndex,
+			Series:       section.SectionInfo.Series,
+			Smooth:       section.SectionInfo.Smooth,
+			StartSeq:     section.SectionInfo.StartSeq,
+		}
+	}
+	return res
 }
 
-func getWeightsFromSingleSection(section *Section, centroids []fcm.Interface, fuzziness float64) []float64 {
+func GetIndexOfRelevantCentroids(section *Section, centroids []*repository.ClusterCentroid, membershipThreshold float64, fuzziness float64) []int {
+
+	weights := getWeightsFromSingleSection(section, centroids, fuzziness)
+	return getIndexOfRelevantCentroidsGivenWeights(section, weights, membershipThreshold)
+}
+
+func getWeightsFromSingleSection(section *Section, centroids []*repository.ClusterCentroid, fuzziness float64) []float64 {
+
+	interfacedCentroids := transformCentroidsToFcmInterface(centroids)
 
 	//var interfacedSection fcm.Interface
 	fcmSection := scaleSection(section, numPointsForCluster)
 
-	return fcm.EvaluateWeightsForOneVal(FcmSection(fcmSection), centroids, fuzziness)
+	return fcm.EvaluateWeightsForOneVal(FcmSection(fcmSection), interfacedCentroids, fuzziness)
 
 }
 
-func getMembershipOfSingleSectionGivenWeights(section *Section, weights []float64, membershipThreshold float64) []*repository.ClusterMember {
-	res := make([]*repository.ClusterMember, 0, len(weights)/3)
+func getIndexOfRelevantCentroidsGivenWeights(section *Section, weights []float64, membershipThreshold float64) []int {
+	var res []int
 	for clusterIndex, weight := range weights {
 		if weight > membershipThreshold {
-			res = append(res, &repository.ClusterMember{
-				Groupname:    section.SectionInfo.Groupname,
-				Sign:         section.SectionInfo.Sign,
-				ClusterIndex: clusterIndex,
-				Series:       section.SectionInfo.Series,
-				Smooth:       section.SectionInfo.Smooth,
-				StartSeq:     section.SectionInfo.StartSeq,
-			})
+			res = append(res, clusterIndex)
 		}
 	}
 	return res

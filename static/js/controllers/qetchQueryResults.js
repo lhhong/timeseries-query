@@ -167,61 +167,14 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
     };
 
     $scope.adjustMatches = function () {
-      var match, i;
-      if ($scope.feedbacks.length > 0) {
-    /*
-        var feedbacksDecisionTree = new dt.DecisionTree({
-          trainingSet: $scope.feedbacks,
-          categoryAttr: 'feedback',
-          ignoredAttributes: []
-        });
-
-        for (i = 0; i < $scope.matches.length; i++) {
-          match = $scope.matches[i];
-          if (match.feedback !== -2 && match.feedback !== 2) {
-            match.feedback = (feedbacksDecisionTree.predict({
-                timeSpanDistance: match.timeSpanDistance,
-                smoothIteration: match.smoothIteration,
-                matchPos: match.matchPos,
-                altitude: match.altitude,
-                height: match.height
-              }) == 'true') ? 1 : -1;
-          }
-          match.adjMatch = match.match; // * (match.feedback ? 0.5 : 1.5);
-        }
-        */
-
-      } else {
+        var match, i;
         for (i = 0; i < $scope.matches.length; i++) {
           match = $scope.matches[i];
           match.feedback = undefined;
           match.adjMatch = match.match;
         }
-      }
-    };
+      };
 
-    /*
-    $scope.feedback = function (matchId, feedback) {
-      var match = $scope.matches[matchId];
-      match.feedback = feedback ? 2 : -2;
-      $scope.feedbacks.push({
-        timeSpanDistance: match.timeSpanDistance,
-        smoothIteration: match.smoothIteration,
-        matchPos: match.matchPos,
-        altitude: match.altitude,
-        height: match.height,
-        feedback: feedback
-      });
-      $scope.adjustMatches();
-    };
-
-    $scope.clearFeedbackStats = function () {
-      console.log('clearing ', $scope.feedbacks.length, ' feedbacks');
-      $scope.feedbacks = [];
-      $scope.adjustMatches();
     }
-    */
 
-  }
-
-]);
+  ]);

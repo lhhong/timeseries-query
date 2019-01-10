@@ -61,7 +61,7 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 
 	sections := make([]*Section, 0, 20)
 
-	totalHeight := dataHeight(points)
+	totalHeight := DataHeight(points)
 
 	for i, tangent := range tangents {
 		pt := points[i]
@@ -75,7 +75,7 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 				// The first section sign is 0, change it to sign of subsequent sign
 				lastSect.SectionInfo.Sign = sign
 			} else if lastSect.SectionInfo.Sign != sign {
-				lastSectHeight := dataHeight(append(lastSect.Points, pt))
+				lastSectHeight := DataHeight(append(lastSect.Points, pt))
 				if len(lastSect.Points) > 0 && (minHeightPerc <= 0 || lastSectHeight/totalHeight > minHeightPerc) {
 					finalizeSection(pt, sections, lastSectHeight)
 					sections = append(sections, constructSection(sign, pt.Seq,
@@ -106,7 +106,7 @@ func FindCurveSections(tangents []float64, points []repository.Values, minHeight
 
 	pt := points[len(points)-1]
 	lastSect := sections[len(sections)-1]
-	lastSectHeight := dataHeight(append(lastSect.Points, pt))
+	lastSectHeight := DataHeight(append(lastSect.Points, pt))
 	finalizeSection(pt, sections, lastSectHeight)
 
 	// In original javascript code:

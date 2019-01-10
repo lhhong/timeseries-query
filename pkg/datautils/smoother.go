@@ -22,10 +22,10 @@ func SmoothData(rawData []repository.Values) [][]repository.Values {
 	currentSignVariationNum := countSignVariations(dataArray[lastDataPos])
 	lastSignVariationNum := currentSignVariationNum
 	attempts := 0
-	origDataHeight := dataHeight(dataArray[0])
+	origDataHeight := DataHeight(dataArray[0])
 
 	for lastSignVariationNum > minimumSignVarations && attempts < maximumAttepts &&
-		(dataHeight(dataArray[lastDataPos])/origDataHeight >= smoothedHeightHeightMinRatio) {
+		(DataHeight(dataArray[lastDataPos])/origDataHeight >= smoothedHeightHeightMinRatio) {
 
 		lastDataPos = len(dataArray) - 1
 
@@ -44,7 +44,7 @@ func SmoothData(rawData []repository.Values) [][]repository.Values {
 				currentSignVariationNum = countSignVariations(currentSmoothing)
 				if currentSignVariationNum < minimumSignVarations ||
 					float64(currentSignVariationNum)/float64(lastSignVariationNum) < variationRatio ||
-					(dataHeight(currentSmoothing)/origDataHeight < smoothedHeightHeightMinRatio) {
+					(DataHeight(currentSmoothing)/origDataHeight < smoothedHeightHeightMinRatio) {
 					smoothed = true
 					break
 				}

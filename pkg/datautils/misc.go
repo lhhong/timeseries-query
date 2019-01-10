@@ -40,7 +40,7 @@ func countSignVariations(data []repository.Values) int {
 	return variations
 }
 
-func dataHeight(data []repository.Values) float64 {
+func DataHeight(data []repository.Values) float64 {
 	miny := data[0].Value
 	maxy := data[0].Value
 	for _, v := range data {

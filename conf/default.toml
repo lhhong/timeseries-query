@@ -9,5 +9,6 @@ database = "timeseries"
 port = 8080
 
 [redis]
+env = "dev"
 hostname = "localhost"
 port = 6379

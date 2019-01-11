@@ -29,10 +29,10 @@ func extractTangents(points []repository.Values) []float64 {
 func (s *Section) AppendInfo(groupname string, series string, smooth int) {
 	s.SectionInfo.Groupname = groupname
 	s.SectionInfo.Series = series
-	s.SectionInfo.Smooth = smooth
+	s.SectionInfo.Smooth = int32(smooth)
 }
 
-func newSection(sign int, startSeq int64, prevSeq int64) *Section {
+func newSection(sign int32, startSeq int64, prevSeq int64) *Section {
 	return &Section{
 		Points:   make([]repository.Values, 0, 15),
 		Tangents: make([]float64, 0, 15),
@@ -72,7 +72,7 @@ func findCurveSections(tangents []float64, points []repository.Values, minHeight
 
 	for i, tangent := range tangents {
 		pt := points[i]
-		sign := sign(tangent)
+		sign := int32(sign(tangent))
 
 		if len(sections) == 0 {
 			sections = append(sections, newSection(sign, pt.Seq, -1))

@@ -8,12 +8,12 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-type PartialMatch struct {
-	LastSection repository.SectionInfo
-
-	PrevWidth  int64
-	PrevHeight float64
-}
+// type PartialMatch struct {
+// 	LastSection repository.SectionInfo
+//
+// 	PrevWidth  int64
+// 	PrevHeight float64
+// }
 
 func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, nextQuerySection []repository.Values) []*PartialMatch {
 

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package query;
+
+import "pkg/repository/sectionInfo.proto";
+
+message PartialMatch {
+    repository.SectionInfo LastSection = 1;
+    int64 PrevWidth = 2;
+    int64 PrevHeight = 3;
+}

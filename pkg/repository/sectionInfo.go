@@ -5,17 +5,17 @@ import (
 )
 
 // SectionInfo provides all necessary information of a section for query
-type SectionInfo struct {
-	Groupname string
-	Series    string
-	Smooth    int
-	StartSeq  int64
-	Sign      int
-	Height    float64
-	Width     int64
-	NextSeq   int64
-	PrevSeq   int64
-}
+// type SectionInfo struct {
+// 	Groupname string
+// 	Series    string
+// 	Smooth    int
+// 	StartSeq  int64
+// 	Sign      int
+// 	Height    float64
+// 	Width     int64
+// 	NextSeq   int64
+// 	PrevSeq   int64
+// }
 
 var sectionInfoCreateStmt = `CREATE TABLE IF NOT EXISTS SectionInfo (
 		groupname VARCHAR(30),

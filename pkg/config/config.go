@@ -1,11 +1,12 @@
 package config
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // Config Main Configuration Model
@@ -26,6 +27,7 @@ type DatabaseConfig struct {
 
 // RedisConfig Redis Config Model
 type RedisConfig struct {
+	Env      string
 	Hostname string
 	Port     int
 }

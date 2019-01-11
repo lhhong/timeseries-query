@@ -5,6 +5,7 @@ import (
 
 	"github.com/lhhong/timeseries-query/pkg/config"
 	"github.com/lhhong/timeseries-query/pkg/http"
+	"github.com/lhhong/timeseries-query/pkg/querycache"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,8 @@ func rootCommand() *cobra.Command {
 func run(cmd *cobra.Command, args []string) {
 	conf := config.GetConfig(cmd)
 	repo := repository.LoadDb(&conf.Database)
-	http.StartServer(&conf.HTTPServer, repo)
+	cs := querycache.NewCacheStore(&conf.Redis)
+	http.StartServer(&conf.HTTPServer, repo, cs)
 }
 
 func main() {

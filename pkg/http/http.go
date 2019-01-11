@@ -11,11 +11,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/lhhong/timeseries-query/pkg/config"
+	"github.com/lhhong/timeseries-query/pkg/querycache"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
 // StartServer Starts http server
-func StartServer(conf *config.HTTPConfig, repo *repository.Repository) {
+func StartServer(conf *config.HTTPConfig, repo *repository.Repository, cs *querycache.CacheStore) {
 
 	datasetRouter := mux.NewRouter().PathPrefix("/datasets/").Subrouter()
 	datasetRouter.HandleFunc("/definition", getDefinition(repo)).Methods("GET")

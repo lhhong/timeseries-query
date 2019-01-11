@@ -3,14 +3,15 @@ package querycache
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/lhhong/timeseries-query/pkg/config"
 )
 
 type CacheStore struct {
-	env   string
-	redis redis.Conn
+	env       string
+	redisPool *redis.Pool
 }
 
 func NewCacheStore(conf *config.RedisConfig) *CacheStore {
@@ -24,10 +25,20 @@ func NewCacheStore(conf *config.RedisConfig) *CacheStore {
 
 func (cs *CacheStore) InitConn(hostname string, port int) {
 
-	conn, err := redis.DialURL(fmt.Sprintf("redis://%s:%d", hostname, port))
+	pool := &redis.Pool{
+		MaxIdle:     3,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", fmt.Sprintf("%s:%d", hostname, port))
+		},
+	}
+
+	// Test connection
+	conn := pool.Get()
+	_, err := conn.Do("PING")
 	if err != nil {
 		log.Println("Cannot connect to redis")
 		log.Panicln(err)
 	}
-	cs.redis = conn
+	cs.redisPool = pool
 }

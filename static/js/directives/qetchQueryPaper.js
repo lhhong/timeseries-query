@@ -9,6 +9,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
         scope: true,
         controller: ['$scope', function (scope) {
           scope.pointsLength = 0;
+          scope.pathCp = 0;
 
           scope.currentPath = null;
           scope.segment = null;
@@ -56,6 +57,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
             paper.view.draw();
             scope.currentPath = null;
             scope.pointsLength = 0;
+            scope.pathCp = 0;
 
             scope.resetCurrentShape();
             scope.resetShapes();
@@ -472,10 +474,9 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
 
             // TIMESERIES-QUERY FUNCTIONS
             // lhhong
-            // TODO checkpont and start extractPoints from where last stopped to reduce processing
-            if (scope.currentPath && scope.currentPath.length > 50) {
-              points = scope.extractPoints()
-              if (points.length > scope.pointsLength + 10) {
+            if (scope.currentPath && scope.currentPath.length > 200) {
+              points = scope.extractPointsContinuous()
+              if (points.length > scope.pointsLength + 15) {
                 scope.pointsLength = points.length
                 console.log("Update points")
                 $http.post('/query/updatepoints', points).then(function successCallback(response) {
@@ -627,12 +628,43 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
             }
 
             // flip y because in the query paper the point (0,0) is in the left-top corner
-            scope.currentQuery.originY = _.max(points, 'y').y;
+            scope.currentQuery.originY = points[0].origY //_.max(points, 'y').y;
             for (i in points) points[i].y = scope.currentQuery.originY - points[i].y;
 
             // translate the query to have the minimum x to 0
-            scope.currentQuery.originX = _.min(points, 'x').x;
+            scope.currentQuery.originX = points[0].origX //_.min(points, 'x').x;
             for (i in points) points[i].x = points[i].x - scope.currentQuery.originX;
+
+            scope.currentQuery.points = points;
+
+            return points;
+          };
+
+          scope.extractPointsContinuous = function () {
+            var points = scope.currentQuery.points, px, p, i;
+
+            if (!scope.currentPath) return [];
+
+            // extract points
+            p = scope.currentPath.getPointAt(0);
+            if (points === undefined) {
+              points = [];
+              scope.currentQuery.originY = p.y;
+              scope.currentQuery.originX = p.x;
+            }
+            px = points.length * Parameters.X_TICK_WIDTH + p.x
+
+            // minus 50 for smoothing allowance
+            for (i = scope.pathCp; i < scope.currentPath.length - 50; i += 0.01) {
+              p = scope.currentPath.getPointAt(i);
+              if (p.x >= px) {
+                var offsetX = scope.currentQuery.originX;
+                var offsetY = scope.currentQuery.originY;
+                points.push(new Qetch.Point(p.x - offsetX, offsetY - p.y, p.x, p.y));
+                px += Parameters.X_TICK_WIDTH;
+              }
+            }
+            scope.pathCp = i;
 
             scope.currentQuery.points = points;
 

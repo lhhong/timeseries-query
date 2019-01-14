@@ -64,6 +64,20 @@ func ConstructSectionsFromPoints(points []repository.Values, minHeightPerc float
 	return findCurveSections(tangents, points, minHeightPerc)
 }
 
+func ConstructSectionsFromPointsAbsoluteMinHeight(points []repository.Values, minHeight float64) []*Section {
+
+	tangents := extractTangents(points)
+
+	return findCurveSectionsAbsoluteMinHeight(tangents, points, minHeight)
+}
+
+func findCurveSectionsAbsoluteMinHeight(tangents[] float64, points []repository.Values, minHeight float64) []*Section {
+
+	totalHeight := DataHeight(points)
+
+	return findCurveSections(tangents, points, minHeight/totalHeight)
+}
+
 func findCurveSections(tangents []float64, points []repository.Values, minHeightPerc float64) []*Section {
 
 	sections := make([]*Section, 0, 20)

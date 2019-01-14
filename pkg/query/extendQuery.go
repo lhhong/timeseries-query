@@ -8,13 +8,6 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-// type PartialMatch struct {
-// 	LastSection repository.SectionInfo
-//
-// 	PrevWidth  int64
-// 	PrevHeight float64
-// }
-
 func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, nextQuerySection []repository.Values) []*PartialMatch {
 
 	sign := getSign(nextQuerySection)
@@ -30,7 +23,7 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 	var remainingMatches []*PartialMatch
 
 	for _, partialMatch := range partialMatches {
-		nextSection := getNextSection(repo, &partialMatch.LastSection)
+		nextSection := getNextSection(repo, partialMatch.LastSection)
 		if nextSection == nil {
 			continue
 		}
@@ -40,7 +33,7 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 		if !inRelevantClusters(repo, nextSection, relevantClusters) {
 			continue
 		}
-		partialMatch.LastSection = *nextSection
+		partialMatch.LastSection = nextSection
 		partialMatch.PrevHeight = queryHeight
 		partialMatch.PrevWidth = queryWidth
 
@@ -77,7 +70,7 @@ func getRelevantClusters(points []repository.Values, centroids []*repository.Clu
 }
 
 func getNextSection(repo *repository.Repository, prevSection *repository.SectionInfo) *repository.SectionInfo {
-	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, prevSection.Smooth, prevSection.StartSeq)
+	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, int(prevSection.Smooth), prevSection.StartSeq)
 	if err != nil {
 		log.Println("Error getting next section")
 		log.Println(err)
@@ -114,8 +107,8 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 
 func inRelevantClusters(repo *repository.Repository, nextSection *repository.SectionInfo, relevantClusters []int) bool {
 	for _, clusterIndex := range relevantClusters {
-		res, err := repo.ExistsClusterMember(nextSection.Groupname, nextSection.Sign, clusterIndex,
-			nextSection.Series, nextSection.Smooth, nextSection.StartSeq)
+		res, err := repo.ExistsClusterMember(nextSection.Groupname, int(nextSection.Sign), clusterIndex,
+			nextSection.Series, int(nextSection.Smooth), nextSection.StartSeq)
 		if err != nil {
 			log.Println("Failed to check if ClusterMember exists")
 			log.Println(err)

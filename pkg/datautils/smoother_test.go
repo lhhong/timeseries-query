@@ -17,7 +17,7 @@ var smoothTests = []repository.Values{
 func TestSmooth(t *testing.T) {
 	slice := make([]repository.Values, len(smoothTests))
 	copy(slice, smoothTests)
-	smooth(slice, 1, 1)
+	Smooth(slice, 1, 1)
 	for i, v := range slice {
 		fmt.Printf("seq: %d, val: %f orig: %f\n", v.Seq, v.Value, smoothTests[i].Value)
 	}

@@ -40,7 +40,7 @@ func SmoothData(rawData []repository.Values) [][]repository.Values {
 		for !smoothed {
 			space = 1
 			for siIdx := uint(1); siIdx < uint(iterationsSteps); siIdx++ {
-				smooth(currentSmoothing, 1<<siIdx /* 2 ^ siIdx */, space)
+				Smooth(currentSmoothing, 1<<siIdx /* 2 ^ siIdx */, space)
 				currentSignVariationNum = countSignVariations(currentSmoothing)
 				if currentSignVariationNum < minimumSignVarations ||
 					float64(currentSignVariationNum)/float64(lastSignVariationNum) < variationRatio ||
@@ -62,7 +62,7 @@ func SmoothData(rawData []repository.Values) [][]repository.Values {
 }
 
 // Moving average (we iterate it multiple times) (no array copies)
-func smooth(data []repository.Values, iterations int, space int) {
+func Smooth(data []repository.Values, iterations int, space int) {
 	for it := 0; it < iterations; it++ {
 		for i := 1; i < len(data)-1; i++ {
 			count := 1

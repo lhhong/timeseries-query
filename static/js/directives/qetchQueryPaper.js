@@ -503,6 +503,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
               scope.updateNotOperatorInfo();
 
               var points = scope.extractPoints();
+              console.log(points)
               QetchQuery_QueryAPI.setPoints(points);
               QetchQuery_DrawRefining.queryUpdated(points);
 

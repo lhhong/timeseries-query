@@ -27,7 +27,7 @@ import (
 func CalcAndSaveIndexDetails(repo *repository.Repository, group string) {
 
 	// TODO export to parameters
-	membershipThreshold := 0.5
+	membershipThreshold := 0.35
 	fuzziness := 2.0
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)

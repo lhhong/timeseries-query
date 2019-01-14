@@ -45,7 +45,7 @@ func (repo *Repository) BulkSaveSectionInfos(sectionInfos []*SectionInfo) error 
 	for i, sectionInfo := range sectionInfos {
 		valueArgs[i*numVar+0] = sectionInfo.Groupname
 		valueArgs[i*numVar+1] = sectionInfo.Series
-		valueArgs[i*numVar+2] = sectionInfo.Smooth
+		valueArgs[i*numVar+2] = sectionInfo.Nsmooth
 		valueArgs[i*numVar+3] = sectionInfo.StartSeq
 		valueArgs[i*numVar+4] = sectionInfo.Sign
 		valueArgs[i*numVar+5] = sectionInfo.Height
@@ -60,7 +60,7 @@ func (repo *Repository) BulkSaveSectionInfos(sectionInfos []*SectionInfo) error 
 func (repo *Repository) GetOneSectionInfo(groupname string, series string, smooth int, startSeq int64) (*SectionInfo, error) {
 	data := []SectionInfo{}
 	err := repo.db.Select(&data, `SELECT * FROM SectionInfo
-		WHERE groupname = ? AND series = ? AND smooth = ? AND startseq = ?`,
+		WHERE groupname = ? AND series = ? AND nsmooth = ? AND startseq = ?`,
 		groupname, series, smooth, startSeq)
 	if err != nil {
 		return nil, err

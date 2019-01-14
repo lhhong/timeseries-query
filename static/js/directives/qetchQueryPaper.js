@@ -504,6 +504,13 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
 
               var points = scope.extractPoints();
               console.log(points)
+              $http.post('/query/instantquery', points).then(function successCallback(response) {
+                // this callback will be called asynchronously
+                // when the response is available
+              }, function errorCallback(response) {
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+              });
               QetchQuery_QueryAPI.setPoints(points);
               QetchQuery_DrawRefining.queryUpdated(points);
 

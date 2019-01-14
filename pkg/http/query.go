@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,13 +16,15 @@ func getQueryRouter(repo *repository.Repository) *mux.Router {
 
 	queryRouter := mux.NewRouter().PathPrefix("/query/").Subrouter()
 	queryRouter.HandleFunc("/updatepoints", updatePoints(repo)).Methods("POST")
-	queryRouter.HandleFunc("/instantQuery", instantQuery(repo)).Methods("POST")
+	queryRouter.HandleFunc("/instantquery", instantQuery(repo)).Methods("POST")
 
 	return queryRouter
 }
 
 func instantQuery(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		log.Printf("\n\n Instant query called \n\n")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			log.Println(err)
@@ -67,10 +68,10 @@ func updatePoints(repo *repository.Repository) func(http.ResponseWriter, *http.R
 		datautils.Smooth(queryValues, 1, 1)
 		datautils.Smooth(queryValues, 1, 2)
 
-		fmt.Println("values")
-		for _, v := range queryValues {
-			fmt.Printf("%f ", v.Value)
-		}
+		// fmt.Println("values")
+		// for _, v := range queryValues {
+		// 	fmt.Printf("%f ", v.Value)
+		// }
 
 	}
 }

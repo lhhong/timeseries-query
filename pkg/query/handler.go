@@ -21,6 +21,8 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 		return
 	}
 
+	log.Printf("%d sections in query", len(sections))
+
 	centroids, err := repo.GetClusterCentroids(groupname, getSign(sections[1].Points))
 	if err != nil {
 		log.Println("Error getting centroids")
@@ -43,7 +45,11 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 	}
 
 	for i := 2; i < len(sections)-1; i++ {
+		log.Printf("extending query, i=%d", i)
 		matches = ExtendQuery(repo, matches, sections[i].Points)
+	}
+	if len(matches) < 1 {
+		log.Println("No match found")
 	}
 	for _, match := range matches {
 		res, _ := json.Marshal(match)

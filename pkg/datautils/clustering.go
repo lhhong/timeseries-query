@@ -118,7 +118,7 @@ func GetMembership(sections []*Section, weights [][]float64, membershipThreshold
 					Sign:         int(section.SectionInfo.Sign),
 					ClusterIndex: clusterIndex,
 					Series:       section.SectionInfo.Series,
-					Smooth:       int(section.SectionInfo.Smooth),
+					Smooth:       int(section.SectionInfo.Nsmooth),
 					StartSeq:     section.SectionInfo.StartSeq,
 				})
 			}
@@ -161,7 +161,7 @@ func GetMembershipOfSingleSection(section *Section, centroids []*repository.Clus
 			Sign:         int(section.SectionInfo.Sign),
 			ClusterIndex: clusterIndex,
 			Series:       section.SectionInfo.Series,
-			Smooth:       int(section.SectionInfo.Smooth),
+			Smooth:       int(section.SectionInfo.Nsmooth),
 			StartSeq:     section.SectionInfo.StartSeq,
 		}
 	}

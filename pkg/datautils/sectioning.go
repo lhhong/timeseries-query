@@ -29,7 +29,7 @@ func extractTangents(points []repository.Values) []float64 {
 func (s *Section) AppendInfo(groupname string, series string, smooth int) {
 	s.SectionInfo.Groupname = groupname
 	s.SectionInfo.Series = series
-	s.SectionInfo.Smooth = int32(smooth)
+	s.SectionInfo.Nsmooth = int32(smooth)
 }
 
 func newSection(sign int32, startSeq int64, prevSeq int64) *Section {
@@ -71,7 +71,7 @@ func ConstructSectionsFromPointsAbsoluteMinHeight(points []repository.Values, mi
 	return findCurveSectionsAbsoluteMinHeight(tangents, points, minHeight)
 }
 
-func findCurveSectionsAbsoluteMinHeight(tangents[] float64, points []repository.Values, minHeight float64) []*Section {
+func findCurveSectionsAbsoluteMinHeight(tangents []float64, points []repository.Values, minHeight float64) []*Section {
 
 	totalHeight := DataHeight(points)
 

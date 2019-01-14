@@ -10,6 +10,11 @@ import (
 
 func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, nextQuerySection []repository.Values) []*PartialMatch {
 
+	var remainingMatches []*PartialMatch
+
+	if len(partialMatches) == 0 {
+		return remainingMatches
+	}
 	sign := getSign(nextQuerySection)
 	centroids, err := repo.GetClusterCentroids(partialMatches[0].LastSection.Groupname, sign)
 	if err != nil {
@@ -19,8 +24,6 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 
 	queryWidth, queryHeight := getWidthAndHeight(nextQuerySection)
 	relevantClusters := getRelevantClusters(nextQuerySection, centroids)
-
-	var remainingMatches []*PartialMatch
 
 	for _, partialMatch := range partialMatches {
 		nextSection := getNextSection(repo, partialMatch.LastSection)
@@ -70,7 +73,10 @@ func getRelevantClusters(points []repository.Values, centroids []*repository.Clu
 }
 
 func getNextSection(repo *repository.Repository, prevSection *repository.SectionInfo) *repository.SectionInfo {
-	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, int(prevSection.Smooth), prevSection.StartSeq)
+	if prevSection.NextSeq == -1 {
+		return nil
+	}
+	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, int(prevSection.Nsmooth), prevSection.NextSeq)
 	if err != nil {
 		log.Println("Error getting next section")
 		log.Println(err)
@@ -87,8 +93,8 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 
 	//TODO export to parameters
 	//Cutoff parameters
-	widthRatioLimit := 0.3
-	heightRatioLimit := 0.3
+	widthRatioLimit := 0.8
+	heightRatioLimit := 0.5
 
 	widthAbsoluteDifferenceCutoff := 0.3
 	heightAbsoluteDifferenceCutoff := 0.3
@@ -108,7 +114,7 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 func inRelevantClusters(repo *repository.Repository, nextSection *repository.SectionInfo, relevantClusters []int) bool {
 	for _, clusterIndex := range relevantClusters {
 		res, err := repo.ExistsClusterMember(nextSection.Groupname, int(nextSection.Sign), clusterIndex,
-			nextSection.Series, int(nextSection.Smooth), nextSection.StartSeq)
+			nextSection.Series, int(nextSection.Nsmooth), nextSection.StartSeq)
 		if err != nil {
 			log.Println("Failed to check if ClusterMember exists")
 			log.Println(err)

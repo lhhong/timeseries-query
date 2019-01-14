@@ -5,7 +5,7 @@ option go_package = "github.com/lhhong/timeseries-query/pkg/repository";
 message SectionInfo {
     string Groupname = 1;
     string Series = 2;
-    int32 Smooth = 3;
+    int32 Nsmooth = 3;
     int64 StartSeq = 4;
     int32 Sign = 5;
     double Height = 6;

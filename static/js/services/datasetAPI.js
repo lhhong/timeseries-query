@@ -262,29 +262,14 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
     }
   };
 
-  this.getPointsFromInterval = function (snum, smoothIteration, minPos, maxPos, windowPerc, origX) {
-    var points = this.data[snum][smoothIteration];
+  this.getPointsFromInterval = function (points, minPos, maxPos, windowPerc) {
     var size = maxPos - minPos + 1;
     var extractedPoints = [];
     for (var i = 0; i < points.length; i++) {
-      if (origX) {
-        if (points[i].origX >= minPos - size * windowPerc) {
-          if (points[i].origX > maxPos + size * windowPerc) break;
-          var newPts = {x: points[i].x, y: points[i].y};
-          if (windowPerc !== undefined && windowPerc !== null && windowPerc > 0) {
-            newPts.marker = !!(points[i].origX >= minPos && points[i].origX <= maxPos);
-          }
-          extractedPoints.push(newPts);
-        }
-      } else {
-        if (points[i].x >= minPos - size * windowPerc) {
-          if (points[i].x > maxPos + size * windowPerc) break;
-          var newPts = {x: points[i].x, y: points[i].y};
-          if (windowPerc !== undefined && windowPerc !== null && windowPerc > 0) {
-            newPts.marker = !!(points[i].x >= minPos && points[i].x <= maxPos);
-          }
-          extractedPoints.push(newPts);
-        }
+      if (points[i].origX >= minPos - size * windowPerc) {
+        if (points[i].origX > maxPos + size * windowPerc) break;
+        var newPts = {x: points[i].x, y: points[i].y};
+        extractedPoints.push(newPts);
       }
     }
     return extractedPoints;
@@ -302,14 +287,6 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
       ptsLst.push(pt);
     }
     return ptsLst;
-  };
-
-  this.pointArrayToPointsList = function (pts, markers) {
-    var ptsStr = '';
-    for (var i = 0; i < pts.length; i++) {
-      ptsStr += '(' + pts[i].x + ',' + pts[i].y + (markers ? (pts[i].marker ? ',1' : ',0') : '') + ')';
-    }
-    return ptsStr;
   };
 
   this.clear = function() {
@@ -332,87 +309,5 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
   this.clearMatches = function () {
     this.matches = null;
   };
-
-  /* -------------------------------------------
-   * DEBUG functions 
-   * ------------------------------------------- */
-  document.getTopKResults = function (k) {
-    var topKRes = [];
-    var ordMatches = _.sortBy(self.matches, 'match');
-    for (var i = 0; i < k && i < ordMatches.length; i++) {
-      topKRes.push(ordMatches[i]);
-    }
-    return topKRes;
-  };
-  document.checkResultIn = function (positions) {
-    var totalResults = self.matches.length;
-    var ordMatches = _.sortBy(self.matches, 'match');
-    var ordMatchesScores = [];
-    var match = null;
-    for (var pi = 0; pi < positions.length; pi++) {
-      var xStart = positions[pi].start;
-      var xEnd = positions[pi].end;
-      var xAprxRng = (xEnd - xStart) / 100 * 25;
-
-      for (var i = 0; i < ordMatches.length; i++) {
-        ordMatchesScores[i] = ordMatches[i].match;
-      }
-
-      for (var i = 0; i < ordMatches.length; i++) {
-        var mtcStart = ordMatches[i].points[0].origX;
-        var mtcEnd = ordMatches[i].points[ordMatches[i].points.length - 1].origX;
-        if (mtcStart > xStart - xAprxRng &&
-          mtcStart < xStart + xAprxRng &&
-          mtcEnd < xEnd + xAprxRng &&
-          mtcEnd > xEnd - xAprxRng) {
-          if (match === null || match.matchValue > ordMatches[i].match) {
-            match = {
-              position: i,
-              matchValue: ordMatches[i].match,
-              scores: ordMatchesScores,
-              noResults: totalResults,
-              timespan: ordMatches[i].timespan.value / (1000*60*60*24) // in days
-            };
-          }
-        }
-      }
-    }
-    return match;
-  };
-  document.getBoundOf = function (id) {
-    for (var i in self.matches) {
-      if (self.matches[i].id === id)
-        console.log({id: id,
-          start: self.matches[i].points[0].origX,
-          end: self.matches[i].points[self.matches[i].points.length - 1].origX});
-    }
-  };
-  document.getErrorsOf = function (id) {
-    for (var i in self.matches) {
-      if (self.matches[i].id === id) {
-        var errorsStr = '';
-        var errors = self.matches[i].errors;
-        for (var ei in errors) {
-          errorsStr += 'cx: ' + errors[ei].cx.toFixed(2) + ' cy: ' + errors[ei].cy.toFixed(2) + '\n';
-        }
-        console.log('errors:\n' + errorsStr);
-      }
-    }
-  };
-  document.getDataAllSmooths = function (start, end) {
-    var data = self.data[0];
-    var points = '';
-    for (var i = 0; i < data.length; i++) {
-      points += self.pointArrayToPointsList(self.getPointsFromInterval(0, i, start, end, 0.5, true), true) + '§' +
-        self.pointArrayToPointsList(self.getPointsFromInterval(0, i, start, end, 0, true), true) + '\n';
-    }
-    return points;
-  };
-  document.getDataPoints = function () {
-    return self.data[0][0].length;
-  };
-  /* -------------------------------------------
-   * END DEBUG functions 
-   * ------------------------------------------- */
 
 }]);

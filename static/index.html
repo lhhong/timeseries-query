@@ -300,9 +300,6 @@
 									<li><a ng-click="showMatches(0, MAX_MATCH_GOOD)" href><span class="label label-success">Good</span> matches</a></li>
 									<li><a ng-click="showMatches(MAX_MATCH_GOOD, MAX_MATCH_MEDIUM)" href><span class="label label-warning">Fair</span> matches</a></li>
 									<li><a ng-click="showMatches(MAX_MATCH_MEDIUM, Number.MAX_VALUE)" href><span class="label label-danger">Poor</span> matches</a></li>
-									<li class="divider"></li>
-									<li><a ng-click="showMatchesFromFeedback(true)" href><span class="label label-success">Relevant</span> matches</a></li>
-									<li><a ng-click="showMatchesFromFeedback(false)" href><span class="label label-danger">Not Relevant</span> matches</a></li>
 								</ul>
 							</div>
 						</th>
@@ -316,10 +313,6 @@
 								data-match-id="{{match.id}}"
 								data-smooth-iteration="{{match.smoothIteration}}"
 								ng-repeat="match in matches | orderBy: orderingColumns">
-								<!--<td class="middle-vertical-align feedbackTableValue">-->
-									<!--<span ng-click="feedback(match.id, true)" class="btn-feedback btn btn-default btn-xs glyphicon glyphicon-ok" ng-class="getFeedbackClass(match.id, true)"></span>-->
-									<!--<span ng-click="feedback(match.id, false)" class="btn-feedback btn btn-default btn-xs glyphicon glyphicon-remove" ng-class="getFeedbackClass(match.id, false)"></span>-->
-								<!--</td>-->
 								<td class="middle-vertical-align matchTableValue">
 									<div class="label" ng-class="matchValueClass(match.match)">
 										{{match.adjMatch | number: 2}}

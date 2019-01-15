@@ -23,14 +23,6 @@ QetchQueryDrawRefining.service('QetchQuery_DrawRefining', ['$rootScope', 'Datase
     return ptsLst;
   };
 
-  this.pointArrayToPointsList = function (pts, markers) {
-    var ptsStr = '';
-    for (var i = 0; i < pts.length; i++) {
-      ptsStr += '(' + pts[i].x + ',' + pts[i].y + (markers ? (pts[i].marker ? ',1' : ',0') : '') + ')';
-    }
-    return ptsStr;
-  };
-
   this.queryUpdated = function (points) {
     var qtangents = QetchQuery_QueryAPI.extractTangents(points);
     var qsections = QetchQuery_QueryAPI.findCurveSections(qtangents, points, Parameters.DIVIDE_SECTION_MIN_HEIGHT_QUERY);

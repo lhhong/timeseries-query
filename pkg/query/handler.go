@@ -1,14 +1,13 @@
 package query
 
 import (
-	"encoding/json"
 	"log"
 
 	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func HandleInstantQuery(repo *repository.Repository, groupname string, points []repository.Values) {
+func HandleInstantQuery(repo *repository.Repository, groupname string, points []repository.Values) []*PartialMatch {
 	// 1. section points
 	// 2. start off with 2nd section
 	// 3. extend till 2nd last section
@@ -18,7 +17,7 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(points, 0.1)
 	if len(sections) < 3 {
 		log.Println("Algorithm not done")
-		return
+		return nil
 	}
 
 	log.Printf("%d sections in query", len(sections))
@@ -37,7 +36,7 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 		if err != nil {
 			log.Println("Error retriving members of cluster")
 			log.Println(err)
-			return
+			return nil
 		}
 		for _, member := range members {
 			matches = append(matches, getPartialMatch(repo, member, width, height))
@@ -51,10 +50,12 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 	if len(matches) < 1 {
 		log.Println("No match found")
 	}
-	for _, match := range matches {
-		res, _ := json.Marshal(match)
-		log.Println(string(res))
-	}
+
+	return matches
+	// for _, match := range matches {
+	// 	res, _ := json.Marshal(match)
+	// 	log.Println(string(res))
+	// }
 }
 
 func getPartialMatch(repo *repository.Repository, member repository.ClusterMember, width int64, height float64) *PartialMatch {

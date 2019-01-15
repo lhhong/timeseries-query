@@ -39,7 +39,9 @@ func instantQuery(repo *repository.Repository) func(http.ResponseWriter, *http.R
 		for i, val := range reqValues {
 			queryValues[i] = repository.Values{Seq: int64(val.X), Value: val.Y}
 		}
-		query.HandleInstantQuery(repo, "stocks", queryValues)
+		res := query.HandleInstantQuery(repo, "stocks", queryValues)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(res)
 	}
 }
 

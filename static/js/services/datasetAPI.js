@@ -31,11 +31,56 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
   */
 
   this.matches = null;
+  this.tsqMatches = null;
 
   this.smoothedDataId = 0;
 
   this.displaySize = 0; // the width of the display to determine how is the aspect ratio of the user interface
   this.displayHeight = 0;
+
+  this.updateTsqMatches = function(partialMatches) {
+    matches = []
+
+    for (i in partialMatches) {
+      matches.push({
+        match: 0,
+        group: partialMatches[i].FirstSection.Groupname,
+        series: partialMatches[i].FirstSection.Series,
+        smooth: partialMatches[i].FirstSection.Nsmooth,
+        startPos: partialMatches[i].FirstSection.StartSeq,
+        endPos: partialMatches[i].LastSection.NextSeq,
+      })
+    }
+    this.tsqMatches = matches
+
+    $rootScope.$broadcast(Parameters.DATASET_EVENTS.TSQ_MATCHES_LOADED, matches)
+  }
+
+  this.loadTsqMatches = function(index) {
+
+    partialMatch = this.tsqMatches[index]
+    this.loadDataSet(partialMatch.group, partialMatch.series, index)
+  }
+
+  this.showTsqMatches = function(index) {
+    matchesToShow = []
+
+    tsqMatch = this.tsqMatches[index]
+    data = this.data[0][tsqMatch.smooth]
+    points = this.getPointsFromInterval(data, tsqMatch.startPos, tsqMatch.endPos, 0)
+
+    matchesToShow.push({
+      id: 0,
+      adjMatch: tsqMatch.match,
+      minPos: points[0].x,
+      maxPos: points[points.length - 1].x,
+      points: points,
+      smoothIteration: tsqMatch.smooth,
+      snum: tsqMatch.series
+    })
+
+    $rootScope.$broadcast(Parameters.DATASET_EVENTS.SHOW_MATCHES, matchesToShow) //, idx, smoothedDataId, minimumMatch, maximumMatch, highlightInMatchesList);
+  }
 
   this.updateDatasetDefinition = function () {
     var self = this;
@@ -50,8 +95,9 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
    * @param key specified the key to load
    * @param snum specifies the snum series to load, can be undefinded or null if all one wants to load all the time series
    *             of that particular key
+   * @param index specifies whether to show tsq Matches, index of tsqMatch
    */
-  this.loadDataSet = function (key, snum) {
+  this.loadDataSet = function (key, snum, index) {
     var i, j, series;
 
     this.clear();
@@ -90,7 +136,13 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
         self.updateDataForDisplaySize();
         $rootScope.$broadcast(Parameters.DATASET_EVENTS.DATASET_LOADED, self.dataset);
         self.notifyDataChanged();
-        self.notifyChangeDataRepresentation();
+        if (index !== undefined) {
+          self.notifyChangeDataRepresentation(undefined, self.tsqMatches[index].smooth);
+          self.showTsqMatches(index)
+        }
+        else {
+          self.notifyChangeDataRepresentation()
+        }
 
       });
 
@@ -268,7 +320,7 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
     for (var i = 0; i < points.length; i++) {
       if (points[i].origX >= minPos - size * windowPerc) {
         if (points[i].origX > maxPos + size * windowPerc) break;
-        var newPts = {x: points[i].x, y: points[i].y};
+        var newPts = points[i]
         extractedPoints.push(newPts);
       }
     }

@@ -813,12 +813,4 @@ QetchQuery.service('QetchQuery_QueryAPI', ['$rootScope', 'DatasetAPI', 'Data_Uti
     return maxY - minY;
   };
 
-  document.getNumberOfSections = function (snum, smoothi) {
-    var dataPoints = DatasetAPI.getData(snum, smoothi);
-    var dataTangents = self.extractTangents(dataPoints);
-    var dataSections = self.findCurveSections(dataTangents, dataPoints, Parameters.DIVIDE_SECTION_MIN_HEIGHT_DATA);
-    return dataSections.length;
-  };
-
-
 }]);

@@ -30,7 +30,7 @@ Qetch.value('Parameters', {
     MATCHES_CHANGED: 'DatasetAPI:matches-changed',
     SHOW_MATCHES: 'DatasetAPI:show-matches',
     DATA_REPRESENTATION_CHANGED: 'DatasetAPI:data-representation-changed',
-    MATCHES_RECEIVED: 'DatasetAPI:matches-received',
+    TSQ_MATCHES_LOADED: 'DatasetAPI:tsq-matches-loaded',
   },
 
   // Query draw

@@ -44,6 +44,8 @@
 	<script type="text/javascript" src="/js/directives/qetchQueryPaper.js"></script>
 	<script type="text/javascript" src="/js/directives/datasetPlot.js"></script>
 	<script type="text/javascript" src="/js/generic.js"></script>
+
+	<script type="text/javascript" src="/js/controllers/qetchTsqQueryResults.js"></script>
 </head>
 
 <body ng-controller="MainCtrl">
@@ -242,6 +244,108 @@
 				</div>
 			</div>
 		</div>
+
+		<div class="col-xs-7" style="padding-left: 5px;">
+			<div class="panel panel-default" ng-controller="QetchQuery_TsqResultsCntrl">
+				<div class="panel-heading">
+					<i class="glyphicon glyphicon-search title-icon"></i>
+					Results
+					<!--<div class="btn btn-default btn-xs pull-right" ng-click="clearFeedbackStats()">-->
+						<!--<span class="glyphicon glyphicon-trash smallerfont-90"></span>&nbsp;-->
+						<!--Clear Feedback-->
+					<!--</div>-->
+				</div>
+				<table id="dataSetQueryResultsTitle" class="table table-condensed">
+					<tr>
+						<!--<th class="feedbackTableLabel" ng-click="changeColumnOrdering('feedback')">-->
+							<!--Feedback-->
+							<!--<i ng-show="getLastOrderingColumn() == 'feedback'"-->
+							   <!--ng-class="'glyphicon glyphicon-sort-by-attributes' + (getLastOrderingColumnSign() == '-' ? '-alt' : '')">-->
+							<!--</i>-->
+						<!--</th>-->
+						<th class="matchTableLabel" ng-click="changeColumnOrdering('adjMatch')"
+							title="Match value: 0 for a perfect match, higher values for poor matches">
+							Distance
+							<i ng-show="getLastOrderingColumn() == 'adjMatch'"
+							   ng-class="'glyphicon glyphicon-sort-by-attributes' + (getLastOrderingColumnSign() == '-' ? '-alt' : '')">
+							</i>
+						</th>
+						<th class="snumTableLabel" ng-click="changeColumnOrdering('snum')" 
+							title="The dataset where the match has been found">
+							Time series
+							<i ng-show="getLastOrderingColumn() == 'snum'"
+							   ng-class="'glyphicon glyphicon-sort-by-attributes' + (getLastOrderingColumnSign() == '-' ? '-alt' : '')">
+							</i>
+						</th>
+						<th class="smoothItTableLabel" ng-click="changeColumnOrdering('smoothIteration')"
+							title="How many times the data has been smoothed to find the match">
+							Smooth iteration
+							<i ng-show="getLastOrderingColumn() == 'smoothIteration'"
+							   ng-class="'glyphicon glyphicon-sort-by-attributes' + (getLastOrderingColumnSign() == '-' ? '-alt' : '')">
+							</i>
+						</th>
+						<th class="sizeTableLabel" ng-click="changeColumnOrdering('size')"
+							title="The size of the matched portion relative to the entire dataset">
+							Time span
+							<i ng-show="getLastOrderingColumn() == 'size'"
+							   ng-class="'glyphicon glyphicon-sort-by-attributes' + (getLastOrderingColumnSign() == '-' ? '-alt' : '')">
+							</i>
+						</th>
+						<th class="fillTableLabel">
+							<div class="btn-group pull-right" ng-show="matches">
+								<button type="button" class="btn btn-default btn-xs" ng-click="showMatches(0, Number.MAX_VALUE)"
+										title="Show all the matches">Show all
+								</button>
+								<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+									<span class="caret"></span>
+								</button>
+								<ul class="dropdown-menu">
+									<li><a ng-click="showMatches(0, MAX_MATCH_GOOD)" href><span class="label label-success">Good</span> matches</a></li>
+									<li><a ng-click="showMatches(MAX_MATCH_GOOD, MAX_MATCH_MEDIUM)" href><span class="label label-warning">Fair</span> matches</a></li>
+									<li><a ng-click="showMatches(MAX_MATCH_MEDIUM, Number.MAX_VALUE)" href><span class="label label-danger">Poor</span> matches</a></li>
+								</ul>
+							</div>
+						</th>
+					</tr>
+				</table>
+				<div class="panel-body" id="dataSetQueryResultsPanel">
+					<div>
+						<table class="table table-condensed">
+							<tr class="result-display"
+								id="result-{{match.id}}"
+								data-match-id="{{match.id}}"
+								data-smooth-iteration="{{match.smooth}}"
+								ng-repeat="match in matches | orderBy: orderingColumns">
+								<td class="middle-vertical-align matchTableValue">
+									<div class="label" ng-class="matchValueClass(match.match)">
+										{{match.match | number: 2}}
+									</div>
+									<!--&nbsp; id: {{match.id}}-->
+								</td>
+								<td class="middle-vertical-align snumTableValue">
+									{{match.series}}
+								</td>
+								<td class="middle-vertical-align smoothItTableValue">
+									{{match.smooth}}
+								</td>
+								<td class="middle-vertical-align sizeTableValue">
+									{{match.startPos | date:'d/M h:mm a'}} - {{match.endPos | date:'d/M h:mm a'}}
+									<!-- <div class="progress"> -->
+										<!-- <div class="progress-bar progress-bar-info" role="progressbar" ng-style="{'width': match.size * 100 + '%'}"> -->
+											<!-- <span>{{match.timespan.str}}</span> -->
+										<!-- </div> -->
+									<!-- </div> -->
+								</td>
+								<td class="middle-vertical-align fillTableValue">
+									<button class="btn btn-default btn-xs pull-right" ng-click="showMatch($index)">Show</button>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="col-xs-7" style="padding-left: 5px;">
 			<div class="panel panel-default" ng-controller="QetchQuery_ResultsCntrl">
 				<div class="panel-heading">

@@ -1,6 +1,6 @@
 var QetchQuery = angular.module('QetchQuery');
 
-QetchQuery.controller('QetchQuery_ResultsCntrl', 
+QetchQuery.controller('QetchQuery_TsqResultsCntrl', 
   ['$scope', '$timeout', 'QetchQuery_QueryAPI', 'Dataset_Resource', 'DatasetAPI', 'Parameters',
   function ($scope, $timeout, QetchQuery_QueryAPI, Dataset_Resource, DatasetAPI, Parameters) {
 
@@ -13,10 +13,9 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
     $scope.MAX_MATCH_GOOD = Parameters.MAX_MATCH_GOOD;
     $scope.MAX_MATCH_MEDIUM = Parameters.MAX_MATCH_MEDIUM;
 
-    $scope.$on(Parameters.DATASET_EVENTS.MATCHES_CHANGED, function (event, matches, matchIndex) {
-      if (matchIndex !== undefined) return;
+    $scope.$on(Parameters.DATASET_EVENTS.TSQ_MATCHES_LOADED, function (event, matches) {
       $scope.matches = matches;
-      $scope.adjustMatches();
+      console.log(matches)
       // DatasetAPI.showMatches(null, DatasetAPI.smoothedDataId, $scope.selectedSeriesNum, null, null, false, null);
       $timeout(function() {
         $scope.$apply();
@@ -66,14 +65,6 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
       return $scope.orderingColumns[0].substr(0,1);
     };
 
-    $scope.getSeriesName = function (snum) {
-      return DatasetAPI.dataset.series[snum].desc;
-    };
-
-    $scope.$on(Parameters.DATASET_EVENTS.DATASET_LOADED, function (event, dataset) {
-      $scope.multipleSeries = dataset.series.length > 1;
-    });
-
     $scope.matchValueClass = function (matchValue) {
       if (matchValue < $scope.MAX_MATCH_GOOD) {
         return 'label-success';
@@ -84,13 +75,10 @@ QetchQuery.controller('QetchQuery_ResultsCntrl',
       }
     };
 
-    // To show a particular match from the list
-    $scope.showMatch = function (i, snum, smoothIteration) {
-      DatasetAPI.notifyDataChanged(snum);
-      DatasetAPI.showDataRepresentation(snum, smoothIteration);
+    $scope.showMatch = function (i) {
       var $results = $('.result-display');
       $results.removeClass('displaying');
-      DatasetAPI.showMatches(i, null, null, null, null, false, null);
+      DatasetAPI.loadTsqMatches(i);
     };
 
     $scope.showMatches = function (minimumMatch, maximumMatch) {

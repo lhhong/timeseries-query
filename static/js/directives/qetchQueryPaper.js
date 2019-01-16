@@ -505,7 +505,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
               var points = scope.extractPoints();
               console.log(points)
               $http.post('/query/instantquery', points).then(function successCallback(response) {
-                //$scope.$broadcast(Parameters.DATASET_EVENTS.MATCHES_RECEIVED, response.data)
+                DatasetAPI.updateTsqMatches(response.data)
               }, function errorCallback(response) {
                 // called asynchronously if an error occurs
                 // or server returns response with an error status.

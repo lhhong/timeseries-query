@@ -14,7 +14,7 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 
 	var matches []*PartialMatch
 
-	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(points, 0.1)
+	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(points, 0.5)
 	if len(sections) < 3 {
 		log.Println("Algorithm not done")
 		return nil

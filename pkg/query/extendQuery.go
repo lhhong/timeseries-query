@@ -23,7 +23,9 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 	}
 
 	queryWidth, queryHeight := getWidthAndHeight(nextQuerySection)
+
 	relevantClusters := getRelevantClusters(nextQuerySection, centroids)
+	_ = relevantClusters
 
 	for _, partialMatch := range partialMatches {
 		nextSection := getNextSection(repo, partialMatch.LastSection)
@@ -33,9 +35,10 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 		if !withinWidthAndHeight(partialMatch, nextSection, queryWidth, queryHeight) {
 			continue
 		}
-		if !inRelevantClusters(repo, nextSection, relevantClusters) {
-			continue
-		}
+		// if !inRelevantClusters(repo, nextSection, relevantClusters) {
+		// 	//log.Println("incorrect centroid for ", nextSection.Series)
+		// 	continue
+		// }
 		partialMatch.LastSection = nextSection
 		partialMatch.PrevHeight = queryHeight
 		partialMatch.PrevWidth = queryWidth
@@ -61,8 +64,8 @@ func getWidthAndHeight(section []repository.Values) (int64, float64) {
 func getRelevantClusters(points []repository.Values, centroids []*repository.ClusterCentroid) []int {
 
 	// TODO export to parameters
-	membershipThreshold := 0.3
-	fuzziness := 2.0
+	membershipThreshold := 0.2
+	fuzziness := 4.0
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 
 	sections := datautils.ConstructSectionsFromPoints(points, divideSectionMinimumHeightData)
@@ -93,8 +96,8 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 
 	//TODO export to parameters
 	//Cutoff parameters
-	widthRatioLimit := 0.8
-	heightRatioLimit := 0.5
+	widthRatioLimit := 1.3
+	heightRatioLimit := 0.8
 
 	widthAbsoluteDifferenceCutoff := 0.3
 	heightAbsoluteDifferenceCutoff := 0.3
@@ -102,10 +105,12 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	//TODO rethink limits algo
 	widthRatioDifference := math.Abs(dataWidthRatio - queryWidthRatio)
 	if widthRatioDifference/queryWidthRatio > widthRatioLimit && widthRatioDifference > widthAbsoluteDifferenceCutoff {
+		//log.Println("incorrect width for ", nextSection.Series)
 		return false
 	}
 	heightRatioDifference := math.Abs(dataHeightRatio - queryHeightRatio)
 	if heightRatioDifference/queryHeightRatio > heightRatioLimit && heightRatioDifference > heightAbsoluteDifferenceCutoff {
+		//log.Println("incorrect height for ", nextSection.Series)
 		return false
 	}
 	return true

@@ -14,16 +14,21 @@ type CacheStore struct {
 	redisPool *redis.Pool
 }
 
-func NewCacheStore(conf *config.RedisConfig) *CacheStore {
+func InitCacheStore(conf *config.RedisConfig) *CacheStore {
+
+	return NewCacheStore(conf.Env, conf.Hostname, conf.Port)
+}
+
+func NewCacheStore(env string, hostname string, port int) *CacheStore {
 
 	cs := &CacheStore{
-		env: conf.Env,
+		env:       env,
+		redisPool: initConnPool(hostname, port),
 	}
-	cs.InitConn(conf.Hostname, conf.Port)
 	return cs
 }
 
-func (cs *CacheStore) InitConn(hostname string, port int) {
+func initConnPool(hostname string, port int) *redis.Pool {
 
 	pool := &redis.Pool{
 		MaxIdle:     3,
@@ -40,5 +45,5 @@ func (cs *CacheStore) InitConn(hostname string, port int) {
 		log.Println("Cannot connect to redis")
 		log.Panicln(err)
 	}
-	cs.redisPool = pool
+	return pool
 }

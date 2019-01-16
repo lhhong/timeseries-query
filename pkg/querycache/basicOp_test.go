@@ -6,11 +6,7 @@ import (
 )
 
 func getCacheStore() *CacheStore {
-	cs := &CacheStore{
-		env: "test",
-	}
-	cs.InitConn("localhost", 6379)
-	return cs
+	return NewCacheStore("test", "localhost", 6379)
 }
 
 func TestCacheStore_SetGetDelBytes(t *testing.T) {

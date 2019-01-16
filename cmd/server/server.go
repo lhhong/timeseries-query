@@ -24,7 +24,7 @@ func rootCommand() *cobra.Command {
 func run(cmd *cobra.Command, args []string) {
 	conf := config.GetConfig(cmd)
 	repo := repository.LoadDb(&conf.Database)
-	cs := querycache.NewCacheStore(&conf.Redis)
+	cs := querycache.InitCacheStore(&conf.Redis)
 	http.StartServer(&conf.HTTPServer, repo, cs)
 }
 

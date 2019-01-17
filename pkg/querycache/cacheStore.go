@@ -47,3 +47,7 @@ func initConnPool(hostname string, port int) *redis.Pool {
 	}
 	return pool
 }
+
+func (cs CacheStore) formatKey(key string) string {
+	return fmt.Sprintf("%s/%s", cs.env, key)
+}

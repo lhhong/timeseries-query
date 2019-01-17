@@ -4,8 +4,13 @@ import (
 	"log"
 
 	"github.com/lhhong/timeseries-query/pkg/datautils"
+	"github.com/lhhong/timeseries-query/pkg/querycache"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
+
+func StartContinuousQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string) {
+
+}
 
 func HandleInstantQuery(repo *repository.Repository, groupname string, points []repository.Values) []*PartialMatch {
 	// 1. section points

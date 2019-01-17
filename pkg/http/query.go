@@ -9,16 +9,27 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/query"
+	"github.com/lhhong/timeseries-query/pkg/querycache"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func getQueryRouter(repo *repository.Repository) *mux.Router {
+func getQueryRouter(repo *repository.Repository, cs *querycache.CacheStore) *mux.Router {
 
 	queryRouter := mux.NewRouter().PathPrefix("/query/").Subrouter()
-	queryRouter.HandleFunc("/updatepoints", updatePoints(repo)).Methods("POST")
+	queryRouter.HandleFunc("/initializequery", initializeQuery(repo, cs)).Methods("POST")
+	queryRouter.HandleFunc("/updatepoints", updatePoints(repo, cs)).Methods("POST")
 	queryRouter.HandleFunc("/instantquery", instantQuery(repo)).Methods("POST")
 
 	return queryRouter
+}
+
+func initializeQuery(repo *repository.Repository, cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		sessionID := getAndRefreshSessionID(w, r)
+		go query.StartContinuousQuery(repo, cs, sessionID)
+
+	}
 }
 
 func instantQuery(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
@@ -50,7 +61,7 @@ type ReqValues struct {
 	Y float64 `json:"y"`
 }
 
-func updatePoints(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
+func updatePoints(repo *repository.Repository, cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		body, err := ioutil.ReadAll(r.Body)

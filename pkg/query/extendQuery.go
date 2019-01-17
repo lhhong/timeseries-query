@@ -94,23 +94,47 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	dataWidthRatio := float64(nextSection.Width) / float64(partialMatch.LastSection.Width)
 	dataHeightRatio := nextSection.Height / partialMatch.LastSection.Height
 
+	// Main Idea:
+	// 1. If query draws height to be wider than width, height is more important and width is less important
+	//			Prioritize height ratio and make width ratio more lenient
+	// 2. If height difference with previous section is huge, there may be more distortion from user drawing
+	//			eg, 4x height difference vs 5x height difference is not sigificant visually but is huge in absolute values
+	//			Weigh the ratio based on difference factor
+	// 3. The previous approach leads to 2 consecutive sections having the same height will have small margin of error
+	//			Apply minimum cut off
+	// 4. Height is more important than width
+
+	limitMultiplier := queryHeight / float64(queryWidth)
+
 	//TODO export to parameters
+	// Raise Power to shift values closer to one
+	widthLimitMultiplier := math.Pow(limitMultiplier, 0.3)
+	heightLimitMultiplier := math.Pow(1/limitMultiplier, 0.3)
+
 	//Cutoff parameters
-	widthRatioLimit := 1.3
-	heightRatioLimit := 0.8
+	widthRatioLimit := 1.8 * widthLimitMultiplier   // 1.8
+	heightRatioLimit := 1.0 * heightLimitMultiplier // 0.8
 
 	widthAbsoluteDifferenceCutoff := 0.3
 	heightAbsoluteDifferenceCutoff := 0.3
 
 	//TODO rethink limits algo
 	widthRatioDifference := math.Abs(dataWidthRatio - queryWidthRatio)
-	if widthRatioDifference/queryWidthRatio > widthRatioLimit && widthRatioDifference > widthAbsoluteDifferenceCutoff {
-		//log.Println("incorrect width for ", nextSection.Series)
+	//if widthRatioDifference/queryWidthRatio > widthRatioLimit && widthRatioDifference > widthAbsoluteDifferenceCutoff {
+	dataQueryWidthRatio := dataWidthRatio / queryWidthRatio
+	if dataQueryWidthRatio < 1 {
+		dataQueryWidthRatio = 1 / dataQueryWidthRatio
+	}
+	if dataQueryWidthRatio-1 > widthRatioLimit && widthRatioDifference > widthAbsoluteDifferenceCutoff {
 		return false
 	}
+
 	heightRatioDifference := math.Abs(dataHeightRatio - queryHeightRatio)
-	if heightRatioDifference/queryHeightRatio > heightRatioLimit && heightRatioDifference > heightAbsoluteDifferenceCutoff {
-		//log.Println("incorrect height for ", nextSection.Series)
+	dataQueryHeightRatio := dataHeightRatio / queryHeightRatio
+	if dataQueryHeightRatio < 1 {
+		dataQueryHeightRatio = 1 / dataQueryHeightRatio
+	}
+	if dataQueryHeightRatio-1 > heightRatioLimit && heightRatioDifference > heightAbsoluteDifferenceCutoff {
 		return false
 	}
 	return true

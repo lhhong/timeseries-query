@@ -1,14 +1,70 @@
 package query
 
 import (
+	"bytes"
+	"encoding/gob"
 	"log"
 
+	"github.com/gomodule/redigo/redis"
 	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/querycache"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
+type Updates struct {
+	IsFinal bool
+	Query   []*repository.Values
+}
+
+func PublishUpdates(cs *querycache.CacheStore, sessionID string, query []*repository.Values) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	enc.Encode(Updates{IsFinal: false, Query: query})
+	cs.Publish(sessionID, buf.Bytes())
+}
+
+func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string, query []*repository.Values) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	enc.Encode(Updates{IsFinal: true, Query: nil})
+	cs.Subscribe(sessionID+"FINAL", func(conn redis.Conn, dataChan chan []byte) {
+		defer cs.Unsubscribe(conn)
+		data := <-dataChan
+		dec := gob.NewDecoder(bytes.NewReader(data))
+		var matches []*PartialMatch
+		dec.Decode(matches)
+		finalize(repo, query, matches)
+	})
+	cs.Publish(sessionID, buf.Bytes())
+}
+
 func StartContinuousQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string) {
+
+	cs.Subscribe(sessionID, func(conn redis.Conn, dataChan chan []byte) {
+		defer cs.Unsubscribe(conn)
+		for {
+			data := <-dataChan
+			dec := gob.NewDecoder(bytes.NewReader(data))
+			var query Updates
+			dec.Decode(&query)
+			if query.IsFinal {
+				prepareFinalize()
+				return
+			}
+			handleUpdate(query.Query)
+		}
+	})
+}
+
+func prepareFinalize() {
+
+}
+
+func handleUpdate(query []*repository.Values) {
+
+}
+
+func finalize(repo *repository.Repository, query []*repository.Values, matches []*PartialMatch) {
 
 }
 

@@ -127,7 +127,7 @@ span.desc-label {
 
 #dataSetQueryCanvas canvas {
   width: 100%;
-  height: 209px; /* 209px default*/
+  height: 509px; /* 209px default*/
   margin-bottom: -5px;
 }
 

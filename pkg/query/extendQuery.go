@@ -34,8 +34,8 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 		// 	continue
 		// }
 		partialMatch.LastSection = nextSection
-		partialMatch.PrevHeight = queryHeight
-		partialMatch.PrevWidth = queryWidth
+		partialMatch.LastQHeight = queryHeight
+		partialMatch.LastQWidth = queryWidth
 
 		remainingMatches = append(remainingMatches, partialMatch)
 	}
@@ -59,8 +59,8 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		if firstSection == nil {
 			continue
 		}
-		firstLimits := getAllLimits(firstQueryWidth, partialMatch.FirstWidth, partialMatch.FirstSection.Width,
-			firstQueryHeight, partialMatch.FirstHeight, partialMatch.FirstSection.Height)
+		firstLimits := getAllLimits(firstQueryWidth, partialMatch.FirstQWidth, partialMatch.FirstSection.Width,
+			firstQueryHeight, partialMatch.FirstQHeight, partialMatch.FirstSection.Height)
 		if firstSection.Width < int64(firstLimits.widthLower) || firstSection.Height < firstLimits.heightLower {
 			continue
 		}
@@ -69,8 +69,8 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		if lastSection == nil {
 			continue
 		}
-		lastLimits := getAllLimits(lastQueryWidth, partialMatch.PrevWidth, partialMatch.LastSection.Width,
-			lastQueryHeight, partialMatch.PrevHeight, partialMatch.LastSection.Height)
+		lastLimits := getAllLimits(lastQueryWidth, partialMatch.LastQWidth, partialMatch.LastSection.Width,
+			lastQueryHeight, partialMatch.LastQHeight, partialMatch.LastSection.Height)
 		if lastSection.Width < int64(lastLimits.widthLower) || lastSection.Height < lastLimits.heightLower {
 			continue
 		}
@@ -93,7 +93,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 
 		firstEndSeq := firstSection.NextSeq
 		firstStartSeq := firstSection.StartSeq
-		firstExpectedWidth := float64(partialMatch.FirstSection.Width) * float64(firstQueryWidth) / float64(partialMatch.FirstWidth)
+		firstExpectedWidth := float64(partialMatch.FirstSection.Width) * float64(firstQueryWidth) / float64(partialMatch.FirstQWidth)
 		if firstEndSeq-int64(firstExpectedWidth) > firstStartSeq {
 			firstStartSeq = firstEndSeq - int64(firstExpectedWidth)
 		}
@@ -109,7 +109,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 			lastEndSeq = data[len(data)-1].Seq
 		}
 		lastStartSeq := lastSection.StartSeq
-		lastExpectedWidth := float64(partialMatch.LastSection.Width) * float64(lastQueryWidth) / float64(partialMatch.PrevWidth)
+		lastExpectedWidth := float64(partialMatch.LastSection.Width) * float64(lastQueryWidth) / float64(partialMatch.LastQWidth)
 		if lastStartSeq+int64(lastExpectedWidth) < lastEndSeq {
 			lastEndSeq = lastStartSeq + int64(lastExpectedWidth)
 		}
@@ -123,7 +123,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		matches = append(matches, &Match{
 			Groupname: firstSection.Groupname,
 			Series:    firstSection.Series,
-			Smooth:    int(firstSection.Nsmooth),
+			Smooth:    firstSection.Nsmooth,
 			StartSeq:  firstStartSeq,
 			EndSeq:    lastEndSeq,
 		})
@@ -163,7 +163,7 @@ func getPrevSection(repo *repository.Repository, nextSection *repository.Section
 	if nextSection.PrevSeq == -1 {
 		return nil
 	}
-	res, err := repo.GetOneSectionInfo(nextSection.Groupname, nextSection.Series, int(nextSection.Nsmooth), nextSection.PrevSeq)
+	res, err := repo.GetOneSectionInfo(nextSection.Groupname, nextSection.Series, nextSection.Nsmooth, nextSection.PrevSeq)
 	if err != nil {
 		log.Println("Error getting prev section")
 		log.Println(err)
@@ -175,7 +175,7 @@ func getNextSection(repo *repository.Repository, prevSection *repository.Section
 	if prevSection.NextSeq == -1 {
 		return nil
 	}
-	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, int(prevSection.Nsmooth), prevSection.NextSeq)
+	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, prevSection.Nsmooth, prevSection.NextSeq)
 	if err != nil {
 		log.Println("Error getting next section")
 		log.Println(err)
@@ -217,8 +217,8 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 
 func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int64, queryHeight float64) bool {
 
-	l := getAllLimits(queryWidth, partialMatch.PrevWidth, partialMatch.LastSection.Width,
-		queryHeight, partialMatch.PrevHeight, partialMatch.LastSection.Height)
+	l := getAllLimits(queryWidth, partialMatch.LastQWidth, partialMatch.LastSection.Width,
+		queryHeight, partialMatch.LastQHeight, partialMatch.LastSection.Height)
 
 	if float64(nextSection.Width) < l.widthLower || float64(nextSection.Width) > l.widthUpper {
 		return false
@@ -303,8 +303,8 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 
 func inRelevantClusters(repo *repository.Repository, nextSection *repository.SectionInfo, relevantClusters []int) bool {
 	for _, clusterIndex := range relevantClusters {
-		res, err := repo.ExistsClusterMember(nextSection.Groupname, int(nextSection.Sign), clusterIndex,
-			nextSection.Series, int(nextSection.Nsmooth), nextSection.StartSeq)
+		res, err := repo.ExistsClusterMember(nextSection.Groupname, nextSection.Sign, clusterIndex,
+			nextSection.Series, nextSection.Nsmooth, nextSection.StartSeq)
 		if err != nil {
 			log.Println("Failed to check if ClusterMember exists")
 			log.Println(err)

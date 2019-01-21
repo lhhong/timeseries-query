@@ -187,9 +187,9 @@ func getPartialMatch(repo *repository.Repository, member repository.ClusterMembe
 	return &PartialMatch{
 		FirstSection: sectionInfo,
 		LastSection:  sectionInfo,
-		FirstWidth:   width,
-		FirstHeight:  height,
-		PrevWidth:    width,
-		PrevHeight:   height,
+		FirstQWidth:  width,
+		FirstQHeight: height,
+		LastQWidth:   width,
+		LastQHeight:  height,
 	}
 }

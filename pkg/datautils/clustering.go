@@ -115,10 +115,10 @@ func GetMembership(sections []*Section, weights [][]float64, membershipThreshold
 				section := sections[sectionIndex]
 				res = append(res, &repository.ClusterMember{
 					Groupname:    section.SectionInfo.Groupname,
-					Sign:         int(section.SectionInfo.Sign),
+					Sign:         section.SectionInfo.Sign,
 					ClusterIndex: clusterIndex,
 					Series:       section.SectionInfo.Series,
-					Smooth:       int(section.SectionInfo.Nsmooth),
+					Smooth:       section.SectionInfo.Nsmooth,
 					StartSeq:     section.SectionInfo.StartSeq,
 				})
 			}
@@ -158,10 +158,10 @@ func GetMembershipOfSingleSection(section *Section, centroids []*repository.Clus
 	for i, clusterIndex := range relevantIndices {
 		res[i] = &repository.ClusterMember{
 			Groupname:    section.SectionInfo.Groupname,
-			Sign:         int(section.SectionInfo.Sign),
+			Sign:         section.SectionInfo.Sign,
 			ClusterIndex: clusterIndex,
 			Series:       section.SectionInfo.Series,
-			Smooth:       int(section.SectionInfo.Nsmooth),
+			Smooth:       section.SectionInfo.Nsmooth,
 			StartSeq:     section.SectionInfo.StartSeq,
 		}
 	}

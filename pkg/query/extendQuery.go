@@ -1,6 +1,7 @@
 package query
 
 import (
+	fmt "fmt"
 	"log"
 	"math"
 
@@ -15,17 +16,16 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 	if len(partialMatches) == 0 {
 		return remainingMatches
 	}
-	sign := getSign(nextQuerySection)
-	centroids, err := repo.GetClusterCentroids(partialMatches[0].LastSection.Groupname, sign)
-	if err != nil {
-		log.Println("Error getting centroids")
-		log.Println(err)
-	}
+	//sign := getSign(nextQuerySection)
+	//centroids, err := repo.GetClusterCentroids(partialMatches[0].LastSection.Groupname, sign)
+	//if err != nil {
+	//	log.Println("Error getting centroids")
+	//	log.Println(err)
+	//}
 
 	queryWidth, queryHeight := getWidthAndHeight(nextQuerySection)
 
-	relevantClusters := getRelevantClusters(nextQuerySection, centroids)
-	_ = relevantClusters
+	//relevantClusters := getRelevantClusters(nextQuerySection, centroids)
 
 	for _, partialMatch := range partialMatches {
 		nextSection := getNextSection(repo, partialMatch.LastSection)
@@ -45,6 +45,93 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 
 		remainingMatches = append(remainingMatches, partialMatch)
 	}
+	return remainingMatches
+}
+
+func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch, firstQuerySection, lastQuerySection []repository.Values) []*PartialMatch {
+
+	var remainingMatches []*PartialMatch
+	cachedSeries := make(map[string][][]repository.Values)
+
+	if len(partialMatches) == 0 {
+		return remainingMatches
+	}
+
+	firstQueryWidth, firstQueryHeight := getWidthAndHeight(firstQuerySection)
+	lastQueryWidth, lastQueryHeight := getWidthAndHeight(lastQuerySection)
+	for _, partialMatch := range partialMatches {
+
+		firstSection := getPrevSection(repo, partialMatch.FirstSection)
+		if firstSection == nil {
+			continue
+		}
+		firstLimits := getAllLimits(firstQueryWidth, partialMatch.FirstWidth, partialMatch.FirstSection.Width,
+			firstQueryHeight, partialMatch.FirstHeight, partialMatch.FirstSection.Height)
+		if firstSection.Width < int64(firstLimits.widthLower) || firstSection.Height < firstLimits.heightLower {
+			continue
+		}
+
+		lastSection := getNextSection(repo, partialMatch.LastSection)
+		if lastSection == nil {
+			continue
+		}
+		lastLimits := getAllLimits(lastQueryWidth, partialMatch.PrevWidth, partialMatch.LastSection.Width,
+			lastQueryHeight, partialMatch.PrevHeight, partialMatch.LastSection.Height)
+		if lastSection.Width < int64(lastLimits.widthLower) || lastSection.Height < lastLimits.heightLower {
+			continue
+		}
+
+		//Common processing for first and last sections
+		key := fmt.Sprintf("%s-%s", firstSection.Groupname, firstSection.Series)
+		smoothed, ok := cachedSeries[key]
+		if !ok {
+			values, err := repo.GetRawDataOfSmoothedSeries(firstSection.Groupname, firstSection.Series, 0)
+			if err != nil {
+				log.Println("Failed to retrieve raw data")
+				log.Println(err)
+				continue
+			}
+			smoothed = datautils.SmoothData(values)
+			cachedSeries[key] = smoothed
+		}
+		data := smoothed[firstSection.Nsmooth]
+		//End common processing for first and last sections
+
+		firstEndSeq := firstSection.NextSeq
+		firstStartSeq := firstSection.StartSeq
+		firstExpectedWidth := float64(partialMatch.FirstSection.Width) * float64(firstQueryWidth) / float64(partialMatch.FirstWidth)
+		if firstEndSeq-int64(firstExpectedWidth) > firstStartSeq {
+			firstStartSeq = firstEndSeq - int64(firstExpectedWidth)
+		}
+		firstSectionData := datautils.ExtractInterval(data, firstStartSeq, firstEndSeq)
+		_, firstDataHeight := getWidthAndHeight(firstSectionData)
+		if firstDataHeight < firstLimits.heightLower || firstDataHeight > firstLimits.heightUpper {
+			continue
+		}
+
+		lastEndSeq := lastSection.NextSeq
+		if lastEndSeq == -1 {
+			//End of data series
+			lastEndSeq = data[len(data)-1].Seq
+		}
+		lastStartSeq := lastSection.StartSeq
+		lastExpectedWidth := float64(partialMatch.LastSection.Width) * float64(lastQueryWidth) / float64(partialMatch.PrevWidth)
+		if lastStartSeq+int64(lastExpectedWidth) < lastEndSeq {
+			lastEndSeq = lastStartSeq + int64(lastExpectedWidth)
+		}
+		lastSectionData := datautils.ExtractInterval(data, lastStartSeq, lastEndSeq)
+		_, lastDataHeight := getWidthAndHeight(lastSectionData)
+		if lastDataHeight < lastLimits.heightLower || lastDataHeight > lastLimits.heightUpper {
+			continue
+		}
+
+		// TODO Remove hacky solution by defining new match structure
+		partialMatch.FirstSection.StartSeq = firstStartSeq
+		partialMatch.LastSection.NextSeq = lastEndSeq
+
+		remainingMatches = append(remainingMatches, partialMatch)
+	}
+
 	return remainingMatches
 }
 
@@ -75,6 +162,18 @@ func getRelevantClusters(points []repository.Values, centroids []*repository.Clu
 	return datautils.GetIndexOfRelevantCentroids(sections[0], centroids, membershipThreshold, fuzziness)
 }
 
+func getPrevSection(repo *repository.Repository, nextSection *repository.SectionInfo) *repository.SectionInfo {
+	if nextSection.PrevSeq == -1 {
+		return nil
+	}
+	res, err := repo.GetOneSectionInfo(nextSection.Groupname, nextSection.Series, int(nextSection.Nsmooth), nextSection.PrevSeq)
+	if err != nil {
+		log.Println("Error getting prev section")
+		log.Println(err)
+	}
+	return res
+}
+
 func getNextSection(repo *repository.Repository, prevSection *repository.SectionInfo) *repository.SectionInfo {
 	if prevSection.NextSeq == -1 {
 		return nil
@@ -87,7 +186,14 @@ func getNextSection(repo *repository.Repository, prevSection *repository.Section
 	return res
 }
 
-func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int64, queryHeight float64) bool {
+type limits struct {
+	widthLower  float64
+	widthUpper  float64
+	heightLower float64
+	heightUpper float64
+}
+
+func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) limits {
 
 	// TODO Export to parameters
 
@@ -99,15 +205,39 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	heightRatioMultiplier := 1.0
 	heightMinimumCutoff := 0.3
 
-	widthLowerLimit, widthUpperLimit := getWidthOrHeightLimits(float64(queryWidth), float64(partialMatch.PrevWidth),
-		queryHeight, float64(partialMatch.LastSection.Width), widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
-	heightLowerLimit, heightUpperLimit := getWidthOrHeightLimits(queryHeight, partialMatch.PrevHeight, float64(queryWidth),
-		partialMatch.LastSection.Height, heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
+	widthLowerLimit, widthUpperLimit := getWidthOrHeightLimits(float64(queryWidth), float64(cmpQueryWidth),
+		queryHeight, float64(cmpDataWidth), widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
+	heightLowerLimit, heightUpperLimit := getWidthOrHeightLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
+		cmpDataHeight, heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
 
-	if float64(nextSection.Width) < widthLowerLimit || float64(nextSection.Width) > widthUpperLimit {
+	return limits{
+		widthLower:  widthLowerLimit,
+		widthUpper:  widthUpperLimit,
+		heightLower: heightLowerLimit,
+		heightUpper: heightUpperLimit,
+	}
+}
+
+func tooShort(queryWidth, cmpQueryWidth, dataWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, dataHeight, cmpDataHeight float64) bool {
+	l := getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth, queryHeight, cmpQueryHeight, cmpDataHeight)
+	if float64(dataWidth) < l.widthLower {
+		return true
+	}
+	if dataHeight < l.heightLower {
+		return true
+	}
+	return false
+}
+
+func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int64, queryHeight float64) bool {
+
+	l := getAllLimits(queryWidth, partialMatch.PrevWidth, partialMatch.LastSection.Width,
+		queryHeight, partialMatch.PrevHeight, partialMatch.LastSection.Height)
+
+	if float64(nextSection.Width) < l.widthLower || float64(nextSection.Width) > l.widthUpper {
 		return false
 	}
-	if nextSection.Height < heightLowerLimit || nextSection.Height > heightUpperLimit {
+	if nextSection.Height < l.heightLower || nextSection.Height > l.heightUpper {
 		return false
 	}
 	return true

@@ -159,3 +159,15 @@ func SortPositiveNegative(sections []*Section) ([]*Section, []*Section) {
 
 	return positive, negative
 }
+
+func ExtractInterval(values []repository.Values, start int64, end int64) []repository.Values {
+
+	var extracted []repository.Values
+	for _, v := range values {
+		if v.Seq >= start && v.Seq <= end {
+			extracted = append(extracted, v)
+		}
+	}
+
+	return extracted
+}

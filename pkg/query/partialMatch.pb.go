@@ -5,9 +5,10 @@ package query
 
 import (
 	fmt "fmt"
+	math "math"
+
 	proto "github.com/golang/protobuf/proto"
 	repository "github.com/lhhong/timeseries-query/pkg/repository"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -26,6 +27,8 @@ type PartialMatch struct {
 	LastSection          *repository.SectionInfo `protobuf:"bytes,2,opt,name=LastSection,proto3" json:"LastSection,omitempty"`
 	PrevWidth            int64                   `protobuf:"varint,3,opt,name=PrevWidth,proto3" json:"PrevWidth,omitempty"`
 	PrevHeight           float64                 `protobuf:"fixed64,4,opt,name=PrevHeight,proto3" json:"PrevHeight,omitempty"`
+	FirstWidth           int64                   `protobuf:"varint,3,opt,name=FirstWidth,proto3" json:"FirstWidth,omitempty"`
+	FirstHeight          float64                 `protobuf:"fixed64,4,opt,name=PrevHeight,proto3" json:"FirstHeight,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
 	XXX_unrecognized     []byte                  `json:"-"`
 	XXX_sizecache        int32                   `json:"-"`

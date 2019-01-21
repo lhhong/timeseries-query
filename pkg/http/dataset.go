@@ -50,11 +50,11 @@ func getSeries(repo *repository.Repository) func(http.ResponseWriter, *http.Requ
 		vars := mux.Vars(r)
 
 		values, err := repo.GetRawDataOfSmoothedSeries(vars["gkey"], vars["skey"], 0)
-		smoothed := datautils.SmoothData(values)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		smoothed := datautils.SmoothData(values)
 		res, err := json.Marshal(seriesResponse{Values: smoothed})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

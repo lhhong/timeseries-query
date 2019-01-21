@@ -164,6 +164,7 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 		log.Printf("extending query, i=%d", i)
 		matches = ExtendQuery(repo, matches, sections[i].Points)
 	}
+	matches = ExtendStartEnd(repo, matches, sections[0].Points, sections[len(sections)-1].Points)
 	if len(matches) < 1 {
 		log.Println("No match found")
 	}
@@ -186,6 +187,8 @@ func getPartialMatch(repo *repository.Repository, member repository.ClusterMembe
 	return &PartialMatch{
 		FirstSection: sectionInfo,
 		LastSection:  sectionInfo,
+		FirstWidth:   width,
+		FirstHeight:  height,
 		PrevWidth:    width,
 		PrevHeight:   height,
 	}

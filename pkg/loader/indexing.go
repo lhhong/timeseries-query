@@ -153,6 +153,7 @@ func getSmoothedPosNegSections(seriesInfo repository.SeriesInfo, values []reposi
 
 func retrieveSmoothedPosNegSectionsForAllSeries(seriesInfos []repository.SeriesInfo, seriesValues [][]repository.Values) ([]*datautils.Section, []*datautils.Section) {
 
+	// TODO move to parameters
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 	minSmoothRatio := 0.4                  // minimum smooth iteration to index
 

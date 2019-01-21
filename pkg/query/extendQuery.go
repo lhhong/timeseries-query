@@ -16,12 +16,6 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 	if len(partialMatches) == 0 {
 		return remainingMatches
 	}
-	//sign := getSign(nextQuerySection)
-	//centroids, err := repo.GetClusterCentroids(partialMatches[0].LastSection.Groupname, sign)
-	//if err != nil {
-	//	log.Println("Error getting centroids")
-	//	log.Println(err)
-	//}
 
 	queryWidth, queryHeight := getWidthAndHeight(nextQuerySection)
 
@@ -48,13 +42,13 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 	return remainingMatches
 }
 
-func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch, firstQuerySection, lastQuerySection []repository.Values) []*PartialMatch {
+func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch, firstQuerySection, lastQuerySection []repository.Values) []*Match {
 
-	var remainingMatches []*PartialMatch
+	var matches []*Match
 	cachedSeries := make(map[string][][]repository.Values)
 
 	if len(partialMatches) == 0 {
-		return remainingMatches
+		return matches
 	}
 
 	firstQueryWidth, firstQueryHeight := getWidthAndHeight(firstQuerySection)
@@ -126,13 +120,16 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		}
 
 		// TODO Remove hacky solution by defining new match structure
-		partialMatch.FirstSection.StartSeq = firstStartSeq
-		partialMatch.LastSection.NextSeq = lastEndSeq
-
-		remainingMatches = append(remainingMatches, partialMatch)
+		matches = append(matches, &Match{
+			Groupname: firstSection.Groupname,
+			Series:    firstSection.Series,
+			Smooth:    int(firstSection.Nsmooth),
+			StartSeq:  firstStartSeq,
+			EndSeq:    lastEndSeq,
+		})
 	}
 
-	return remainingMatches
+	return matches
 }
 
 func getSign(section []repository.Values) int {
@@ -216,17 +213,6 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 		heightLower: heightLowerLimit,
 		heightUpper: heightUpperLimit,
 	}
-}
-
-func tooShort(queryWidth, cmpQueryWidth, dataWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, dataHeight, cmpDataHeight float64) bool {
-	l := getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth, queryHeight, cmpQueryHeight, cmpDataHeight)
-	if float64(dataWidth) < l.widthLower {
-		return true
-	}
-	if dataHeight < l.heightLower {
-		return true
-	}
-	return false
 }
 
 func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int64, queryHeight float64) bool {

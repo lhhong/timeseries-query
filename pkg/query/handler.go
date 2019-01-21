@@ -23,13 +23,13 @@ func PublishUpdates(cs *querycache.CacheStore, sessionID string, query []reposit
 	cs.Publish(sessionID, buf.Bytes())
 }
 
-func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string, query []repository.Values) []*PartialMatch {
+func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string, query []repository.Values) []*Match {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	enc.Encode(Updates{IsFinal: true, Query: nil})
 
 	// TODO create proper return data type
-	resChan := make(chan []*PartialMatch)
+	resChan := make(chan []*Match)
 	cs.Subscribe(sessionID+"FINAL", func(conn redis.Conn, dataChan chan []byte) {
 		defer cs.Unsubscribe(conn)
 		data := <-dataChan
@@ -119,17 +119,17 @@ func handleUpdate(repo *repository.Repository, matches *[]*PartialMatch, section
 }
 
 // TODO create return data type
-func finalize(repo *repository.Repository, query []repository.Values, matches []*PartialMatch) []*PartialMatch {
+func finalize(repo *repository.Repository, query []repository.Values, matches []*PartialMatch) []*Match {
 
 	return nil
 }
 
-func HandleInstantQuery(repo *repository.Repository, groupname string, points []repository.Values) []*PartialMatch {
+func HandleInstantQuery(repo *repository.Repository, groupname string, points []repository.Values) []*Match {
 	// 1. section points
 	// 2. start off with 2nd section
 	// 3. extend till 2nd last section
 
-	var matches []*PartialMatch
+	var partialMatches []*PartialMatch
 
 	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(points, 0.5)
 	if len(sections) < 3 {
@@ -156,15 +156,15 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 			return nil
 		}
 		for _, member := range members {
-			matches = append(matches, getPartialMatch(repo, member, width, height))
+			partialMatches = append(partialMatches, getPartialMatch(repo, member, width, height))
 		}
 	}
 
 	for i := 2; i < len(sections)-1; i++ {
 		log.Printf("extending query, i=%d", i)
-		matches = ExtendQuery(repo, matches, sections[i].Points)
+		partialMatches = ExtendQuery(repo, partialMatches, sections[i].Points)
 	}
-	matches = ExtendStartEnd(repo, matches, sections[0].Points, sections[len(sections)-1].Points)
+	matches := ExtendStartEnd(repo, partialMatches, sections[0].Points, sections[len(sections)-1].Points)
 	if len(matches) < 1 {
 		log.Println("No match found")
 	}

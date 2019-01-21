@@ -38,18 +38,10 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
   this.displaySize = 0; // the width of the display to determine how is the aspect ratio of the user interface
   this.displayHeight = 0;
 
-  this.updateTsqMatches = function(partialMatches) {
-    matches = []
+  this.updateTsqMatches = function(matches) {
 
-    for (i in partialMatches) {
-      matches.push({
-        match: 0,
-        group: partialMatches[i].FirstSection.Groupname,
-        series: partialMatches[i].FirstSection.Series,
-        smooth: partialMatches[i].FirstSection.Nsmooth,
-        startPos: partialMatches[i].FirstSection.StartSeq,
-        endPos: partialMatches[i].LastSection.NextSeq,
-      })
+    for (i in matches) {
+      matches.match = 0
     }
     this.tsqMatches = matches
 
@@ -67,7 +59,7 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
 
     tsqMatch = this.tsqMatches[index]
     data = this.data[0][tsqMatch.smooth]
-    points = this.getPointsFromInterval(data, tsqMatch.startPos, tsqMatch.endPos, 0)
+    points = this.getPointsFromInterval(data, tsqMatch.startSeq, tsqMatch.endSeq, 0)
 
     matchesToShow.push({
       id: 0,

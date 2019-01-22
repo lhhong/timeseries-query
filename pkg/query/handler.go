@@ -23,10 +23,13 @@ func PublishUpdates(cs *querycache.CacheStore, sessionID string, query []reposit
 	cs.Publish(sessionID, buf.Bytes())
 }
 
+type PartialMatches []*PartialMatch
+
 func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string, query []repository.Values) []*Match {
+
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	enc.Encode(Updates{IsFinal: true, Query: nil})
+	enc.Encode(Updates{IsFinal: true, Query: query})
 
 	// TODO create proper return data type
 	resChan := make(chan []*Match)
@@ -35,7 +38,7 @@ func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessi
 		data := <-dataChan
 		dec := gob.NewDecoder(bytes.NewReader(data))
 		var matches []*PartialMatch
-		dec.Decode(matches)
+		dec.Decode(&matches)
 		resChan <- finalize(repo, query, matches)
 	})
 	cs.Publish(sessionID, buf.Bytes())
@@ -55,11 +58,12 @@ func StartContinuousQuery(repo *repository.Repository, cs *querycache.CacheStore
 			dec := gob.NewDecoder(bytes.NewReader(data))
 			var query Updates
 			dec.Decode(&query)
+			handleUpdate(repo, &matches, &sectionsMatched, query.Query)
 			if query.IsFinal {
+				//log.Println("Received final query")
 				prepareFinalize(cs, sessionID, matches)
 				return
 			}
-			handleUpdate(repo, &matches, &sectionsMatched, query.Query)
 		}
 	})
 }
@@ -75,10 +79,10 @@ func prepareFinalize(cs *querycache.CacheStore, sessionID string, matches []*Par
 func handleUpdate(repo *repository.Repository, matches *[]*PartialMatch, sectionsMatched *int, query []repository.Values) {
 
 	//Replace with alternative smoothing, eg paper.simplify
-	datautils.Smooth(query, 2, 1)
-	datautils.Smooth(query, 3, 2)
+	//datautils.Smooth(query, 2, 1)
+	//datautils.Smooth(query, 3, 2)
 
-	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 0.5)
+	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 2.2)
 	if len(sections) < 3 {
 		// Not ready for query yet
 		return
@@ -97,6 +101,7 @@ func handleUpdate(repo *repository.Repository, matches *[]*PartialMatch, section
 
 		relevantClusters := getRelevantClusters(sections[1].Points, centroids)
 		width, height := getWidthAndHeight(sections[1].Points)
+		//log.Printf("width: %d, height: %f", width, height)
 		sign := getSign(sections[1].Points)
 		for _, cluster := range relevantClusters {
 			// TODO Change stocks to generic groupname
@@ -111,17 +116,25 @@ func handleUpdate(repo *repository.Repository, matches *[]*PartialMatch, section
 		}
 		*sectionsMatched = 1
 	}
-	if len(sections)-2 > *sectionsMatched {
-		log.Printf("extending query, i=%d", *sectionsMatched)
-		*matches = ExtendQuery(repo, *matches, sections[*sectionsMatched].Points)
+	for len(sections)-2 > *sectionsMatched {
+		*matches = ExtendQuery(repo, *matches, sections[*sectionsMatched+1].Points)
 		*sectionsMatched++
 	}
 }
 
-// TODO create return data type
-func finalize(repo *repository.Repository, query []repository.Values, matches []*PartialMatch) []*Match {
+func finalize(repo *repository.Repository, query []repository.Values, partialMatches []*PartialMatch) []*Match {
 
-	return nil
+	//TODO replace with alternative smoothing
+	//datautils.Smooth(query, 2, 1)
+	//datautils.Smooth(query, 3, 2)
+
+	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 2.2)
+
+	matches := ExtendStartEnd(repo, partialMatches, sections[0].Points, sections[len(sections)-1].Points)
+	if len(matches) < 1 {
+		log.Println("No match found")
+	}
+	return matches
 }
 
 func HandleInstantQuery(repo *repository.Repository, groupname string, points []repository.Values) []*Match {

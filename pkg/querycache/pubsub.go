@@ -13,7 +13,6 @@ func (cs CacheStore) Subscribe(channel string, onStart func(redis.Conn, chan []b
 
 	dataChan := make(chan []byte)
 	go func(conn redis.Conn, dataChan chan []byte) {
-		defer conn.Close()
 		for {
 			switch m := psc.Receive().(type) {
 			case error:
@@ -22,17 +21,18 @@ func (cs CacheStore) Subscribe(channel string, onStart func(redis.Conn, chan []b
 				dataChan <- m.Data
 			case redis.Subscription:
 				if m.Count == 0 {
-					// Unsubscribed, close conenction
+					// Unsubscribed
 					return
 				}
 			}
 		}
 	}(conn, dataChan)
-	onStart(conn, dataChan)
+	go onStart(conn, dataChan)
 }
 
 func (cs CacheStore) Unsubscribe(conn redis.Conn) {
 	conn.Do("UNSUBSCRIBE")
+	conn.Close()
 }
 
 func (cs CacheStore) Publish(channel string, data []byte) {

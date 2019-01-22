@@ -421,6 +421,14 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
             scope.currentPath.strokeWidth = Parameters.PATH_STROKEWIDTH;
             scope.currentPath.strokeCap = 'round';
             scope.currentPath.strokeJoin = 'round';
+
+            $http.post('/query/initializequery', {}).then(function successCallback(response) {
+              // this callback will be called asynchronously
+              // when the response is available
+            }, function errorCallback(response) {
+              // called asynchronously if an error occurs
+              // or server returns response with an error status.
+            });
           };
 
           scope.onMouseDrag = function(event) {
@@ -476,9 +484,10 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
             // lhhong
             if (scope.currentPath && scope.currentPath.length > 200) {
               points = scope.extractPointsContinuous()
-              if (points.length > scope.pointsLength + 15) {
+              if (points.length > scope.pointsLength + 50) {
                 scope.pointsLength = points.length
                 console.log("Update points")
+                console.log(JSON.parse(JSON.stringify(points)))
                 $http.post('/query/updatepoints', points).then(function successCallback(response) {
                   // this callback will be called asynchronously
                   // when the response is available
@@ -492,6 +501,13 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
 
           scope.onMouseUp = function(event) {
 
+            var points = scope.extractPoints();
+            console.log(points)
+            $http.post('/query/finalizequery', points).then(function successCallback(response) {
+              DatasetAPI.updateTsqMatches(response.data)
+            }, function errorCallback(response) {
+            });
+
             // If it is in "No Edit mode" (i.e. no points query before) we need to smooth it
             if (QetchQuery_QueryAPI.isEmpty()) {
               if (scope.currentPath.length === 0) return; // No points has been drawn
@@ -502,14 +518,11 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
               scope.updateQueryHeightInfo();
               scope.updateNotOperatorInfo();
 
-              var points = scope.extractPoints();
-              console.log(points)
-              $http.post('/query/instantquery', points).then(function successCallback(response) {
-                DatasetAPI.updateTsqMatches(response.data)
-              }, function errorCallback(response) {
-                // called asynchronously if an error occurs
-                // or server returns response with an error status.
-              });
+              points = scope.extractPoints();
+              // $http.post('/query/instantquery', points).then(function successCallback(response) {
+              //   DatasetAPI.updateTsqMatches(response.data)
+              // }, function errorCallback(response) {
+              // });
               QetchQuery_QueryAPI.setPoints(points);
               QetchQuery_DrawRefining.queryUpdated(points);
 

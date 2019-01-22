@@ -19,6 +19,7 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 
 	queryWidth, queryHeight := getWidthAndHeight(nextQuerySection)
 
+	//log.Printf("width: %d, height: %f", queryWidth, queryHeight)
 	//relevantClusters := getRelevantClusters(nextQuerySection, centroids)
 
 	for _, partialMatch := range partialMatches {

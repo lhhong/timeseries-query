@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/lhhong/timeseries-query/pkg/query"
@@ -103,7 +104,13 @@ func finalizeQuery(repo *repository.Repository, cs *querycache.CacheStore) func(
 
 		sessionID := getAndRefreshSessionID(w, r)
 		queryValues := getQueryValues(r)
+
+		start := time.Now()
+
 		matches := query.FinalizeQuery(repo, cs, sessionID, queryValues)
+
+		elapsed := time.Since(start)
+		log.Printf("Finalizing query took %s", elapsed)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(matches)

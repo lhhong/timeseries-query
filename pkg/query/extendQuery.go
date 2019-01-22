@@ -46,7 +46,8 @@ func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, ne
 func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch, firstQuerySection, lastQuerySection []repository.Values) []*Match {
 
 	var matches []*Match
-	cachedSeries := make(map[string][][]repository.Values)
+	//cachedSeries := make(map[string][][]repository.Values)
+	cachedSeries := make(map[string][]repository.Values)
 
 	if len(partialMatches) == 0 {
 		return matches
@@ -54,6 +55,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 
 	firstQueryWidth, firstQueryHeight := getWidthAndHeight(firstQuerySection)
 	lastQueryWidth, lastQueryHeight := getWidthAndHeight(lastQuerySection)
+
 	for _, partialMatch := range partialMatches {
 
 		firstSection := getPrevSection(repo, partialMatch.FirstSection)
@@ -78,7 +80,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 
 		//Common processing for first and last sections
 		key := fmt.Sprintf("%s-%s", firstSection.Groupname, firstSection.Series)
-		smoothed, ok := cachedSeries[key]
+		values, ok := cachedSeries[key]
 		if !ok {
 			values, err := repo.GetRawDataOfSmoothedSeries(firstSection.Groupname, firstSection.Series, 0)
 			if err != nil {
@@ -86,10 +88,11 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 				log.Println(err)
 				continue
 			}
-			smoothed = datautils.SmoothData(values)
-			cachedSeries[key] = smoothed
+
+			cachedSeries[key] = values
 		}
-		data := smoothed[firstSection.Nsmooth]
+
+		data := values
 		//End common processing for first and last sections
 
 		firstEndSeq := firstSection.NextSeq
@@ -129,7 +132,6 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 			EndSeq:    lastEndSeq,
 		})
 	}
-
 	return matches
 }
 

@@ -82,7 +82,8 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		key := fmt.Sprintf("%s-%s", firstSection.Groupname, firstSection.Series)
 		values, ok := cachedSeries[key]
 		if !ok {
-			values, err := repo.GetRawDataOfSmoothedSeries(firstSection.Groupname, firstSection.Series, 0)
+			var err error
+			values, err = repo.GetRawDataOfSmoothedSeries(firstSection.Groupname, firstSection.Series, 0)
 			if err != nil {
 				log.Println("Failed to retrieve raw data")
 				log.Println(err)
@@ -123,7 +124,6 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 			continue
 		}
 
-		// TODO Remove hacky solution by defining new match structure
 		matches = append(matches, &Match{
 			Groupname: firstSection.Groupname,
 			Series:    firstSection.Series,
@@ -143,6 +143,10 @@ func getSign(section []repository.Values) int {
 }
 
 func getWidthAndHeight(section []repository.Values) (int64, float64) {
+	if len(section) == 0 {
+		log.Println("Warning: Section length is 0 when getting width and height")
+		return 0, 0
+	}
 	width := section[len(section)-1].Seq - section[0].Seq
 	height := datautils.DataHeight(section)
 	return width, height

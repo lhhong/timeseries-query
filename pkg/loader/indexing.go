@@ -26,6 +26,35 @@ import (
 
 func CalcAndSaveIndexDetails(repo *repository.Repository, group string) {
 
+	//TODO export to parameters
+	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
+	minSmoothRatio := 0.4                  // minimum smooth iteration to index
+
+	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
+
+	for i, seriesInfo := range seriesInfos {
+
+		var sectionInfos []*repository.SectionInfo
+
+		values := seriesValues[i]
+
+		smoothedValues := datautils.SmoothData(values)
+		minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
+		for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
+			values := smoothedValues[smoothIndex]
+			currentSections := datautils.ConstructSectionsFromPoints(values, divideSectionMinimumHeightData)
+			for _, section := range currentSections {
+				section.AppendInfo(seriesInfo.Groupname, seriesInfo.Series, smoothIndex)
+				sectionInfos = append(sectionInfos, &section.SectionInfo)
+			}
+		}
+
+		//Save sectionInfos
+	}
+}
+
+func CalcAndSaveIndexDetails_Old(repo *repository.Repository, group string) {
+
 	// TODO export to parameters
 	membershipThreshold := 0.35
 	fuzziness := 2.0

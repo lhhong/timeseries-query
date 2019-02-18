@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"log"
 	"sync"
 
@@ -24,7 +25,7 @@ import (
 // 	}
 // }
 
-func CalcAndSaveIndexDetails(repo *repository.Repository, group string) {
+func CalcAndSaveIndexDetails(repo *repository.Repository, ss *sectionindex.SectionStorage, env string, group string) {
 
 	//TODO export to parameters
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
@@ -45,12 +46,13 @@ func CalcAndSaveIndexDetails(repo *repository.Repository, group string) {
 			currentSections := datautils.ConstructSectionsFromPoints(values, divideSectionMinimumHeightData)
 			for _, section := range currentSections {
 				section.AppendInfo(seriesInfo.Groupname, seriesInfo.Series, smoothIndex)
-				sectionInfos = append(sectionInfos, &section.SectionInfo)
+				sectionInfos = append(sectionInfos, section.SectionInfo)
 			}
 		}
 
-		//Save sectionInfos
+		ss.StoreSeries(sectionInfos)
 	}
+	ss.Persist(env)
 }
 
 func CalcAndSaveIndexDetails_Old(repo *repository.Repository, group string) {
@@ -81,12 +83,12 @@ func CalcAndSaveIndexDetails_Old(repo *repository.Repository, group string) {
 		values := seriesValues[seriesIndex]
 		posSections, negSections := getSmoothedPosNegSections(seriesInfo, values)
 		for _, section := range posSections {
-			sectionInfos = append(sectionInfos, &section.SectionInfo)
+			sectionInfos = append(sectionInfos, section.SectionInfo)
 			members := datautils.GetMembershipOfSingleSection(section, posCentroids, membershipThreshold, fuzziness)
 			clusterMembers = append(clusterMembers, members...)
 		}
 		for _, section := range negSections {
-			sectionInfos = append(sectionInfos, &section.SectionInfo)
+			sectionInfos = append(sectionInfos, section.SectionInfo)
 			members := datautils.GetMembershipOfSingleSection(section, negCentroids, membershipThreshold, fuzziness)
 			clusterMembers = append(clusterMembers, members...)
 		}
@@ -141,10 +143,10 @@ func getIndexDetailsByFCM(repo *repository.Repository, group string) ([][]float6
 
 	sectionInfos := make([]*repository.SectionInfo, len(posSections)+len(negSections))
 	for i, section := range posSections {
-		sectionInfos[i] = &section.SectionInfo
+		sectionInfos[i] = section.SectionInfo
 	}
 	for i, section := range negSections {
-		sectionInfos[len(posSections)+i] = &section.SectionInfo
+		sectionInfos[len(posSections)+i] = section.SectionInfo
 	}
 	rawPosCentroids := make([][]float64, len(posCentroids))
 	for i, c := range posCentroids {

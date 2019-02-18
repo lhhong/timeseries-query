@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"testing"
 
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -13,7 +14,9 @@ func TestIndexing(t *testing.T) {
 	repo.DeleteAllClusterMembers()
 	repo.DeleteAllSectionInfos()
 
-	CalcAndSaveIndexDetails(repo, "stocks")
+	ss := sectionindex.InitDefaultSectionStorage()
+
+	CalcAndSaveIndexDetails(repo, ss, "test", "stocks")
 }
 
 // func TestIndexingOld(t *testing.T) {

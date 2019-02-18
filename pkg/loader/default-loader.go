@@ -1,6 +1,8 @@
 package loader
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/config"
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"bufio"
 	"encoding/csv"
 	"io"
@@ -14,7 +16,7 @@ import (
 )
 
 // LoadData Loads data from commands
-func LoadData(cmd *cobra.Command, repo *repository.Repository) {
+func LoadData(cmd *cobra.Command, conf config.AppConfig, repo *repository.Repository) {
 
 	group, _ := cmd.Flags().GetString("groupname")
 	data, _ := cmd.Flags().GetString("datafile")
@@ -23,11 +25,12 @@ func LoadData(cmd *cobra.Command, repo *repository.Repository) {
 	dateCol, _ := cmd.Flags().GetInt("date")
 	valCol, _ := cmd.Flags().GetInt("value")
 
-	ReadCsvAndSave(repo, group, data, seriesCol, dateCol, valCol)
+	readCsvAndSave(repo, group, data, seriesCol, dateCol, valCol)
 
+	loadIndex(group, conf.Env, repo)
 }
 
-func ReadCsvAndSave(repo *repository.Repository, group string, data string, seriesCol int, dateCol int, valCol int) {
+func readCsvAndSave(repo *repository.Repository, group string, data string, seriesCol int, dateCol int, valCol int) {
 	csvFile, err := os.Open(data)
 	if err != nil {
 		panic(err)
@@ -80,6 +83,11 @@ func ReadCsvAndSave(repo *repository.Repository, group string, data string, seri
 SaveAndExit:
 	bulkSave(values, repo)
 	saveSeries(series, group, repo)
+}
+
+func loadIndex(group string, env string, repo *repository.Repository) {
+	ss := sectionindex.InitDefaultSectionStorage()
+	CalcAndSaveIndexDetails(repo, ss, env, group)
 }
 
 func saveSeries(series map[string]bool, group string, repo *repository.Repository) {

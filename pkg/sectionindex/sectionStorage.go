@@ -78,8 +78,8 @@ func (ss *SectionStorage) rebuildReferences() {
 	ss.NegIndex.rebuildReferences()
 }
 
-func (ss *SectionStorage) Persist(env string) {
-	file, err := os.Create(fmt.Sprintf("section_storage_%s.gob", env))
+func (ss *SectionStorage) Persist(group string, env string) {
+	file, err := os.Create(getFileName(group, env))
 	if err != nil {
 		log.Println("Error creating file to persist section storage")
 		log.Println(err)
@@ -95,17 +95,21 @@ func (ss *SectionStorage) Persist(env string) {
 	
 }
 
-func LoadStorage(env string) *SectionStorage {
-	ss := loadFile(env)
+func getFileName(group string, env string) string {
+	return fmt.Sprintf("index_%s_%s.gob", group, env)
+}
+
+func LoadStorage(group string, env string) *SectionStorage {
+	ss := loadFile(group, env)
 
 	ss.rebuildReferences()
 
 	return ss
 }
 
-func loadFile(env string) *SectionStorage {
+func loadFile(group string, env string) *SectionStorage {
 	ss := SectionStorage{}
-	file, err := os.Open(fmt.Sprintf("section_storage_%s.gob", env))
+	file, err := os.Open(getFileName(group, env))
 	if err != nil {
 		log.Println("Error opening file to load section storage")
 		log.Println(err)

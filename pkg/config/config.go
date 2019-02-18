@@ -14,6 +14,7 @@ type Config struct {
 	Database   DatabaseConfig
 	Redis      RedisConfig
 	HTTPServer HTTPConfig
+	App        AppConfig
 }
 
 // DatabaseConfig Database Config Model
@@ -35,6 +36,11 @@ type RedisConfig struct {
 // HTTPConfig Http Config Model
 type HTTPConfig struct {
 	Port int
+}
+
+// AppConfig General application Config Model
+type AppConfig struct {
+	Env string
 }
 
 // GetConfig Returns Config given cobra.Command which can contain config file

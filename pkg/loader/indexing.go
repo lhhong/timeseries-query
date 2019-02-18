@@ -58,7 +58,7 @@ func CalcAndSaveIndexDetails(repo *repository.Repository, ss *sectionindex.Secti
 		IndexAndSaveSeries(ss, seriesInfo, values)
 
 	}
-	ss.Persist(env)
+	ss.Persist(group, env)
 }
 
 func CalcAndSaveIndexDetails_Old(repo *repository.Repository, group string) {

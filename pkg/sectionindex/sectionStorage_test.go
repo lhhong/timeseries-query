@@ -120,6 +120,7 @@ func Test_sectionStorage_StoreSeries(t *testing.T) {
 
 func Test_sectionStorage_Persist_LoadStorage(t *testing.T) {
 	type args struct {
+		group string
 		env string
 	}
 	tests := []struct {
@@ -128,18 +129,17 @@ func Test_sectionStorage_Persist_LoadStorage(t *testing.T) {
 		ss   *SectionStorage
 		want *SectionStorage
 	}{
-		// TODO: Add test cases.
 		{
 			name: "Full Test",
-			args: args{env: "test"},
+			args: args{group: "testGroup", env: "test"},
 			ss:   getTestSectionStorage(),
 			want: getTestSectionStorageAfterReconstruction(),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.ss.Persist(tt.args.env)
-			got := LoadStorage(tt.args.env)
+			tt.ss.Persist(tt.args.group, tt.args.env)
+			got := LoadStorage(tt.args.group, tt.args.env)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("LoadStorage() = %v, want %v", got, tt.want)
 			}

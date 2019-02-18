@@ -30,7 +30,7 @@ func rootCommand() *cobra.Command {
 func run(cmd *cobra.Command, args []string) {
 	conf := config.GetConfig(cmd)
 	repo := repository.LoadDb(&conf.Database)
-	loader.LoadData(cmd, repo)
+	loader.LoadData(cmd, &conf.App, repo)
 }
 
 func main() {

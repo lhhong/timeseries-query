@@ -1,9 +1,10 @@
 package loader
 
 import (
-	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"log"
 	"sync"
+
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 
 	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -25,32 +26,37 @@ import (
 // 	}
 // }
 
-func CalcAndSaveIndexDetails(repo *repository.Repository, ss *sectionindex.SectionStorage, env string, group string) {
+func IndexAndSaveSeries(ss *sectionindex.SectionStorage, seriesInfo repository.SeriesInfo, values []repository.Values) {
 
 	//TODO export to parameters
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 	minSmoothRatio := 0.4                  // minimum smooth iteration to index
+	var sectionInfos []*repository.SectionInfo
+
+	smoothedValues := datautils.SmoothData(values)
+	minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
+	for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
+		values := smoothedValues[smoothIndex]
+		currentSections := datautils.ConstructSectionsFromPoints(values, divideSectionMinimumHeightData)
+		for _, section := range currentSections {
+			section.AppendInfo(seriesInfo.Groupname, seriesInfo.Series, smoothIndex)
+			sectionInfos = append(sectionInfos, section.SectionInfo)
+		}
+	}
+
+	ss.StoreSeries(sectionInfos)
+}
+
+func CalcAndSaveIndexDetails(repo *repository.Repository, ss *sectionindex.SectionStorage, env string, group string) {
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
 
 	for i, seriesInfo := range seriesInfos {
 
-		var sectionInfos []*repository.SectionInfo
-
 		values := seriesValues[i]
 
-		smoothedValues := datautils.SmoothData(values)
-		minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
-		for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
-			values := smoothedValues[smoothIndex]
-			currentSections := datautils.ConstructSectionsFromPoints(values, divideSectionMinimumHeightData)
-			for _, section := range currentSections {
-				section.AppendInfo(seriesInfo.Groupname, seriesInfo.Series, smoothIndex)
-				sectionInfos = append(sectionInfos, section.SectionInfo)
-			}
-		}
+		IndexAndSaveSeries(ss, seriesInfo, values)
 
-		ss.StoreSeries(sectionInfos)
 	}
 	ss.Persist(env)
 }

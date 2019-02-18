@@ -1,5 +1,11 @@
 package repository
 
+import (
+	"strings"
+	"strconv"
+	"fmt"
+)
+
 // SeriesInfo Information of each series
 type SeriesInfo struct {
 	Groupname string
@@ -20,6 +26,18 @@ var seriesInfoCreateStmt = `CREATE TABLE IF NOT EXISTS SeriesInfo (
 func (repo *Repository) SaveSeriesInfo(seriesInfo *SeriesInfo) error {
 	_, err := repo.db.Exec("INSERT INTO SeriesInfo VALUES (?, ?, ?, ?)",
 		seriesInfo.Groupname, seriesInfo.Series, seriesInfo.Nsmooth, seriesInfo.Type)
+	return err
+}
+
+// BulkSaveSeriesInfoUnsafe WARNING: Unsafe call to SQL, Prone to injections. Used for efficient bulk loading to database as there is maximum number of placeholder for prepared statement
+func (repo *Repository) BulkSaveSeriesInfoUnsafe(data []*SeriesInfo) error {
+	valueStrings := make([]string, 0, len(data))
+	for _, v := range data {
+		value := "(\"" + v.Groupname + "\",\"" + v.Series + "\"," + strconv.Itoa(v.Nsmooth) + ",\"" + v.Type + "\")"
+		valueStrings = append(valueStrings, value)
+	}
+	stmt := fmt.Sprintf("INSERT INTO SeriesInfo VALUES %s", strings.Join(valueStrings, ","))
+	_, err := repo.db.Exec(stmt)
 	return err
 }
 

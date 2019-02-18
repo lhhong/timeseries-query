@@ -16,8 +16,6 @@ import (
 // LoadData Loads data from commands
 func LoadData(cmd *cobra.Command, repo *repository.Repository) {
 
-	var err error
-
 	group, _ := cmd.Flags().GetString("groupname")
 	data, _ := cmd.Flags().GetString("datafile")
 
@@ -25,6 +23,11 @@ func LoadData(cmd *cobra.Command, repo *repository.Repository) {
 	dateCol, _ := cmd.Flags().GetInt("date")
 	valCol, _ := cmd.Flags().GetInt("value")
 
+	ReadCsvAndSave(repo, group, data, seriesCol, dateCol, valCol)
+
+}
+
+func ReadCsvAndSave(repo *repository.Repository, group string, data string, seriesCol int, dateCol int, valCol int) {
 	csvFile, err := os.Open(data)
 	if err != nil {
 		panic(err)
@@ -38,6 +41,7 @@ func LoadData(cmd *cobra.Command, repo *repository.Repository) {
 	}
 
 	batchSize := 50000
+	series := make(map[string]bool)
 	values := make([]repository.RawData, 0, batchSize)
 	for {
 		values = values[:0]
@@ -59,15 +63,39 @@ func LoadData(cmd *cobra.Command, repo *repository.Repository) {
 					log.Println(err)
 					continue
 				}
-				seq := t.Unix()
+				seq := t.Unix() * 1000
 				values = append(values, repository.RawData{
-					group, line[seriesCol], 0, seq, value})
+					Groupname: group,
+					Series:    line[seriesCol],
+					Smooth:    0,
+					Seq:       seq,
+					Value:     value,
+				})
+				// For storing series info
+				series[line[seriesCol]] = true
 			}
 		}
 		bulkSave(values, repo)
 	}
 SaveAndExit:
 	bulkSave(values, repo)
+	saveSeries(series, group, repo)
+}
+
+func saveSeries(series map[string]bool, group string, repo *repository.Repository) {
+	var seriesInfo []*repository.SeriesInfo
+	for s := range series {
+		seriesInfo = append(seriesInfo, &repository.SeriesInfo{
+			Groupname: group,
+			Series:    s,
+			Nsmooth:   0,
+			Type:      "date",
+		})
+	}
+	err := repo.BulkSaveSeriesInfoUnsafe(seriesInfo)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func bulkSave(vals []repository.RawData, repo *repository.Repository) {

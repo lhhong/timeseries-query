@@ -1,37 +1,41 @@
 package sectionindex
 
 import (
+	"encoding/gob"
+	"fmt"
 	"github.com/lhhong/timeseries-query/pkg/repository"
+	"log"
+	"os"
 )
 
-type sectionStorage struct {
-	posIndex *Index
-	negIndex *Index
+type SectionStorage struct {
+	PosIndex *index
+	NegIndex *index
 
-	numLevels int
+	NumLevels int
 }
 
-func InitDefaultSectionStorage() *sectionStorage {
+func InitDefaultSectionStorage() *SectionStorage {
 
 	//TODO determine tick values and numLevels
 	widthRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
 	heightRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
 	numLevels := 4
 
-	return InitSectionStorage(numLevels, widthRatioTicks, heightRatioTicks) 
+	return InitSectionStorage(numLevels, widthRatioTicks, heightRatioTicks)
 }
 
-func InitSectionStorage(numLevels int, widthRatioTicks []float64, heightRatioTicks []float64) *sectionStorage {
+func InitSectionStorage(numLevels int, widthRatioTicks []float64, heightRatioTicks []float64) *SectionStorage {
 
-	return &sectionStorage{
-		posIndex: InitIndex(widthRatioTicks, heightRatioTicks),
-		negIndex: InitIndex(widthRatioTicks, heightRatioTicks),
-		numLevels: numLevels,
+	return &SectionStorage{
+		PosIndex:  InitIndex(widthRatioTicks, heightRatioTicks),
+		NegIndex:  InitIndex(widthRatioTicks, heightRatioTicks),
+		NumLevels: numLevels,
 	}
 
 }
 
-func (ss *sectionStorage) StoreSeries(sections []*repository.SectionInfo) {
+func (ss *SectionStorage) StoreSeries(sections []*repository.SectionInfo) {
 
 	var widthRatios, heightRatios [][]float64
 	var prevSection *repository.SectionInfo
@@ -41,7 +45,7 @@ func (ss *sectionStorage) StoreSeries(sections []*repository.SectionInfo) {
 			widthRatio := float64(section.Width) / float64(prevSection.Width)
 			heightRatio := float64(section.Height) / float64(prevSection.Height)
 
-			for i := len(widthRatios) - 1; i >= 0 && i >= len(widthRatios)-ss.numLevels; i-- {
+			for i := len(widthRatios) - 1; i >= 0 && i >= len(widthRatios)-ss.NumLevels; i-- {
 				widthRatios[i] = append(widthRatios[i], widthRatio)
 				heightRatios[i] = append(heightRatios[i], heightRatio)
 			}
@@ -53,7 +57,6 @@ func (ss *sectionStorage) StoreSeries(sections []*repository.SectionInfo) {
 		prevSection = section
 	}
 
-
 	for i, section := range sections {
 		wr := widthRatios[i]
 		hr := heightRatios[i]
@@ -63,9 +66,54 @@ func (ss *sectionStorage) StoreSeries(sections []*repository.SectionInfo) {
 		}
 
 		if section.Sign > 0 {
-			ss.posIndex.AddSection(wr, hr, section)
+			ss.PosIndex.AddSection(wr, hr, section)
 		} else {
-			ss.negIndex.AddSection(wr, hr, section)
+			ss.NegIndex.AddSection(wr, hr, section)
 		}
 	}
+}
+
+func (ss *SectionStorage) rebuildReferences() {
+	ss.PosIndex.rebuildReferences()
+	ss.NegIndex.rebuildReferences()
+}
+
+func (ss *SectionStorage) Persist(env string) {
+	file, err := os.Create(fmt.Sprintf("section_storage_%s.gob", env))
+	if err != nil {
+		log.Println("Error creating file to persist section storage")
+		log.Println(err)
+		return
+	}
+	defer file.Close()
+
+	enc := gob.NewEncoder(file)
+	err = enc.Encode(*ss)
+	if err != nil {
+		log.Println(err)
+	}
+	
+}
+
+func LoadStorage(env string) *SectionStorage {
+	ss := loadFile(env)
+
+	ss.rebuildReferences()
+
+	return ss
+}
+
+func loadFile(env string) *SectionStorage {
+	ss := SectionStorage{}
+	file, err := os.Open(fmt.Sprintf("section_storage_%s.gob", env))
+	if err != nil {
+		log.Println("Error opening file to load section storage")
+		log.Println(err)
+		return nil
+	}
+	defer file.Close()
+
+	dec := gob.NewDecoder(file)
+	dec.Decode(&ss)
+	return &ss
 }

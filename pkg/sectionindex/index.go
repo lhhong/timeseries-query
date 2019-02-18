@@ -6,7 +6,7 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-type Index struct {
+type index struct {
 	WidthRatioTicks  []float64
 	HeightRatioTicks []float64
 	NumWidth         int
@@ -19,65 +19,65 @@ type WidthHeightIndex struct {
 	heightIndex int
 }
 
-func InitIndex(widthRatioTicks []float64, heightRatioTicks []float64) *Index {
+func InitIndex(widthRatioTicks []float64, heightRatioTicks []float64) *index {
 
 	numWidth := len(widthRatioTicks) + 1
 	numHeight := len(heightRatioTicks) + 1
-	index := &Index{
+	ind := &index{
 		WidthRatioTicks:  widthRatioTicks,
 		HeightRatioTicks: heightRatioTicks,
 		NumWidth:         numWidth,
 		NumHeight:        numHeight,
 	}
-	rootNode := initNodeLazy(nil, index)
-	index.RootNode = rootNode
-	return index
+	rootNode := initNodeLazy(nil, ind)
+	ind.RootNode = rootNode
+	return ind
 }
 
-func (index *Index) AddSection(widthRatios []float64, heightRatios []float64, section *repository.SectionInfo) {
+func (ind *index) AddSection(widthRatios []float64, heightRatios []float64, section *repository.SectionInfo) {
 
-	indexLink := index.getIndexLink(widthRatios, heightRatios)
-	index.RootNode.addSection(indexLink, section)
+	indexLink := ind.getIndexLink(widthRatios, heightRatios)
+	ind.RootNode.addSection(indexLink, section)
 }
 
-func (index *Index) traverse(indexLink []WidthHeightIndex) *node {
-	node := index.RootNode
+func (ind *index) traverse(indexLink []WidthHeightIndex) *node {
+	node := ind.RootNode
 	for _, link := range indexLink {
-		node = node.children[link.heightIndex][link.widthIndex]
+		node = node.Children[link.heightIndex][link.widthIndex].N
 	}
 	return node
 }
 
-func (index *Index) RetrieveSections(widthRatios []float64, heightRatios []float64) []*repository.SectionInfo {
-	indexLink := index.getIndexLink(widthRatios, heightRatios)
-	node := index.traverse(indexLink)
+func (ind *index) RetrieveSections(widthRatios []float64, heightRatios []float64) []*repository.SectionInfo {
+	indexLink := ind.getIndexLink(widthRatios, heightRatios)
+	node := ind.traverse(indexLink)
 	return node.retrieveSections()
 }
 
-func (index *Index) GetSectionSlices(widthRatios []float64, heightRatios []float64) SectionSlices {
-	indexLink := index.getIndexLink(widthRatios, heightRatios)
-	node := index.traverse(indexLink)
+func (ind *index) GetSectionSlices(widthRatios []float64, heightRatios []float64) SectionSlices {
+	indexLink := ind.getIndexLink(widthRatios, heightRatios)
+	node := ind.traverse(indexLink)
 	return node.getSectionSlices()
 }
 
-func (index *Index) GetCount(widthRatios []float64, heightRatios []float64) int {
-	indexLink := index.getIndexLink(widthRatios, heightRatios)
-	node := index.traverse(indexLink)
+func (ind *index) GetCount(widthRatios []float64, heightRatios []float64) int {
+	indexLink := ind.getIndexLink(widthRatios, heightRatios)
+	node := ind.traverse(indexLink)
 	return node.getCount()
 }
 
-func (index *Index) getWidthHeightIndex(widthRatio float64, heightRatio float64) WidthHeightIndex {
+func (ind *index) getWidthHeightIndex(widthRatio float64, heightRatio float64) WidthHeightIndex {
 	wh := WidthHeightIndex{
-		widthIndex:  index.NumWidth - 1,
-		heightIndex: index.NumHeight - 1,
+		widthIndex:  ind.NumWidth - 1,
+		heightIndex: ind.NumHeight - 1,
 	}
-	for j, wTick := range index.WidthRatioTicks {
+	for j, wTick := range ind.WidthRatioTicks {
 		if widthRatio < wTick {
 			wh.widthIndex = j
 			break
 		}
 	}
-	for j, hTick := range index.HeightRatioTicks {
+	for j, hTick := range ind.HeightRatioTicks {
 		if heightRatio < hTick {
 			wh.heightIndex = j
 			break
@@ -86,7 +86,7 @@ func (index *Index) getWidthHeightIndex(widthRatio float64, heightRatio float64)
 	return wh
 }
 
-func (index *Index) getIndexLink(widthRatios []float64, heightRatios []float64) []WidthHeightIndex {
+func (ind *index) getIndexLink(widthRatios []float64, heightRatios []float64) []WidthHeightIndex {
 	if len(widthRatios) != len(heightRatios) {
 		log.Println("Error, width ratio and height ratio slices should be same length")
 		return nil
@@ -94,7 +94,11 @@ func (index *Index) getIndexLink(widthRatios []float64, heightRatios []float64) 
 	var whIndex []WidthHeightIndex
 	for i, w := range widthRatios {
 		h := heightRatios[i]
-		whIndex = append(whIndex, index.getWidthHeightIndex(w, h))
+		whIndex = append(whIndex, ind.getWidthHeightIndex(w, h))
 	}
 	return whIndex
+}
+
+func (ind *index) rebuildReferences() {
+	ind.RootNode.rebuildReferences(ind, nil)
 }

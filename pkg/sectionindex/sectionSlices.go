@@ -7,24 +7,24 @@ import (
 type SectionSlices []*[]*repository.SectionInfo
 
 type SectionSlicesIterator struct {
-	sectionSlices SectionSlices
+	ss SectionSlices
 	outerIndex int
 	innerIndex int
 }
 
 func (ss SectionSlices) Iterator() SectionSlicesIterator {
 	return SectionSlicesIterator {
-		sectionSlices: ss,
 		outerIndex: 0,
 		innerIndex: 0,
+		ss: ss,
 	}
 }
 
 func (ssi *SectionSlicesIterator) Next() *repository.SectionInfo {
-	if ssi.outerIndex >= len(ssi.sectionSlices) {
+	if ssi.outerIndex >= len(ssi.ss) {
 		return nil
 	}
-	slice := ssi.sectionSlices[ssi.outerIndex]
+	slice := (ssi.ss)[ssi.outerIndex]
 	if ssi.innerIndex >= len(*slice) {
 		ssi.outerIndex++
 		ssi.innerIndex = 0

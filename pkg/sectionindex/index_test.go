@@ -12,23 +12,23 @@ func TestInitIndex(t *testing.T) {
 		widthRatioTicks  []float64
 		heightRatioTicks []float64
 	}
-	want := &Index{
+	want := &index{
 		WidthRatioTicks:  []float64{0.5, 2.0, 5.0},
 		HeightRatioTicks: []float64{0.8, 1.5},
 		NumWidth:         4,
 		NumHeight:        3,
 		RootNode: &node{
-			count:   0,
-			level:   0,
+			Count:   0,
+			Level:   0,
 			updated: false,
 		},
 	}
-	want.RootNode.index = want
+	want.RootNode.ind = want
 
 	tests := []struct {
 		name string
 		args args
-		want *Index
+		want *index
 	}{
 		{
 			name: "Basic Index Initialization",
@@ -48,8 +48,8 @@ func TestInitIndex(t *testing.T) {
 	}
 }
 
-func getTestIndex() *Index {
-	indexWant := &Index{
+func getTestIndex() *index {
+	indexWant := &index{
 		WidthRatioTicks:  []float64{0.5, 2.0, 5.0},
 		HeightRatioTicks: []float64{0.8, 1.5},
 		NumWidth:         4,
@@ -80,85 +80,85 @@ func getTestIndex() *Index {
 		},
 	}
 
-	childrenRoot := make([][]*node, 3)
+	childrenRoot := make([][]child, 3)
 	for h := 0; h < 3; h++ {
-		childrenRoot[h] = make([]*node, 4)
+		childrenRoot[h] = make([]child, 4)
 	}
 	indexWant.RootNode = &node{
-		count:          5,
-		level:          0,
+		Count:          5,
+		Level:          0,
 		updated:        true,
-		index:          indexWant,
+		ind:            indexWant,
 		parent:         nil,
-		children:       childrenRoot,
+		Children:       childrenRoot,
 		descendents:    []*[]*repository.SectionInfo{&values1231, &values1221, &values12, &values1021},
 		allValuesCache: nil,
-		values:         nil,
+		Values:         nil,
 	}
 
-	children12 := make([][]*node, 3)
+	children12 := make([][]child, 3)
 	for h := 0; h < 3; h++ {
-		children12[h] = make([]*node, 4)
+		children12[h] = make([]child, 4)
 	}
-	childrenRoot[2][1] = &node{
-		count:          4,
-		level:          1,
+	childrenRoot[2][1].N = &node{
+		Count:          4,
+		Level:          1,
 		updated:        true,
-		index:          indexWant,
+		ind:            indexWant,
 		parent:         indexWant.RootNode,
-		children:       children12,
+		Children:       children12,
 		descendents:    []*[]*repository.SectionInfo{&values1231, &values1221, &values12},
 		allValuesCache: nil,
-		values:         values12,
+		Values:         values12,
 	}
-	children12[1][3] = &node{
-		count:          2,
-		level:          2,
+	children12[1][3].N = &node{
+		Count:          2,
+		Level:          2,
 		updated:        true,
-		index:          indexWant,
-		parent:         childrenRoot[2][1],
-		children:       nil,
+		ind:            indexWant,
+		parent:         childrenRoot[2][1].N,
+		Children:       nil,
 		descendents:    []*[]*repository.SectionInfo{&values1231},
 		allValuesCache: nil,
-		values:         values1231,
+		Values:         values1231,
 	}
-	children12[1][2] = &node{
-		count:          1,
-		level:          2,
+	children12[1][2].N = &node{
+		Count:          1,
+		Level:          2,
 		updated:        true,
-		index:          indexWant,
-		parent:         childrenRoot[2][1],
-		children:       nil,
+		ind:            indexWant,
+		parent:         childrenRoot[2][1].N,
+		Children:       nil,
 		descendents:    []*[]*repository.SectionInfo{&values1221},
 		allValuesCache: nil,
-		values:         values1221,
+		Values:         values1221,
 	}
 
-	children10 := make([][]*node, 3)
+	children10 := make([][]child, 3)
 	for h := 0; h < 3; h++ {
-		children10[h] = make([]*node, 4)
+		children10[h] = make([]child, 4)
 	}
-	childrenRoot[0][1] = &node{
-		count:          1,
-		level:          1,
+	childrenRoot[0][1].N = &node{
+		Count:          1,
+		Level:          1,
 		updated:        true,
-		index:          indexWant,
+		ind:            indexWant,
 		parent:         indexWant.RootNode,
-		children:       children10,
+		Children:       children10,
 		descendents:    []*[]*repository.SectionInfo{&values1021},
 		allValuesCache: nil,
-		values:         nil,
+		Values:         nil,
 	}
-	children10[1][2] = &node{
-		count:          1,
-		level:          2,
+	children10[1][2].N = &node{
+		Count:          1,
+		Level:          2,
 		updated:        true,
-		index:          indexWant,
-		parent:         childrenRoot[0][1],
-		children:       nil,
+		ind:            indexWant,
+		parent:         childrenRoot[0][1].N,
+		Children:       nil,
 		descendents:    []*[]*repository.SectionInfo{&values1021},
 		allValuesCache: nil,
-		values:         values1021,
+		Values:         values1021,
 	}
 
 	return indexWant
@@ -170,16 +170,16 @@ func TestIndex_AddSection(t *testing.T) {
 		heightRatioTicks []float64
 	}
 	type args struct {
-		widthRatio []float64
+		widthRatio  []float64
 		heightRatio []float64
-		section   *repository.SectionInfo
+		section     *repository.SectionInfo
 	}
 
 	tests := []struct {
 		name   string
 		fields fields
 		args   []args
-		want   *Index
+		want   *index
 	}{
 		{
 			name: "2 Level Test Index",
@@ -189,35 +189,35 @@ func TestIndex_AddSection(t *testing.T) {
 			},
 			args: []args{
 				args{
-					widthRatio: []float64{0.6, 6.0},
+					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &repository.SectionInfo{
 						Groupname: "Section 12-31-1",
 					},
 				},
 				args{
-					widthRatio: []float64{0.6, 6.0},
+					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &repository.SectionInfo{
 						Groupname: "Section 12-31-2",
 					},
 				},
 				args{
-					widthRatio: []float64{0.6, 3.0},
+					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &repository.SectionInfo{
 						Groupname: "Section 12-21-1",
 					},
 				},
 				args{
-					widthRatio: []float64{0.6},
+					widthRatio:  []float64{0.6},
 					heightRatio: []float64{1.8},
 					section: &repository.SectionInfo{
 						Groupname: "Section 12-1",
 					},
 				},
 				args{
-					widthRatio: []float64{0.6, 3.0},
+					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{0.1, 1.0},
 					section: &repository.SectionInfo{
 						Groupname: "Section 10-21-1",
@@ -233,7 +233,7 @@ func TestIndex_AddSection(t *testing.T) {
 			for _, args := range tt.args {
 				index.AddSection(args.widthRatio, args.heightRatio, args.section)
 			}
-			if got := index; !reflect.DeepEqual(got, tt.want) {
+			if got := index; !reflect.DeepEqual(got.RootNode.descendents, tt.want.RootNode.descendents) {
 				t.Errorf("AddSection() = %v, want %v", got, tt.want)
 			}
 		})
@@ -249,12 +249,12 @@ func TestIndex_RetrieveSections(t *testing.T) {
 		RootNode         *node
 	}
 	type args struct {
-		widthRatio []float64
+		widthRatio  []float64
 		heightRatio []float64
 	}
 	tests := []struct {
 		name  string
-		index *Index
+		index *index
 		args  args
 		want  []*repository.SectionInfo
 	}{
@@ -304,12 +304,12 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 		RootNode         *node
 	}
 	type args struct {
-		widthRatio []float64
+		widthRatio  []float64
 		heightRatio []float64
 	}
 	tests := []struct {
 		name  string
-		index *Index
+		index *index
 		args  args
 		want  []*repository.SectionInfo
 	}{

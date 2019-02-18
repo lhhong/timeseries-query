@@ -5,35 +5,41 @@ import (
 )
 
 type node struct {
-	count          int
-	level          int
+	Count          int
+	Level          int
 	updated        bool
-	index          *Index
+	ind            *index
 	parent         *node
-	children       [][]*node
+	Children       [][]child
 	descendents    []*[]*repository.SectionInfo
 	allValuesCache []*repository.SectionInfo
-	values         []*repository.SectionInfo
+	Values         []*repository.SectionInfo
 }
 
-func initNodeLazy(parent *node, index *Index) *node {
+//Intermediary struct as gob cannot encode nil values in array
+type child struct {
+	N *node
+}
+
+func initNodeLazy(parent *node, ind *index) *node {
 
 	level := 0
 	if parent != nil {
-		level = parent.level + 1
+		level = parent.Level + 1
 	}
 
 	return &node{
-		count:   0,
-		level:   level,
+		Count:   0,
+		Level:   level,
 		updated: false,
 		parent:  parent,
-		index:   index,
+		ind:     ind,
 	}
 }
 
 func (n *node) propagateDescendents(descendent *[]*repository.SectionInfo) {
 	n.descendents = append(n.descendents, descendent)
+	n.updated = true
 	if n.parent != nil {
 		n.parent.propagateDescendents(descendent)
 	}
@@ -41,32 +47,35 @@ func (n *node) propagateDescendents(descendent *[]*repository.SectionInfo) {
 
 func (n *node) initChildrenTable() {
 
-	n.children = make([][]*node, n.index.NumHeight)
-	for h := 0; h < n.index.NumHeight; h++ {
-		n.children[h] = make([]*node, n.index.NumWidth)
+	n.Children = make([][]child, n.ind.NumHeight)
+	for h := 0; h < n.ind.NumHeight; h++ {
+		n.Children[h] = make([]child, n.ind.NumWidth)
+		for w := 0; w < n.ind.NumWidth; w++ {
+			n.Children[h][w] = child{}
+		}
 	}
 }
 
 func (n *node) addSection(indexLink []WidthHeightIndex, section *repository.SectionInfo) {
 
-	n.count++
+	n.Count++
 	n.updated = true
 
 	if len(indexLink) == 0 {
-		if n.values == nil {
-			n.propagateDescendents(&(n.values))
+		if n.Values == nil {
+			n.propagateDescendents(&(n.Values))
 		}
-		n.values = append(n.values, section)
+		n.Values = append(n.Values, section)
 	} else {
-		if n.children == nil {
+		if n.Children == nil {
 			n.initChildrenTable()
 		}
-		child := &(n.children[indexLink[0].heightIndex][indexLink[0].widthIndex])
-		if *child == nil {
-			*child = initNodeLazy(n, n.index)
+		child := &(n.Children[indexLink[0].heightIndex][indexLink[0].widthIndex])
+		if child.N == nil {
+			child.N = initNodeLazy(n, n.ind)
 		}
 
-		(*child).addSection(indexLink[1:], section)
+		child.N.addSection(indexLink[1:], section)
 	}
 }
 
@@ -89,16 +98,35 @@ func (n *node) getSectionSlices() SectionSlices {
 }
 
 func (n *node) getCount() int {
-	return n.count
+	return n.Count
+}
+
+func (n *node) rebuildReferences(ind *index, parent *node) {
+
+	n.ind = ind
+	n.parent = parent
+
+	if n.Values != nil {
+		n.propagateDescendents(&(n.Values))
+	}
+
+	for _, row := range n.Children {
+		for _, child := range row {
+			if child.N != nil {
+				child.N.rebuildReferences(ind, n)
+			}
+		}
+	}
+
 }
 
 // TODO Remove naive method if pointer approach works
 // func (n *node) retrieveSectionsNaive() []*repository.SectionInfo {
-// 
+//
 // 	if n.level == 0 {
 // 		return n.values
 // 	}
-// 
+//
 // 	var res []*repository.SectionInfo
 // 	for _, row := range n.children {
 // 		for _, n := range row {

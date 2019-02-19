@@ -1,6 +1,7 @@
 package sectionindex
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/common"
 	"log"
 
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -101,4 +102,12 @@ func (ind *index) getIndexLink(widthRatios []float64, heightRatios []float64) []
 
 func (ind *index) rebuildReferences() {
 	ind.RootNode.rebuildReferences(ind, nil)
+}
+
+func (ind *index) getRelevantNodeIndex(limits common.Limits) []WidthHeightIndex {
+
+	var res []WidthHeightIndex
+
+	// TODO complete function
+	return res
 }

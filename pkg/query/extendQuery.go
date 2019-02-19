@@ -1,6 +1,7 @@
 package query
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/common"
 	fmt "fmt"
 	"log"
 	"math"
@@ -64,7 +65,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		}
 		firstLimits := getAllLimits(firstQueryWidth, partialMatch.FirstQWidth, partialMatch.FirstSection.Width,
 			firstQueryHeight, partialMatch.FirstQHeight, partialMatch.FirstSection.Height)
-		if firstSection.Width < int64(firstLimits.widthLower) || firstSection.Height < firstLimits.heightLower {
+		if firstSection.Width < int64(firstLimits.WidthLower) || firstSection.Height < firstLimits.HeightLower {
 			continue
 		}
 
@@ -74,7 +75,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		}
 		lastLimits := getAllLimits(lastQueryWidth, partialMatch.LastQWidth, partialMatch.LastSection.Width,
 			lastQueryHeight, partialMatch.LastQHeight, partialMatch.LastSection.Height)
-		if lastSection.Width < int64(lastLimits.widthLower) || lastSection.Height < lastLimits.heightLower {
+		if lastSection.Width < int64(lastLimits.WidthLower) || lastSection.Height < lastLimits.HeightLower {
 			continue
 		}
 
@@ -104,7 +105,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		}
 		firstSectionData := datautils.ExtractInterval(data, firstStartSeq, firstEndSeq)
 		_, firstDataHeight := getWidthAndHeight(firstSectionData)
-		if firstDataHeight < firstLimits.heightLower || firstDataHeight > firstLimits.heightUpper {
+		if firstDataHeight < firstLimits.HeightLower || firstDataHeight > firstLimits.HeightUpper {
 			continue
 		}
 
@@ -120,7 +121,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 		}
 		lastSectionData := datautils.ExtractInterval(data, lastStartSeq, lastEndSeq)
 		_, lastDataHeight := getWidthAndHeight(lastSectionData)
-		if lastDataHeight < lastLimits.heightLower || lastDataHeight > lastLimits.heightUpper {
+		if lastDataHeight < lastLimits.HeightLower || lastDataHeight > lastLimits.HeightUpper {
 			continue
 		}
 
@@ -190,14 +191,7 @@ func getNextSection(repo *repository.Repository, prevSection *repository.Section
 	return res
 }
 
-type limits struct {
-	widthLower  float64
-	widthUpper  float64
-	heightLower float64
-	heightUpper float64
-}
-
-func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) limits {
+func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) common.Limits {
 
 	// TODO Export to parameters
 
@@ -214,11 +208,11 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 	heightLowerLimit, heightUpperLimit := getWidthOrHeightLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
 		cmpDataHeight, heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
 
-	return limits{
-		widthLower:  widthLowerLimit,
-		widthUpper:  widthUpperLimit,
-		heightLower: heightLowerLimit,
-		heightUpper: heightUpperLimit,
+	return common.Limits{
+		WidthLower:  widthLowerLimit,
+		WidthUpper:  widthUpperLimit,
+		HeightLower: heightLowerLimit,
+		HeightUpper: heightUpperLimit,
 	}
 }
 
@@ -227,16 +221,16 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	l := getAllLimits(queryWidth, partialMatch.LastQWidth, partialMatch.LastSection.Width,
 		queryHeight, partialMatch.LastQHeight, partialMatch.LastSection.Height)
 
-	if float64(nextSection.Width) < l.widthLower || float64(nextSection.Width) > l.widthUpper {
+	if float64(nextSection.Width) < l.WidthLower || float64(nextSection.Width) > l.WidthUpper {
 		return false
 	}
-	if nextSection.Height < l.heightLower || nextSection.Height > l.heightUpper {
+	if nextSection.Height < l.HeightLower || nextSection.Height > l.HeightUpper {
 		return false
 	}
 	return true
 }
 
-func getAllRatioLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) limits {
+func getAllRatioLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) common.Limits {
 
 	// TODO Export to parameters
 
@@ -253,11 +247,11 @@ func getAllRatioLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeigh
 	heightLowerLimit, heightUpperLimit := getWidthOrHeightRatioLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
 		heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
 
-	return limits{
-		widthLower:  widthLowerLimit,
-		widthUpper:  widthUpperLimit,
-		heightLower: heightLowerLimit,
-		heightUpper: heightUpperLimit,
+	return common.Limits{
+		WidthLower:  widthLowerLimit,
+		WidthUpper:  widthUpperLimit,
+		HeightLower: heightLowerLimit,
+		HeightUpper: heightUpperLimit,
 	}
 }
 

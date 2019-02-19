@@ -236,6 +236,44 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	return true
 }
 
+func getAllRatioLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) limits {
+
+	// TODO Export to parameters
+
+	widthRatioExponent := 0.3
+	widthRatioMultiplier := 1.8
+	widthMinimumCutoff := 0.3
+
+	heightRatioExponent := 0.3
+	heightRatioMultiplier := 1.0
+	heightMinimumCutoff := 0.3
+
+	widthLowerLimit, widthUpperLimit := getWidthOrHeightRatioLimits(float64(queryWidth), float64(cmpQueryWidth),
+		queryHeight, widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
+	heightLowerLimit, heightUpperLimit := getWidthOrHeightRatioLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
+		heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
+
+	return limits{
+		widthLower:  widthLowerLimit,
+		widthUpper:  widthUpperLimit,
+		heightLower: heightLowerLimit,
+		heightUpper: heightUpperLimit,
+	}
+}
+
+func getWidthOrHeightRatioLimits(queryLength float64, prevQueryLength float64, oppQueryLength float64,
+	ratioExponent float64, ratioMultiplier float64, minimumCutoff float64) (float64, float64) {
+
+	queryRatio := queryLength / prevQueryLength
+	ratioLimit := ratioMultiplier * math.Pow((oppQueryLength/queryLength), ratioExponent)
+	lowerRatioLimit := queryRatio / (ratioLimit + 1)
+	lowerCutoffLimit := (queryRatio - minimumCutoff)
+	upperRatioLimit := queryRatio * (ratioLimit + 1)
+	upperCutoffLimit := (queryRatio + minimumCutoff)
+
+	return math.Min(lowerRatioLimit, lowerCutoffLimit), math.Max(upperRatioLimit, upperCutoffLimit)
+}
+
 // Refer to commented out implementation below for explanation
 func getWidthOrHeightLimits(queryLength float64, prevQueryLength float64, oppQueryLength float64,
 	prevDataLength float64, ratioExponent float64, ratioMultiplier float64, minimumCutoff float64) (float64, float64) {

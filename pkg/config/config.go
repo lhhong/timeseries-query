@@ -41,6 +41,7 @@ type HTTPConfig struct {
 // AppConfig General application Config Model
 type AppConfig struct {
 	Env string
+	SeriesGroups []string
 }
 
 // GetConfig Returns Config given cobra.Command which can contain config file

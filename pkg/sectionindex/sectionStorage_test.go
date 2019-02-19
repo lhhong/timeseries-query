@@ -1,11 +1,27 @@
 package sectionindex
 
 import (
+	"fmt"
+	"os"
+	"flag"
 	"reflect"
 	"testing"
 
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
+
+var (
+    cwdArg = flag.String("cwd", "", "set cwd")
+)
+
+func init() {
+    flag.Parse()
+    if *cwdArg != "" {
+        if err := os.Chdir(*cwdArg); err != nil {
+            fmt.Println("Chdir error:", err)
+        }
+    }
+}
 
 func getTestSectionStorage() *SectionStorage {
 

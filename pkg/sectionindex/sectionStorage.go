@@ -96,7 +96,7 @@ func (ss *SectionStorage) Persist(group string, env string) {
 }
 
 func getFileName(group string, env string) string {
-	return fmt.Sprintf("index_%s_%s.gob", group, env)
+	return fmt.Sprintf("index/index_%s_%s.gob", group, env)
 }
 
 func LoadStorage(group string, env string) *SectionStorage {

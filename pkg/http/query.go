@@ -32,7 +32,7 @@ func initializeQuery(indices *sectionindex.Indices, repo *repository.Repository,
 
 		group := mux.Vars(r)["group"]
 
-		go query.StartContinuousQuery(group, repo, cs, sessionID)
+		go query.StartContinuousQuery(indices.IndexOf[group], repo, cs, sessionID)
 
 	}
 }

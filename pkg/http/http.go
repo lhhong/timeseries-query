@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/lhhong/timeseries-query/pkg/config"
 	"github.com/lhhong/timeseries-query/pkg/querycache"
@@ -19,9 +18,7 @@ import (
 // StartServer Starts http server
 func StartServer(conf *config.HTTPConfig, indices *sectionindex.Indices, repo *repository.Repository, cs *querycache.CacheStore) {
 
-	datasetRouter := mux.NewRouter().PathPrefix("/datasets/").Subrouter()
-	datasetRouter.HandleFunc("/definition", getDefinition(repo)).Methods("GET")
-	datasetRouter.HandleFunc("/{gkey}/{skey}", getSeries(repo)).Methods("GET")
+	datasetRouter := getDatasetRouter(repo)
 	http.Handle("/datasets/", datasetRouter)
 
 	queryRouter := getQueryRouter(indices, repo, cs)

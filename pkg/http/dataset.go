@@ -45,6 +45,15 @@ type Series struct {
 	Snum int    `json:"snum"`
 }
 
+func getDatasetRouter(repo *repository.Repository) *mux.Router {
+
+	datasetRouter := mux.NewRouter().PathPrefix("/datasets/").Subrouter()
+	datasetRouter.HandleFunc("/definition", getDefinition(repo)).Methods("GET")
+	datasetRouter.HandleFunc("/{gkey}/{skey}", getSeries(repo)).Methods("GET")
+
+	return datasetRouter
+}
+
 func getSeries(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

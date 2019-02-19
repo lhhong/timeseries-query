@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"log"
 
 	"github.com/lhhong/timeseries-query/pkg/config"
@@ -23,9 +24,10 @@ func rootCommand() *cobra.Command {
 
 func run(cmd *cobra.Command, args []string) {
 	conf := config.GetConfig(cmd)
+	indices := sectionindex.LoadIndices(conf.App.SeriesGroups, conf.App.Env)
 	repo := repository.LoadDb(&conf.Database)
 	cs := querycache.InitCacheStore(&conf.Redis)
-	http.StartServer(&conf.HTTPServer, repo, cs)
+	http.StartServer(&conf.HTTPServer, indices, repo, cs)
 }
 
 func main() {

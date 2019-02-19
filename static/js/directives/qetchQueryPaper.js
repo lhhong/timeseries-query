@@ -422,7 +422,8 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
             scope.currentPath.strokeCap = 'round';
             scope.currentPath.strokeJoin = 'round';
 
-            $http.post('/query/initializequery', {}).then(function successCallback(response) {
+            // TODO change stocks to appropriate group name
+            $http.post('/query/initializequery/stocks', {}).then(function successCallback(response) {
               // this callback will be called asynchronously
               // when the response is available
             }, function errorCallback(response) {

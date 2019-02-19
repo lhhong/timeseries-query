@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -13,22 +14,25 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func getQueryRouter(repo *repository.Repository, cs *querycache.CacheStore) *mux.Router {
+func getQueryRouter(indices *sectionindex.Indices, repo *repository.Repository, cs *querycache.CacheStore) *mux.Router {
 
 	queryRouter := mux.NewRouter().PathPrefix("/query/").Subrouter()
-	queryRouter.HandleFunc("/initializequery", initializeQuery(repo, cs)).Methods("POST")
-	queryRouter.HandleFunc("/updatepoints", updatePoints(repo, cs)).Methods("POST")
+	queryRouter.HandleFunc("/initializequery/{group}", initializeQuery(indices, repo, cs)).Methods("POST")
+	queryRouter.HandleFunc("/updatepoints", updatePoints(cs)).Methods("POST")
 	queryRouter.HandleFunc("/finalizequery", finalizeQuery(repo, cs)).Methods("POST")
 	queryRouter.HandleFunc("/instantquery", instantQuery(repo)).Methods("POST")
 
 	return queryRouter
 }
 
-func initializeQuery(repo *repository.Repository, cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
+func initializeQuery(indices *sectionindex.Indices, repo *repository.Repository, cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		sessionID := getAndRefreshSessionID(w, r)
-		go query.StartContinuousQuery(repo, cs, sessionID)
+
+		group := mux.Vars(r)["group"]
+
+		go query.StartContinuousQuery(group, repo, cs, sessionID)
 
 	}
 }
@@ -82,7 +86,7 @@ func getQueryValues(r *http.Request) []repository.Values {
 	return queryValues
 }
 
-func updatePoints(repo *repository.Repository, cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
+func updatePoints(cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		sessionID := getAndRefreshSessionID(w, r)

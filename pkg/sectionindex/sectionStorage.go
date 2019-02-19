@@ -101,7 +101,9 @@ func getFileName(group string, env string) string {
 
 func LoadStorage(group string, env string) *SectionStorage {
 	ss := loadFile(group, env)
-
+	if ss == nil {
+		return nil
+	}
 	ss.rebuildReferences()
 
 	return ss

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"encoding/base32"
 	"fmt"
 	"log"
@@ -16,14 +17,14 @@ import (
 )
 
 // StartServer Starts http server
-func StartServer(conf *config.HTTPConfig, repo *repository.Repository, cs *querycache.CacheStore) {
+func StartServer(conf *config.HTTPConfig, indices *sectionindex.Indices, repo *repository.Repository, cs *querycache.CacheStore) {
 
 	datasetRouter := mux.NewRouter().PathPrefix("/datasets/").Subrouter()
 	datasetRouter.HandleFunc("/definition", getDefinition(repo)).Methods("GET")
 	datasetRouter.HandleFunc("/{gkey}/{skey}", getSeries(repo)).Methods("GET")
 	http.Handle("/datasets/", datasetRouter)
 
-	queryRouter := getQueryRouter(repo, cs)
+	queryRouter := getQueryRouter(indices, repo, cs)
 	http.Handle("/query/", queryRouter)
 
 	http.Handle("/libs/", http.StripPrefix("/libs/", http.FileServer(http.Dir("bower_components"))))

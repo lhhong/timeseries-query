@@ -1,6 +1,7 @@
 package query
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"bytes"
 	"encoding/gob"
 	"log"
@@ -46,7 +47,7 @@ func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessi
 	return res
 }
 
-func StartContinuousQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string) {
+func StartContinuousQuery(ss *sectionindex.SectionStorage, repo *repository.Repository, cs *querycache.CacheStore, sessionID string) {
 
 	cs.Subscribe(sessionID, func(conn redis.Conn, dataChan chan []byte) {
 		defer cs.Unsubscribe(conn)
@@ -58,7 +59,7 @@ func StartContinuousQuery(repo *repository.Repository, cs *querycache.CacheStore
 			dec := gob.NewDecoder(bytes.NewReader(data))
 			var query Updates
 			dec.Decode(&query)
-			handleUpdate(repo, &matches, &sectionsMatched, query.Query)
+			handleUpdate(ss, repo, &matches, &sectionsMatched, query.Query)
 			if query.IsFinal {
 				//log.Println("Received final query")
 				prepareFinalize(cs, sessionID, matches)
@@ -76,7 +77,7 @@ func prepareFinalize(cs *querycache.CacheStore, sessionID string, matches []*Par
 	cs.Publish(sessionID+"FINAL", buf.Bytes())
 }
 
-func handleUpdate(repo *repository.Repository, matches *[]*PartialMatch, sectionsMatched *int, query []repository.Values) {
+func handleUpdate(ss *sectionindex.SectionStorage, repo *repository.Repository, matches *[]*PartialMatch, sectionsMatched *int, query []repository.Values) {
 
 	//Replace with alternative smoothing, eg paper.simplify
 	//datautils.Smooth(query, 2, 1)

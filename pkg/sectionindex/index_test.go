@@ -36,12 +36,12 @@ func TestInitIndex(t *testing.T) {
 		NumWidth:         4,
 		NumHeight:        3,
 		NumLevels:        2,
-		NegRoot: &node{
+		NegRoot: &Node{
 			Count:   0,
 			Level:   0,
 			updated: false,
 		},
-		PosRoot: &node{
+		PosRoot: &Node{
 			Count:   0,
 			Level:   0,
 			updated: false,
@@ -119,7 +119,7 @@ func getTestIndex(sign int) *Index {
 		childrenRoot[h] = make([]child, 4)
 	}
 
-	emptyRoot := &node{
+	emptyRoot := &Node{
 		Count:          0,
 		Level:          0,
 		updated:        false,
@@ -130,7 +130,7 @@ func getTestIndex(sign int) *Index {
 		allValuesCache: nil,
 		Values:         nil,
 	}
-	addedRoot := &node{
+	addedRoot := &Node{
 		Count:          5,
 		Level:          0,
 		updated:        true,
@@ -155,7 +155,7 @@ func getTestIndex(sign int) *Index {
 	for h := 0; h < 3; h++ {
 		children12[h] = make([]child, 4)
 	}
-	childrenRoot[2][1].N = &node{
+	childrenRoot[2][1].N = &Node{
 		Count:          4,
 		Level:          1,
 		updated:        true,
@@ -166,7 +166,7 @@ func getTestIndex(sign int) *Index {
 		allValuesCache: nil,
 		Values:         values12,
 	}
-	children12[1][3].N = &node{
+	children12[1][3].N = &Node{
 		Count:          2,
 		Level:          2,
 		updated:        true,
@@ -177,7 +177,7 @@ func getTestIndex(sign int) *Index {
 		allValuesCache: nil,
 		Values:         values1231,
 	}
-	children12[1][2].N = &node{
+	children12[1][2].N = &Node{
 		Count:          1,
 		Level:          2,
 		updated:        true,
@@ -193,7 +193,7 @@ func getTestIndex(sign int) *Index {
 	for h := 0; h < 3; h++ {
 		children10[h] = make([]child, 4)
 	}
-	childrenRoot[0][1].N = &node{
+	childrenRoot[0][1].N = &Node{
 		Count:          1,
 		Level:          1,
 		updated:        true,
@@ -204,7 +204,7 @@ func getTestIndex(sign int) *Index {
 		allValuesCache: nil,
 		Values:         nil,
 	}
-	children10[1][2].N = &node{
+	children10[1][2].N = &Node{
 		Count:          1,
 		Level:          2,
 		updated:        true,

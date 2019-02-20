@@ -17,8 +17,8 @@ type Index struct {
 	NumWidth         int
 	NumHeight        int
 	NumLevels        int
-	PosRoot          *node
-	NegRoot          *node
+	PosRoot          *Node
+	NegRoot          *Node
 }
 
 type WidthHeightIndex struct {
@@ -64,8 +64,8 @@ func (ind *Index) AddSection(widthRatios []float64, heightRatios []float64, sect
 	}
 }
 
-func (ind *Index) traverse(IndexLink []WidthHeightIndex, sign int) *node {
-	var n *node
+func (ind *Index) traverse(IndexLink []WidthHeightIndex, sign int) *Node {
+	var n *Node
 	if sign > 0 {
 		n = ind.PosRoot
 	} else {
@@ -133,6 +133,14 @@ func (ind *Index) rebuildReferences() {
 	ind.NegRoot.rebuildReferences(ind, nil)
 }
 
+func (ind *Index) GetRootNode(sign int) *Node {
+	if sign >= 0 {
+		return ind.PosRoot
+	} else {
+		return ind.NegRoot
+	}
+}
+
 func (ind *Index) getRelevantNodeIndex(limits common.Limits) []WidthHeightIndex {
 
 	var res []WidthHeightIndex
@@ -179,7 +187,7 @@ func (ind *Index) getRelevantNodeIndex(limits common.Limits) []WidthHeightIndex 
 	return res
 }
 
-func (ss *Index) StoreSeries(sections []*repository.SectionInfo) {
+func (ind *Index) StoreSeries(sections []*repository.SectionInfo) {
 
 	var widthRatios, heightRatios [][]float64
 	var prevSection *repository.SectionInfo
@@ -189,7 +197,7 @@ func (ss *Index) StoreSeries(sections []*repository.SectionInfo) {
 			widthRatio := float64(section.Width) / float64(prevSection.Width)
 			heightRatio := float64(section.Height) / float64(prevSection.Height)
 
-			for i := len(widthRatios) - 1; i >= 0 && i >= len(widthRatios)-ss.NumLevels; i-- {
+			for i := len(widthRatios) - 1; i >= 0 && i >= len(widthRatios)-ind.NumLevels; i-- {
 				widthRatios[i] = append(widthRatios[i], widthRatio)
 				heightRatios[i] = append(heightRatios[i], heightRatio)
 			}
@@ -209,11 +217,11 @@ func (ss *Index) StoreSeries(sections []*repository.SectionInfo) {
 			return
 		}
 
-		ss.AddSection(wr, hr, section)
+		ind.AddSection(wr, hr, section)
 	}
 }
 
-func (ss *Index) Persist(group string, env string) {
+func (ind *Index) Persist(group string, env string) {
 	file, err := os.Create(getFileName(group, env))
 	if err != nil {
 		log.Println("Error creating file to persist section storage")
@@ -223,7 +231,7 @@ func (ss *Index) Persist(group string, env string) {
 	defer file.Close()
 
 	enc := gob.NewEncoder(file)
-	err = enc.Encode(*ss)
+	err = enc.Encode(*ind)
 	if err != nil {
 		log.Println(err)
 	}
@@ -235,16 +243,16 @@ func getFileName(group string, env string) string {
 }
 
 func LoadStorage(group string, env string) *Index {
-	ss := loadFile(group, env)
-	if ss == nil {
+	ind := loadFile(group, env)
+	if ind == nil {
 		return nil
 	}
-	ss.rebuildReferences()
-	return ss
+	ind.rebuildReferences()
+	return ind
 }
 
 func loadFile(group string, env string) *Index {
-	ss := Index{}
+	ind := Index{}
 	file, err := os.Open(getFileName(group, env))
 	if err != nil {
 		log.Println("Error opening file to load section storage")
@@ -254,6 +262,6 @@ func loadFile(group string, env string) *Index {
 	defer file.Close()
 
 	dec := gob.NewDecoder(file)
-	dec.Decode(&ss)
-	return &ss
+	dec.Decode(&ind)
+	return &ind
 }

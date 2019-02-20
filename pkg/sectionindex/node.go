@@ -1,15 +1,16 @@
 package sectionindex
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/common"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-type node struct {
+type Node struct {
 	Count          int
 	Level          int
 	updated        bool
 	ind            *Index
-	parent         *node
+	parent         *Node
 	Children       [][]child
 	descendents    []*[]*repository.SectionInfo
 	allValuesCache []*repository.SectionInfo
@@ -18,17 +19,17 @@ type node struct {
 
 //Intermediary struct as gob cannot encode nil values in array
 type child struct {
-	N *node
+	N *Node
 }
 
-func initNodeLazy(parent *node, ind *Index) *node {
+func initNodeLazy(parent *Node, ind *Index) *Node {
 
 	level := 0
 	if parent != nil {
 		level = parent.Level + 1
 	}
 
-	return &node{
+	return &Node{
 		Count:   0,
 		Level:   level,
 		updated: false,
@@ -37,7 +38,7 @@ func initNodeLazy(parent *node, ind *Index) *node {
 	}
 }
 
-func (n *node) propagateDescendents(descendent *[]*repository.SectionInfo) {
+func (n *Node) propagateDescendents(descendent *[]*repository.SectionInfo) {
 	n.descendents = append(n.descendents, descendent)
 	n.updated = true
 	if n.parent != nil {
@@ -45,7 +46,7 @@ func (n *node) propagateDescendents(descendent *[]*repository.SectionInfo) {
 	}
 }
 
-func (n *node) initChildrenTable() {
+func (n *Node) initChildrenTable() {
 
 	n.Children = make([][]child, n.ind.NumHeight)
 	for h := 0; h < n.ind.NumHeight; h++ {
@@ -56,7 +57,7 @@ func (n *node) initChildrenTable() {
 	}
 }
 
-func (n *node) addSection(indexLink []WidthHeightIndex, section *repository.SectionInfo) {
+func (n *Node) addSection(indexLink []WidthHeightIndex, section *repository.SectionInfo) {
 
 	n.Count++
 	n.updated = true
@@ -79,7 +80,7 @@ func (n *node) addSection(indexLink []WidthHeightIndex, section *repository.Sect
 	}
 }
 
-func (n *node) retrieveSections() []*repository.SectionInfo {
+func (n *Node) retrieveSections() []*repository.SectionInfo {
 
 	if n.updated {
 		var res []*repository.SectionInfo
@@ -93,15 +94,15 @@ func (n *node) retrieveSections() []*repository.SectionInfo {
 	return n.allValuesCache
 }
 
-func (n *node) getSectionSlices() SectionSlices {
+func (n *Node) getSectionSlices() SectionSlices {
 	return n.descendents
 }
 
-func (n *node) getCount() int {
+func (n *Node) getCount() int {
 	return n.Count
 }
 
-func (n *node) rebuildReferences(ind *Index, parent *node) {
+func (n *Node) rebuildReferences(ind *Index, parent *Node) {
 
 	n.ind = ind
 	n.parent = parent
@@ -118,6 +119,26 @@ func (n *node) rebuildReferences(ind *Index, parent *node) {
 		}
 	}
 
+}
+
+func (n *Node) traverseRelevantNodes(limits common.Limits) []*Node {
+	relevantIndices := n.ind.getRelevantNodeIndex(limits)
+	var relevantNodes []*Node
+	for _, i := range relevantIndices {
+		child := n.Children[i.heightIndex][i.widthIndex].N
+		if child != nil {
+			relevantNodes = append(relevantNodes, child)
+		}
+	}
+	return relevantNodes
+}
+
+func GetRelevantNodes(limits common.Limits, nodes []*Node) []*Node {
+	var res []*Node
+	for _, n := range nodes {
+		res = append(res, n.traverseRelevantNodes(limits)...)
+	}
+	return res
 }
 
 // TODO Remove naive method if pointer approach works

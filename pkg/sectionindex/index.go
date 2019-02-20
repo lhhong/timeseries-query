@@ -137,7 +137,45 @@ func (ind *Index) getRelevantNodeIndex(limits common.Limits) []WidthHeightIndex 
 
 	var res []WidthHeightIndex
 
-	// TODO complete function
+	startW := ind.NumWidth - 1
+	endW := ind.NumWidth - 1
+	startH := ind.NumWidth - 1
+	endH := ind.NumHeight - 1
+
+	for i, wr := range ind.WidthRatioTicks {
+		if wr > limits.WidthLower {
+			if i < startW {
+				startW = i
+			}
+		}
+		if wr > limits.WidthUpper {
+			if i < endW {
+				endW = i
+			}
+		}
+	}
+	for i, hr := range ind.HeightRatioTicks {
+		if hr > limits.HeightLower {
+			if i < startH {
+				startH = i
+			}
+		}
+		if hr > limits.HeightUpper {
+			if i < endH {
+				endH = i
+			}
+		}
+	}
+
+	for wi := startW; wi <= endW; wi++ {
+		for hi := startH; hi <= endH; hi++ {
+			res = append(res, WidthHeightIndex{
+				widthIndex:  wi,
+				heightIndex: hi,
+			})
+		}
+	}
+
 	return res
 }
 

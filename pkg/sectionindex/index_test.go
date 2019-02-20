@@ -1,13 +1,14 @@
 package sectionindex
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"flag"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
+	"github.com/lhhong/timeseries-query/pkg/common"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
@@ -355,13 +356,6 @@ func TestIndex_AddSection(t *testing.T) {
 }
 
 func TestIndex_RetrieveSections(t *testing.T) {
-	type fields struct {
-		WidthRatioTicks  []float64
-		HeightRatioTicks []float64
-		NumWidth         int
-		NumHeight        int
-		RootNode         *node
-	}
 	type args struct {
 		widthRatio  []float64
 		heightRatio []float64
@@ -443,27 +437,20 @@ func TestIndex_RetrieveSections(t *testing.T) {
 }
 
 func TestIndex_RetrieveSectionSlices(t *testing.T) {
-	type fields struct {
-		WidthRatioTicks  []float64
-		HeightRatioTicks []float64
-		NumWidth         int
-		NumHeight        int
-		RootNode         *node
-	}
 	type args struct {
 		widthRatio  []float64
 		heightRatio []float64
 		sign        int
 	}
 	tests := []struct {
-		name  string
-		index *Index
-		args  args
-		want  []*repository.SectionInfo
+		name string
+		ind  *Index
+		args args
+		want []*repository.SectionInfo
 	}{
 		{
-			name:  "12 from Pos Test Index",
-			index: getTestIndex(1),
+			name: "12 from Pos Test Index",
+			ind:  getTestIndex(1),
 			args: args{
 				[]float64{0.6},
 				[]float64{1.7},
@@ -489,8 +476,8 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 			},
 		},
 		{
-			name:  "12 from Neg Test Index",
-			index: getTestIndex(-1),
+			name: "12 from Neg Test Index",
+			ind:  getTestIndex(-1),
 			args: args{
 				[]float64{0.6},
 				[]float64{1.7},
@@ -518,7 +505,7 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			index := tt.index
+			index := tt.ind
 			if got := index.GetSectionSlices(tt.args.widthRatio, tt.args.heightRatio, tt.args.sign); !reflect.DeepEqual(got.ToSlice(), tt.want) {
 				t.Errorf("Index.RetrieveSections() = %v, want %v", got, tt.want)
 			}
@@ -651,6 +638,53 @@ func Test_sectionStorage_Persist_LoadStorage(t *testing.T) {
 			got := LoadStorage(tt.args.group, tt.args.env)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("LoadStorage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIndex_getRelevantNodeIndex(t *testing.T) {
+	type args struct {
+		limits common.Limits
+	}
+	tests := []struct {
+		name string
+		ind  *Index
+		args args
+		want []WidthHeightIndex
+	}{
+		{
+			name: "Basic test",
+			ind:  InitIndex(0, []float64{0.2, 0.8, 1.2, 1.5}, []float64{0.5, 1.0, 2.0, 5.0}),
+			args: args{
+				limits: common.Limits{
+					WidthLower:  0.9,
+					WidthUpper:  1.8,
+					HeightLower: 2.2,
+					HeightUpper: 3.0,
+				},
+			},
+			want: []WidthHeightIndex{
+				{
+					widthIndex:  2,
+					heightIndex: 3,
+				},
+				{
+					widthIndex:  3,
+					heightIndex: 3,
+				},
+				{
+					widthIndex:  4,
+					heightIndex: 3,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ind := tt.ind
+			if got := ind.getRelevantNodeIndex(tt.args.limits); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Index.getRelevantNodeIndex() = %v, want %v", got, tt.want)
 			}
 		})
 	}

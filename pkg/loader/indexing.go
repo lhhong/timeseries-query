@@ -26,7 +26,7 @@ import (
 // 	}
 // }
 
-func IndexAndSaveSeries(ss *sectionindex.SectionStorage, seriesInfo repository.SeriesInfo, values []repository.Values) {
+func IndexAndSaveSeries(ind *sectionindex.Index, seriesInfo repository.SeriesInfo, values []repository.Values) {
 
 	//TODO export to parameters
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
@@ -44,10 +44,10 @@ func IndexAndSaveSeries(ss *sectionindex.SectionStorage, seriesInfo repository.S
 		}
 	}
 
-	ss.StoreSeries(sectionInfos)
+	ind.StoreSeries(sectionInfos)
 }
 
-func CalcAndSaveIndexDetails(repo *repository.Repository, ss *sectionindex.SectionStorage, env string, group string) {
+func CalcAndSaveIndexDetails(repo *repository.Repository, ind *sectionindex.Index, env string, group string) {
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
 
@@ -55,10 +55,10 @@ func CalcAndSaveIndexDetails(repo *repository.Repository, ss *sectionindex.Secti
 
 		values := seriesValues[i]
 
-		IndexAndSaveSeries(ss, seriesInfo, values)
+		IndexAndSaveSeries(ind, seriesInfo, values)
 
 	}
-	ss.Persist(group, env)
+	ind.Persist(group, env)
 }
 
 func CalcAndSaveIndexDetails_Old(repo *repository.Repository, group string) {

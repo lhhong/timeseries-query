@@ -16,7 +16,7 @@ import (
 )
 
 // LoadData Loads data from commands
-func LoadData(cmd *cobra.Command, conf config.AppConfig, repo *repository.Repository) {
+func LoadData(cmd *cobra.Command, conf *config.AppConfig, repo *repository.Repository) {
 
 	group, _ := cmd.Flags().GetString("groupname")
 	data, _ := cmd.Flags().GetString("datafile")
@@ -86,8 +86,8 @@ SaveAndExit:
 }
 
 func loadIndex(group string, env string, repo *repository.Repository) {
-	ss := sectionindex.InitDefaultSectionStorage()
-	CalcAndSaveIndexDetails(repo, ss, env, group)
+	ind := sectionindex.InitDefaultIndex()
+	CalcAndSaveIndexDetails(repo, ind, env, group)
 }
 
 func saveSeries(series map[string]bool, group string, repo *repository.Repository) {

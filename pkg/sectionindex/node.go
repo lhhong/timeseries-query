@@ -8,7 +8,7 @@ type node struct {
 	Count          int
 	Level          int
 	updated        bool
-	ind            *index
+	ind            *Index
 	parent         *node
 	Children       [][]child
 	descendents    []*[]*repository.SectionInfo
@@ -21,7 +21,7 @@ type child struct {
 	N *node
 }
 
-func initNodeLazy(parent *node, ind *index) *node {
+func initNodeLazy(parent *node, ind *Index) *node {
 
 	level := 0
 	if parent != nil {
@@ -101,7 +101,7 @@ func (n *node) getCount() int {
 	return n.Count
 }
 
-func (n *node) rebuildReferences(ind *index, parent *node) {
+func (n *node) rebuildReferences(ind *Index, parent *node) {
 
 	n.ind = ind
 	n.parent = parent

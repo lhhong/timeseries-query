@@ -14,9 +14,9 @@ func TestIndexing(t *testing.T) {
 	repo.DeleteAllClusterMembers()
 	repo.DeleteAllSectionInfos()
 
-	ss := sectionindex.InitDefaultSectionStorage()
+	ind := sectionindex.InitDefaultIndex()
 
-	CalcAndSaveIndexDetails(repo, ss, "test", "stocks")
+	CalcAndSaveIndexDetails(repo, ind, "test", "stocks")
 }
 
 // func TestIndexingOld(t *testing.T) {

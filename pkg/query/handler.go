@@ -51,7 +51,7 @@ func StartContinuousQuery(ind *sectionindex.Index, repo *repository.Repository, 
 
 	cs.Subscribe(sessionID, func(conn redis.Conn, dataChan chan []byte) {
 		defer cs.Unsubscribe(conn)
-		var matches []*PartialMatch
+		var matches []*sectionindex.Node
 		sectionsMatched := 0
 		// TODO: timeout event if no final received
 		for {
@@ -69,7 +69,7 @@ func StartContinuousQuery(ind *sectionindex.Index, repo *repository.Repository, 
 	})
 }
 
-func prepareFinalize(cs *querycache.CacheStore, sessionID string, matches []*PartialMatch) {
+func prepareFinalize(cs *querycache.CacheStore, sessionID string, matches []*sectionindex.Node) {
 
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
@@ -77,7 +77,46 @@ func prepareFinalize(cs *querycache.CacheStore, sessionID string, matches []*Par
 	cs.Publish(sessionID+"FINAL", buf.Bytes())
 }
 
-func handleUpdate(ind *sectionindex.Index, repo *repository.Repository, matches *[]*PartialMatch, sectionsMatched *int, query []repository.Values) {
+func handleUpdate(ind *sectionindex.Index, repo *repository.Repository, matches *[]*sectionindex.Node, sectionsMatched *int, query []repository.Values) {
+
+	//Replace with alternative smoothing, eg paper.simplify
+	//datautils.Smooth(query, 2, 1)
+	//datautils.Smooth(query, 3, 2)
+
+	//TODO dynamically tweak this value
+	CountToRetrieve := 50
+
+	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 2.2)
+	if len(sections) < 4 {
+		// Not ready for query yet
+		return
+	}
+
+	if *sectionsMatched == 0 {
+
+		limits := getAllRatioLimits(sections[2].SectionInfo.Width, sections[1].SectionInfo.Width, 
+			sections[2].SectionInfo.Height, sections[1].SectionInfo.Height)
+		
+		node := ind.GetRootNode(sections[1].SectionInfo.Sign)
+		*matches = sectionindex.GetRelevantNodes(limits, []*sectionindex.Node{node})
+
+		*sectionsMatched = 2
+	}
+	for len(sections)-2 > *sectionsMatched {
+		limits := getAllRatioLimits(sections[*sectionsMatched+1].SectionInfo.Width, sections[*sectionsMatched].SectionInfo.Width, 
+			sections[*sectionsMatched+1].SectionInfo.Height, sections[*sectionsMatched].SectionInfo.Height)
+		*matches = sectionindex.GetRelevantNodes(limits, *matches)
+		*sectionsMatched++
+	}
+
+	if sectionindex.GetTotalCount(*matches) <= CountToRetrieve {
+		ss := sectionindex.GetAllSectionSlices(*matches)
+		//TODO handle these ss
+		_ = ss
+	}
+}
+
+func handleUpdate_old(ind *sectionindex.Index, repo *repository.Repository, matches *[]*PartialMatch, sectionsMatched *int, query []repository.Values) {
 
 	//Replace with alternative smoothing, eg paper.simplify
 	//datautils.Smooth(query, 2, 1)

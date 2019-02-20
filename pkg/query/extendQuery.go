@@ -230,7 +230,7 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	return true
 }
 
-func getAllRatioLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) common.Limits {
+func getAllRatioLimits(queryWidth, cmpQueryWidth int64, queryHeight, cmpQueryHeight float64) common.Limits {
 
 	// TODO Export to parameters
 

@@ -86,7 +86,7 @@ func (ind *Index) RetrieveSections(widthRatios []float64, heightRatios []float64
 func (ind *Index) GetSectionSlices(widthRatios []float64, heightRatios []float64, sign int) SectionSlices {
 	IndexLink := ind.getIndexLink(widthRatios, heightRatios)
 	node := ind.traverse(IndexLink, sign)
-	return node.getSectionSlices()
+	return node.GetSectionSlices()
 }
 
 func (ind *Index) GetCount(widthRatios []float64, heightRatios []float64, sign int) int {

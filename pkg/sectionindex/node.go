@@ -94,7 +94,7 @@ func (n *Node) retrieveSections() []*repository.SectionInfo {
 	return n.allValuesCache
 }
 
-func (n *Node) getSectionSlices() SectionSlices {
+func (n *Node) GetSectionSlices() SectionSlices {
 	return n.descendents
 }
 
@@ -139,6 +139,22 @@ func GetRelevantNodes(limits common.Limits, nodes []*Node) []*Node {
 		res = append(res, n.traverseRelevantNodes(limits)...)
 	}
 	return res
+}
+
+func GetTotalCount(nodes []*Node) int {
+	count := 0
+	for _, n := range nodes {
+		count += n.getCount()
+	}
+	return count
+}
+
+func GetAllSectionSlices(nodes []*Node) SectionSlices {
+	var ss SectionSlices
+	for _, n := range nodes {
+		ss = append(ss, n.GetSectionSlices()...)
+	}
+	return ss
 }
 
 // TODO Remove naive method if pointer approach works

@@ -3,16 +3,16 @@ package sectionindex
 type SectionSlices []*[]*SectionInfo
 
 type SectionSlicesIterator struct {
-	ss SectionSlices
+	ss         SectionSlices
 	outerIndex int
 	innerIndex int
 }
 
 func (ss SectionSlices) Iterator() SectionSlicesIterator {
-	return SectionSlicesIterator {
+	return SectionSlicesIterator{
 		outerIndex: 0,
 		innerIndex: 0,
-		ss: ss,
+		ss:         ss,
 	}
 }
 

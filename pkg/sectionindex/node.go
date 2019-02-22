@@ -159,6 +159,11 @@ func GetAllSectionSlices(nodes []*Node) SectionSlices {
 	return ss
 }
 
+func RetrieveAllSections(nodes []*Node) []*SectionInfo {
+	ss := GetAllSectionSlices(nodes)
+	return ss.ToSlice()
+}
+
 // TODO Remove naive method if pointer approach works
 // func (n *node) retrieveSectionsNaive() []*SectionInfo {
 //

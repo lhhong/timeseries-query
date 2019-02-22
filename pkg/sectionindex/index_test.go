@@ -45,6 +45,7 @@ func TestInitIndex(t *testing.T) {
 			Level:   0,
 			updated: false,
 		},
+		SectionInfoMap: make(map[SectionInfoKey]*SectionInfo),
 	}
 	want.PosRoot.ind = want
 	want.NegRoot.ind = want
@@ -82,34 +83,55 @@ func getTestIndex(sign int) *Index {
 		NumLevels:        2,
 		PosRoot:          nil,
 		NegRoot:          nil,
+		SectionInfoMap:   make(map[SectionInfoKey]*SectionInfo),
+	}
+	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-31-1"}] = &SectionInfo{
+		Series: "Section 12-31-1",
+		Sign:   sign,
+	}
+	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-31-2"}] = &SectionInfo{
+		Series: "Section 12-31-2",
+		Sign:   sign,
+	}
+	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-21-1"}] = &SectionInfo{
+		Series: "Section 12-21-1",
+		Sign:   sign,
+	}
+	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-1"}] = &SectionInfo{
+		Series: "Section 12-1",
+		Sign:   sign,
+	}
+	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 10-21-1"}] = &SectionInfo{
+		Series: "Section 10-21-1",
+		Sign:   sign,
 	}
 
 	values1231 := []*SectionInfo{
 		&SectionInfo{
-			Groupname: "Section 12-31-1",
-			Sign:      sign,
+			Series: "Section 12-31-1",
+			Sign:   sign,
 		},
 		&SectionInfo{
-			Groupname: "Section 12-31-2",
-			Sign:      sign,
+			Series: "Section 12-31-2",
+			Sign:   sign,
 		},
 	}
 	values1221 := []*SectionInfo{
 		&SectionInfo{
-			Groupname: "Section 12-21-1",
-			Sign:      sign,
+			Series: "Section 12-21-1",
+			Sign:   sign,
 		},
 	}
 	values12 := []*SectionInfo{
 		&SectionInfo{
-			Groupname: "Section 12-1",
-			Sign:      sign,
+			Series: "Section 12-1",
+			Sign:   sign,
 		},
 	}
 	values1021 := []*SectionInfo{
 		&SectionInfo{
-			Groupname: "Section 10-21-1",
-			Sign:      sign,
+			Series: "Section 10-21-1",
+			Sign:   sign,
 		},
 	}
 
@@ -248,40 +270,40 @@ func TestIndex_AddSection(t *testing.T) {
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 12-31-1",
-						Sign:      1,
+						Series: "Section 12-31-1",
+						Sign:   1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 12-31-2",
-						Sign:      1,
+						Series: "Section 12-31-2",
+						Sign:   1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 12-21-1",
-						Sign:      1,
+						Series: "Section 12-21-1",
+						Sign:   1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6},
 					heightRatio: []float64{1.8},
 					section: &SectionInfo{
-						Groupname: "Section 12-1",
-						Sign:      1,
+						Series: "Section 12-1",
+						Sign:   1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{0.1, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 10-21-1",
-						Sign:      1,
+						Series: "Section 10-21-1",
+						Sign:   1,
 					},
 				},
 			},
@@ -299,40 +321,40 @@ func TestIndex_AddSection(t *testing.T) {
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 12-31-1",
-						Sign:      -1,
+						Series: "Section 12-31-1",
+						Sign:   -1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 12-31-2",
-						Sign:      -1,
+						Series: "Section 12-31-2",
+						Sign:   -1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{1.8, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 12-21-1",
-						Sign:      -1,
+						Series: "Section 12-21-1",
+						Sign:   -1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6},
 					heightRatio: []float64{1.8},
 					section: &SectionInfo{
-						Groupname: "Section 12-1",
-						Sign:      -1,
+						Series: "Section 12-1",
+						Sign:   -1,
 					},
 				},
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{0.1, 1.0},
 					section: &SectionInfo{
-						Groupname: "Section 10-21-1",
-						Sign:      -1,
+						Series: "Section 10-21-1",
+						Sign:   -1,
 					},
 				},
 			},
@@ -376,20 +398,20 @@ func TestIndex_RetrieveSections(t *testing.T) {
 			},
 			want: []*SectionInfo{
 				&SectionInfo{
-					Groupname: "Section 12-31-1",
-					Sign:      1,
+					Series: "Section 12-31-1",
+					Sign:   1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-31-2",
-					Sign:      1,
+					Series: "Section 12-31-2",
+					Sign:   1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-21-1",
-					Sign:      1,
+					Series: "Section 12-21-1",
+					Sign:   1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-1",
-					Sign:      1,
+					Series: "Section 12-1",
+					Sign:   1,
 				},
 			},
 		},
@@ -403,20 +425,20 @@ func TestIndex_RetrieveSections(t *testing.T) {
 			},
 			want: []*SectionInfo{
 				&SectionInfo{
-					Groupname: "Section 12-31-1",
-					Sign:      -1,
+					Series: "Section 12-31-1",
+					Sign:   -1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-31-2",
-					Sign:      -1,
+					Series: "Section 12-31-2",
+					Sign:   -1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-21-1",
-					Sign:      -1,
+					Series: "Section 12-21-1",
+					Sign:   -1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-1",
-					Sign:      -1,
+					Series: "Section 12-1",
+					Sign:   -1,
 				},
 			},
 		},
@@ -457,20 +479,20 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 			},
 			want: []*SectionInfo{
 				&SectionInfo{
-					Groupname: "Section 12-31-1",
-					Sign:      1,
+					Series: "Section 12-31-1",
+					Sign:   1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-31-2",
-					Sign:      1,
+					Series: "Section 12-31-2",
+					Sign:   1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-21-1",
-					Sign:      1,
+					Series: "Section 12-21-1",
+					Sign:   1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-1",
-					Sign:      1,
+					Series: "Section 12-1",
+					Sign:   1,
 				},
 			},
 		},
@@ -484,20 +506,20 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 			},
 			want: []*SectionInfo{
 				&SectionInfo{
-					Groupname: "Section 12-31-1",
-					Sign:      -1,
+					Series: "Section 12-31-1",
+					Sign:   -1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-31-2",
-					Sign:      -1,
+					Series: "Section 12-31-2",
+					Sign:   -1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-21-1",
-					Sign:      -1,
+					Series: "Section 12-21-1",
+					Sign:   -1,
 				},
 				&SectionInfo{
-					Groupname: "Section 12-1",
-					Sign:      -1,
+					Series: "Section 12-1",
+					Sign:   -1,
 				},
 			},
 		},

@@ -17,7 +17,7 @@ type Index struct {
 	NumLevels        int
 	PosRoot          *Node
 	NegRoot          *Node
-	// sectionInfoMap   map[SectionInfoKey]*SectionInfo
+	SectionInfoMap   map[SectionInfoKey]*SectionInfo
 }
 
 type WidthHeightIndex struct {
@@ -45,6 +45,7 @@ func InitIndex(numLevels int, widthRatioTicks []float64, heightRatioTicks []floa
 		NumWidth:         numWidth,
 		NumHeight:        numHeight,
 		NumLevels:        numLevels,
+		SectionInfoMap:   make(map[SectionInfoKey]*SectionInfo),
 	}
 	posRoot := initNodeLazy(nil, ind)
 	ind.PosRoot = posRoot
@@ -62,6 +63,7 @@ func (ind *Index) AddSection(widthRatios []float64, heightRatios []float64, sect
 		ind.NegRoot.addSection(IndexLink, section)
 	}
 
+	ind.SectionInfoMap[section.getKey()] = section
 }
 
 func (ind *Index) traverse(IndexLink []WidthHeightIndex, sign int) *Node {

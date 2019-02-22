@@ -25,3 +25,11 @@ func (si *SectionInfo) getKey() SectionInfoKey {
 		StartSeq: si.StartSeq,
 	}
 }
+
+func (si *SectionInfo) getNextKey() SectionInfoKey {
+	return SectionInfoKey{
+		Series:   si.Series,
+		Nsmooth:  si.Nsmooth,
+		StartSeq: si.NextSeq,
+	}
+}

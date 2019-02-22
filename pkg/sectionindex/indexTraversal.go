@@ -5,10 +5,22 @@ import (
 	"log"
 )
 
-
 type WidthHeightIndex struct {
 	widthIndex  int
 	heightIndex int
+}
+
+func (ind *Index) GetNextSection(section *SectionInfo) *SectionInfo {
+	return ind.sectionInfoMap[section.getNextKey()]
+}
+
+func (ind *Index) GetNthSection(section *SectionInfo, n int) *SectionInfo {
+
+	cur := section
+	for i := 0; cur != nil && i < n; i++ {
+		cur = ind.GetNextSection(cur)
+	}
+	return cur
 }
 
 func (ind *Index) traverse(IndexLink []WidthHeightIndex, sign int) *Node {

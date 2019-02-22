@@ -31,7 +31,7 @@ func IndexAndSaveSeries(ind *sectionindex.Index, seriesInfo repository.SeriesInf
 	//TODO export to parameters
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 	minSmoothRatio := 0.4                  // minimum smooth iteration to index
-	var sectionInfos []*repository.SectionInfo
+	var sectionInfos []*sectionindex.SectionInfo
 
 	smoothedValues := datautils.SmoothData(values)
 	minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
@@ -84,7 +84,7 @@ func CalcAndSaveIndexDetails_Old(repo *repository.Repository, group string) {
 	sectionBatchSize := 3000
 
 	clusterMembers := make([]*repository.ClusterMember, 0, clusterBatchSize+1000)
-	sectionInfos := make([]*repository.SectionInfo, 0, sectionBatchSize+1000)
+	sectionInfos := make([]*sectionindex.SectionInfo, 0, sectionBatchSize+1000)
 	for seriesIndex, seriesInfo := range seriesInfos {
 		values := seriesValues[seriesIndex]
 		posSections, negSections := getSmoothedPosNegSections(seriesInfo, values)
@@ -116,12 +116,14 @@ func CalcAndSaveIndexDetails_Old(repo *repository.Repository, group string) {
 	}
 }
 
-func saveSectionInfos(repo *repository.Repository, sectionInfos []*repository.SectionInfo) {
-	err := repo.BulkSaveSectionInfos(sectionInfos)
-	if err != nil {
-		log.Println("Cannot save SectionInfos")
-		log.Println(err)
-	}
+func saveSectionInfos(repo *repository.Repository, sectionInfos []*sectionindex.SectionInfo) {
+	// TODO: remove saving sectioninfo
+	//log.Println("Attempting to save sectioninfo, no longer for storage in database")
+	//err := repo.BulkSaveSectionInfos(sectionInfos)
+	//if err != nil {
+	//	log.Println("Cannot save SectionInfos")
+	//	log.Println(err)
+	//}
 }
 
 func saveClusterMembers(repo *repository.Repository, clusterMembers []*repository.ClusterMember) {
@@ -132,7 +134,7 @@ func saveClusterMembers(repo *repository.Repository, clusterMembers []*repositor
 	}
 }
 
-func getIndexDetailsByFCM(repo *repository.Repository, group string) ([][]float64, [][]float64, []*repository.ClusterMember, []*repository.SectionInfo) {
+func getIndexDetailsByFCM(repo *repository.Repository, group string) ([][]float64, [][]float64, []*repository.ClusterMember, []*sectionindex.SectionInfo) {
 
 	seriesInfos, seriesValues := retrieveAllSeriesInGroup(repo, group)
 
@@ -147,7 +149,7 @@ func getIndexDetailsByFCM(repo *repository.Repository, group string) ([][]float6
 	posClusterMembers := datautils.GetMembership(posSections, posWeights, membershipThreshold)
 	negClusterMembers := datautils.GetMembership(negSections, negWeights, membershipThreshold)
 
-	sectionInfos := make([]*repository.SectionInfo, len(posSections)+len(negSections))
+	sectionInfos := make([]*sectionindex.SectionInfo, len(posSections)+len(negSections))
 	for i, section := range posSections {
 		sectionInfos[i] = section.SectionInfo
 	}

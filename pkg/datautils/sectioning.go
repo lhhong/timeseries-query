@@ -1,6 +1,7 @@
 package datautils
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
@@ -12,7 +13,7 @@ import (
 type Section struct {
 	Points      []repository.Values
 	Tangents    []float64
-	SectionInfo *repository.SectionInfo
+	SectionInfo *sectionindex.SectionInfo
 }
 
 func extractTangents(points []repository.Values) []float64 {
@@ -36,7 +37,7 @@ func newSection(sign int, startSeq int64, prevSeq int64) *Section {
 	return &Section{
 		Points:   make([]repository.Values, 0, 15),
 		Tangents: make([]float64, 0, 15),
-		SectionInfo: &repository.SectionInfo{
+		SectionInfo: &sectionindex.SectionInfo{
 			Sign:     sign,
 			StartSeq: startSeq,
 			PrevSeq:  prevSeq,

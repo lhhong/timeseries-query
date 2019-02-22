@@ -1,10 +1,6 @@
 package sectionindex
 
-import (
-	"github.com/lhhong/timeseries-query/pkg/repository"
-)
-
-type SectionSlices []*[]*repository.SectionInfo
+type SectionSlices []*[]*SectionInfo
 
 type SectionSlicesIterator struct {
 	ss SectionSlices
@@ -20,7 +16,7 @@ func (ss SectionSlices) Iterator() SectionSlicesIterator {
 	}
 }
 
-func (ssi *SectionSlicesIterator) Next() *repository.SectionInfo {
+func (ssi *SectionSlicesIterator) Next() *SectionInfo {
 	if ssi.outerIndex >= len(ssi.ss) {
 		return nil
 	}
@@ -35,8 +31,8 @@ func (ssi *SectionSlicesIterator) Next() *repository.SectionInfo {
 	return res
 }
 
-// func (ss *SectionSlices) iterate() <-chan *repository.SectionInfo {
-// 	ch := make(chan *repository.SectionInfo)
+// func (ss *SectionSlices) iterate() <-chan *SectionInfo {
+// 	ch := make(chan *SectionInfo)
 // 	go func() {
 // 		for _, sl := range *ss {
 // 			for _, si := range *sl {
@@ -48,8 +44,8 @@ func (ssi *SectionSlicesIterator) Next() *repository.SectionInfo {
 // 	return ch
 // }
 
-func (ss *SectionSlices) ToSlice() []*repository.SectionInfo {
-	var res []*repository.SectionInfo
+func (ss *SectionSlices) ToSlice() []*SectionInfo {
+	var res []*SectionInfo
 	ssi := ss.Iterator()
 	for si := ssi.Next(); si != nil; si = ssi.Next() {
 		res = append(res, si)

@@ -229,7 +229,12 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 	// }
 }
 
+// Deprecated or needs to be edited
 func getPartialMatch(repo *repository.Repository, member repository.ClusterMember, width int64, height float64) *PartialMatch {
+	//TODO: Remove function or use sectionindex
+	return nil
+
+	// These will not run
 	sectionInfo, err := repo.GetOneSectionInfo(member.Groupname, member.Series, member.Smooth, member.StartSeq)
 	if err != nil {
 		log.Println("Error retriving section info")

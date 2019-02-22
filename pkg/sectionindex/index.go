@@ -7,8 +7,6 @@ import (
 	"os"
 
 	"github.com/lhhong/timeseries-query/pkg/common"
-
-	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
 type Index struct {
@@ -19,6 +17,7 @@ type Index struct {
 	NumLevels        int
 	PosRoot          *Node
 	NegRoot          *Node
+	// sectionInfoMap   map[SectionInfoKey]*SectionInfo
 }
 
 type WidthHeightIndex struct {
@@ -54,7 +53,7 @@ func InitIndex(numLevels int, widthRatioTicks []float64, heightRatioTicks []floa
 	return ind
 }
 
-func (ind *Index) AddSection(widthRatios []float64, heightRatios []float64, section *repository.SectionInfo) {
+func (ind *Index) AddSection(widthRatios []float64, heightRatios []float64, section *SectionInfo) {
 
 	IndexLink := ind.getIndexLink(widthRatios, heightRatios)
 	if section.Sign >= 0 {
@@ -62,6 +61,7 @@ func (ind *Index) AddSection(widthRatios []float64, heightRatios []float64, sect
 	} else {
 		ind.NegRoot.addSection(IndexLink, section)
 	}
+
 }
 
 func (ind *Index) traverse(IndexLink []WidthHeightIndex, sign int) *Node {
@@ -77,7 +77,7 @@ func (ind *Index) traverse(IndexLink []WidthHeightIndex, sign int) *Node {
 	return n
 }
 
-func (ind *Index) RetrieveSections(widthRatios []float64, heightRatios []float64, sign int) []*repository.SectionInfo {
+func (ind *Index) RetrieveSections(widthRatios []float64, heightRatios []float64, sign int) []*SectionInfo {
 	IndexLink := ind.getIndexLink(widthRatios, heightRatios)
 	node := ind.traverse(IndexLink, sign)
 	return node.retrieveSections()
@@ -187,10 +187,10 @@ func (ind *Index) getRelevantNodeIndex(limits common.Limits) []WidthHeightIndex 
 	return res
 }
 
-func (ind *Index) StoreSeries(sections []*repository.SectionInfo) {
+func (ind *Index) StoreSeries(sections []*SectionInfo) {
 
 	var widthRatios, heightRatios [][]float64
-	var prevSection *repository.SectionInfo
+	var prevSection *SectionInfo
 	for _, section := range sections {
 
 		if prevSection != nil {

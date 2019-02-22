@@ -2,7 +2,6 @@ package sectionindex
 
 import (
 	"github.com/lhhong/timeseries-query/pkg/common"
-	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
 type Node struct {
@@ -12,9 +11,9 @@ type Node struct {
 	ind            *Index
 	parent         *Node
 	Children       [][]child
-	descendents    []*[]*repository.SectionInfo
-	allValuesCache []*repository.SectionInfo
-	Values         []*repository.SectionInfo
+	descendents    []*[]*SectionInfo
+	allValuesCache []*SectionInfo
+	Values         []*SectionInfo
 }
 
 //Intermediary struct as gob cannot encode nil values in array
@@ -38,7 +37,7 @@ func initNodeLazy(parent *Node, ind *Index) *Node {
 	}
 }
 
-func (n *Node) propagateDescendents(descendent *[]*repository.SectionInfo) {
+func (n *Node) propagateDescendents(descendent *[]*SectionInfo) {
 	n.descendents = append(n.descendents, descendent)
 	n.updated = true
 	if n.parent != nil {
@@ -57,7 +56,7 @@ func (n *Node) initChildrenTable() {
 	}
 }
 
-func (n *Node) addSection(indexLink []WidthHeightIndex, section *repository.SectionInfo) {
+func (n *Node) addSection(indexLink []WidthHeightIndex, section *SectionInfo) {
 
 	n.Count++
 	n.updated = true
@@ -80,10 +79,10 @@ func (n *Node) addSection(indexLink []WidthHeightIndex, section *repository.Sect
 	}
 }
 
-func (n *Node) retrieveSections() []*repository.SectionInfo {
+func (n *Node) retrieveSections() []*SectionInfo {
 
 	if n.updated {
-		var res []*repository.SectionInfo
+		var res []*SectionInfo
 		for _, desc := range n.descendents {
 			res = append(res, *desc...)
 		}
@@ -158,13 +157,13 @@ func GetAllSectionSlices(nodes []*Node) SectionSlices {
 }
 
 // TODO Remove naive method if pointer approach works
-// func (n *node) retrieveSectionsNaive() []*repository.SectionInfo {
+// func (n *node) retrieveSectionsNaive() []*SectionInfo {
 //
 // 	if n.level == 0 {
 // 		return n.values
 // 	}
 //
-// 	var res []*repository.SectionInfo
+// 	var res []*SectionInfo
 // 	for _, row := range n.children {
 // 		for _, n := range row {
 // 			if n != nil {

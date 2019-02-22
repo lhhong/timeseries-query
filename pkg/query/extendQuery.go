@@ -168,6 +168,9 @@ func getRelevantClusters(points []repository.Values, centroids []*repository.Clu
 }
 
 func getPrevSection(repo *repository.Repository, nextSection *repository.SectionInfo) *repository.SectionInfo {
+	return nil
+	//TODO Edit this function to use sectionindex
+
 	if nextSection.PrevSeq == -1 {
 		return nil
 	}
@@ -180,6 +183,9 @@ func getPrevSection(repo *repository.Repository, nextSection *repository.Section
 }
 
 func getNextSection(repo *repository.Repository, prevSection *repository.SectionInfo) *repository.SectionInfo {
+	return nil
+	//TODO Edit this function to use sectionindex
+
 	if prevSection.NextSeq == -1 {
 		return nil
 	}

@@ -9,7 +9,6 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/lhhong/timeseries-query/pkg/common"
-	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
 var (
@@ -85,30 +84,30 @@ func getTestIndex(sign int) *Index {
 		NegRoot:          nil,
 	}
 
-	values1231 := []*repository.SectionInfo{
-		&repository.SectionInfo{
+	values1231 := []*SectionInfo{
+		&SectionInfo{
 			Groupname: "Section 12-31-1",
 			Sign:      sign,
 		},
-		&repository.SectionInfo{
+		&SectionInfo{
 			Groupname: "Section 12-31-2",
 			Sign:      sign,
 		},
 	}
-	values1221 := []*repository.SectionInfo{
-		&repository.SectionInfo{
+	values1221 := []*SectionInfo{
+		&SectionInfo{
 			Groupname: "Section 12-21-1",
 			Sign:      sign,
 		},
 	}
-	values12 := []*repository.SectionInfo{
-		&repository.SectionInfo{
+	values12 := []*SectionInfo{
+		&SectionInfo{
 			Groupname: "Section 12-1",
 			Sign:      sign,
 		},
 	}
-	values1021 := []*repository.SectionInfo{
-		&repository.SectionInfo{
+	values1021 := []*SectionInfo{
+		&SectionInfo{
 			Groupname: "Section 10-21-1",
 			Sign:      sign,
 		},
@@ -137,7 +136,7 @@ func getTestIndex(sign int) *Index {
 		ind:            indexWant,
 		parent:         nil,
 		Children:       childrenRoot,
-		descendents:    []*[]*repository.SectionInfo{&values1231, &values1221, &values12, &values1021},
+		descendents:    []*[]*SectionInfo{&values1231, &values1221, &values12, &values1021},
 		allValuesCache: nil,
 		Values:         nil,
 	}
@@ -162,7 +161,7 @@ func getTestIndex(sign int) *Index {
 		ind:            indexWant,
 		parent:         addedRoot,
 		Children:       children12,
-		descendents:    []*[]*repository.SectionInfo{&values1231, &values1221, &values12},
+		descendents:    []*[]*SectionInfo{&values1231, &values1221, &values12},
 		allValuesCache: nil,
 		Values:         values12,
 	}
@@ -173,7 +172,7 @@ func getTestIndex(sign int) *Index {
 		ind:            indexWant,
 		parent:         childrenRoot[2][1].N,
 		Children:       nil,
-		descendents:    []*[]*repository.SectionInfo{&values1231},
+		descendents:    []*[]*SectionInfo{&values1231},
 		allValuesCache: nil,
 		Values:         values1231,
 	}
@@ -184,7 +183,7 @@ func getTestIndex(sign int) *Index {
 		ind:            indexWant,
 		parent:         childrenRoot[2][1].N,
 		Children:       nil,
-		descendents:    []*[]*repository.SectionInfo{&values1221},
+		descendents:    []*[]*SectionInfo{&values1221},
 		allValuesCache: nil,
 		Values:         values1221,
 	}
@@ -200,7 +199,7 @@ func getTestIndex(sign int) *Index {
 		ind:            indexWant,
 		parent:         addedRoot,
 		Children:       children10,
-		descendents:    []*[]*repository.SectionInfo{&values1021},
+		descendents:    []*[]*SectionInfo{&values1021},
 		allValuesCache: nil,
 		Values:         nil,
 	}
@@ -211,7 +210,7 @@ func getTestIndex(sign int) *Index {
 		ind:            indexWant,
 		parent:         childrenRoot[0][1].N,
 		Children:       nil,
-		descendents:    []*[]*repository.SectionInfo{&values1021},
+		descendents:    []*[]*SectionInfo{&values1021},
 		allValuesCache: nil,
 		Values:         values1021,
 	}
@@ -228,7 +227,7 @@ func TestIndex_AddSection(t *testing.T) {
 	type args struct {
 		widthRatio  []float64
 		heightRatio []float64
-		section     *repository.SectionInfo
+		section     *SectionInfo
 	}
 
 	tests := []struct {
@@ -248,7 +247,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-31-1",
 						Sign:      1,
 					},
@@ -256,7 +255,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-31-2",
 						Sign:      1,
 					},
@@ -264,7 +263,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{1.8, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-21-1",
 						Sign:      1,
 					},
@@ -272,7 +271,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6},
 					heightRatio: []float64{1.8},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-1",
 						Sign:      1,
 					},
@@ -280,7 +279,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{0.1, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 10-21-1",
 						Sign:      1,
 					},
@@ -299,7 +298,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-31-1",
 						Sign:      -1,
 					},
@@ -307,7 +306,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 6.0},
 					heightRatio: []float64{1.8, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-31-2",
 						Sign:      -1,
 					},
@@ -315,7 +314,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{1.8, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-21-1",
 						Sign:      -1,
 					},
@@ -323,7 +322,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6},
 					heightRatio: []float64{1.8},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 12-1",
 						Sign:      -1,
 					},
@@ -331,7 +330,7 @@ func TestIndex_AddSection(t *testing.T) {
 				args{
 					widthRatio:  []float64{0.6, 3.0},
 					heightRatio: []float64{0.1, 1.0},
-					section: &repository.SectionInfo{
+					section: &SectionInfo{
 						Groupname: "Section 10-21-1",
 						Sign:      -1,
 					},
@@ -365,7 +364,7 @@ func TestIndex_RetrieveSections(t *testing.T) {
 		name  string
 		index *Index
 		args  args
-		want  []*repository.SectionInfo
+		want  []*SectionInfo
 	}{
 		{
 			name:  "12 from Pos Test Index",
@@ -375,20 +374,20 @@ func TestIndex_RetrieveSections(t *testing.T) {
 				[]float64{1.7},
 				1,
 			},
-			want: []*repository.SectionInfo{
-				&repository.SectionInfo{
+			want: []*SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-1",
 					Sign:      1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-2",
 					Sign:      1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-21-1",
 					Sign:      1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-1",
 					Sign:      1,
 				},
@@ -402,20 +401,20 @@ func TestIndex_RetrieveSections(t *testing.T) {
 				[]float64{1.7},
 				-1,
 			},
-			want: []*repository.SectionInfo{
-				&repository.SectionInfo{
+			want: []*SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-1",
 					Sign:      -1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-2",
 					Sign:      -1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-21-1",
 					Sign:      -1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-1",
 					Sign:      -1,
 				},
@@ -446,7 +445,7 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 		name string
 		ind  *Index
 		args args
-		want []*repository.SectionInfo
+		want []*SectionInfo
 	}{
 		{
 			name: "12 from Pos Test Index",
@@ -456,20 +455,20 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 				[]float64{1.7},
 				1,
 			},
-			want: []*repository.SectionInfo{
-				&repository.SectionInfo{
+			want: []*SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-1",
 					Sign:      1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-2",
 					Sign:      1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-21-1",
 					Sign:      1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-1",
 					Sign:      1,
 				},
@@ -483,20 +482,20 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 				[]float64{1.7},
 				-1,
 			},
-			want: []*repository.SectionInfo{
-				&repository.SectionInfo{
+			want: []*SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-1",
 					Sign:      -1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-31-2",
 					Sign:      -1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-21-1",
 					Sign:      -1,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					Groupname: "Section 12-1",
 					Sign:      -1,
 				},
@@ -516,16 +515,16 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 func getFullTestIndex() *Index {
 
 	ind := InitIndex(3, []float64{0.3, 0.8, 1.5, 2.5}, []float64{0.3, 0.8, 1.5, 2.5})
-	ind.AddSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &repository.SectionInfo{
+	ind.AddSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &SectionInfo{
 		StartSeq: 0, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &SectionInfo{
 		StartSeq: 2, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{1.0}, []float64{1.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{1.0}, []float64{1.0}, &SectionInfo{
 		StartSeq: 4, Sign: 1, Width: 100, Height: 100})
 
-	ind.AddSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &SectionInfo{
 		StartSeq: 1, Sign: -1, Width: 50, Height: 200})
-	ind.AddSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &SectionInfo{
 		StartSeq: 3, Sign: -1, Width: 400, Height: 20})
 
 	return ind
@@ -534,16 +533,16 @@ func getFullTestIndex() *Index {
 // Shift order of adding as reconstruction jumbled up the descendents array
 func getFullTestIndexAfterReconstruction() *Index {
 	ind := InitIndex(3, []float64{0.3, 0.8, 1.5, 2.5}, []float64{0.3, 0.8, 1.5, 2.5})
-	ind.AddSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &SectionInfo{
 		StartSeq: 2, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{1.0}, []float64{1.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{1.0}, []float64{1.0}, &SectionInfo{
 		StartSeq: 4, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &repository.SectionInfo{
+	ind.AddSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &SectionInfo{
 		StartSeq: 0, Sign: 1, Width: 100, Height: 100})
 
-	ind.AddSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &SectionInfo{
 		StartSeq: 1, Sign: -1, Width: 50, Height: 200})
-	ind.AddSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &repository.SectionInfo{
+	ind.AddSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &SectionInfo{
 		StartSeq: 3, Sign: -1, Width: 400, Height: 20})
 
 	return ind
@@ -551,7 +550,7 @@ func getFullTestIndexAfterReconstruction() *Index {
 
 func TestIndex_StoreSeries(t *testing.T) {
 	type args struct {
-		sections []*repository.SectionInfo
+		sections []*SectionInfo
 	}
 	tests := []struct {
 		name string
@@ -563,38 +562,38 @@ func TestIndex_StoreSeries(t *testing.T) {
 		{
 			name: "Basic Test",
 			ind:  InitIndex(3, []float64{0.3, 0.8, 1.5, 2.5}, []float64{0.3, 0.8, 1.5, 2.5}),
-			args: args{sections: []*repository.SectionInfo{
-				&repository.SectionInfo{
+			args: args{sections: []*SectionInfo{
+				&SectionInfo{
 					StartSeq: 0,
 					Sign:     1,
 					Width:    100,
 					Height:   100,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					StartSeq: 1,
 					Sign:     -1,
 					Width:    50,
 					Height:   200,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					StartSeq: 2,
 					Sign:     1,
 					Width:    100,
 					Height:   100,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					StartSeq: 3,
 					Sign:     -1,
 					Width:    400,
 					Height:   20,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					StartSeq: 4,
 					Sign:     1,
 					Width:    100,
 					Height:   100,
 				},
-				&repository.SectionInfo{
+				&SectionInfo{
 					StartSeq: 5,
 					Sign:     -1,
 					Width:    100,

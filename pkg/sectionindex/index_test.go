@@ -45,7 +45,7 @@ func TestInitIndex(t *testing.T) {
 			Level:   0,
 			updated: false,
 		},
-		SectionInfoMap: make(map[SectionInfoKey]*SectionInfo),
+		sectionInfoMap: make(map[SectionInfoKey]*SectionInfo),
 	}
 	want.PosRoot.ind = want
 	want.NegRoot.ind = want
@@ -83,25 +83,25 @@ func getTestIndex(sign int) *Index {
 		NumLevels:        2,
 		PosRoot:          nil,
 		NegRoot:          nil,
-		SectionInfoMap:   make(map[SectionInfoKey]*SectionInfo),
+		sectionInfoMap:   make(map[SectionInfoKey]*SectionInfo),
 	}
-	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-31-1"}] = &SectionInfo{
+	indexWant.sectionInfoMap[SectionInfoKey{Series: "Section 12-31-1"}] = &SectionInfo{
 		Series: "Section 12-31-1",
 		Sign:   sign,
 	}
-	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-31-2"}] = &SectionInfo{
+	indexWant.sectionInfoMap[SectionInfoKey{Series: "Section 12-31-2"}] = &SectionInfo{
 		Series: "Section 12-31-2",
 		Sign:   sign,
 	}
-	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-21-1"}] = &SectionInfo{
+	indexWant.sectionInfoMap[SectionInfoKey{Series: "Section 12-21-1"}] = &SectionInfo{
 		Series: "Section 12-21-1",
 		Sign:   sign,
 	}
-	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 12-1"}] = &SectionInfo{
+	indexWant.sectionInfoMap[SectionInfoKey{Series: "Section 12-1"}] = &SectionInfo{
 		Series: "Section 12-1",
 		Sign:   sign,
 	}
-	indexWant.SectionInfoMap[SectionInfoKey{Series: "Section 10-21-1"}] = &SectionInfo{
+	indexWant.sectionInfoMap[SectionInfoKey{Series: "Section 10-21-1"}] = &SectionInfo{
 		Series: "Section 10-21-1",
 		Sign:   sign,
 	}

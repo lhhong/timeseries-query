@@ -107,6 +107,9 @@ func (n *Node) rebuildReferences(ind *Index, parent *Node) {
 	n.parent = parent
 
 	if n.Values != nil {
+		for _, v := range n.Values {
+			n.ind.sectionInfoMap[v.getKey()] = v
+		}
 		n.propagateDescendents(&(n.Values))
 	}
 

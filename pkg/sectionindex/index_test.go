@@ -365,7 +365,7 @@ func TestIndex_AddSection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			index := InitIndex(tt.fields.numLevels, tt.fields.widthRatioTicks, tt.fields.heightRatioTicks)
 			for _, args := range tt.args {
-				index.AddSection(args.widthRatio, args.heightRatio, args.section)
+				index.addSection(args.widthRatio, args.heightRatio, args.section)
 			}
 			if got := index; !reflect.DeepEqual(got, tt.want) {
 				spew.Dump(tt.want)
@@ -537,16 +537,16 @@ func TestIndex_RetrieveSectionSlices(t *testing.T) {
 func getFullTestIndex() *Index {
 
 	ind := InitIndex(3, []float64{0.3, 0.8, 1.5, 2.5}, []float64{0.3, 0.8, 1.5, 2.5})
-	ind.AddSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &SectionInfo{
+	ind.addSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &SectionInfo{
 		StartSeq: 0, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &SectionInfo{
+	ind.addSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &SectionInfo{
 		StartSeq: 2, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{1.0}, []float64{1.0}, &SectionInfo{
+	ind.addSection([]float64{1.0}, []float64{1.0}, &SectionInfo{
 		StartSeq: 4, Sign: 1, Width: 100, Height: 100})
 
-	ind.AddSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &SectionInfo{
+	ind.addSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &SectionInfo{
 		StartSeq: 1, Sign: -1, Width: 50, Height: 200})
-	ind.AddSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &SectionInfo{
+	ind.addSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &SectionInfo{
 		StartSeq: 3, Sign: -1, Width: 400, Height: 20})
 
 	return ind
@@ -555,16 +555,16 @@ func getFullTestIndex() *Index {
 // Shift order of adding as reconstruction jumbled up the descendents array
 func getFullTestIndexAfterReconstruction() *Index {
 	ind := InitIndex(3, []float64{0.3, 0.8, 1.5, 2.5}, []float64{0.3, 0.8, 1.5, 2.5})
-	ind.AddSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &SectionInfo{
+	ind.addSection([]float64{4.0, 0.25, 1.0}, []float64{0.2, 5.0, 1.0}, &SectionInfo{
 		StartSeq: 2, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{1.0}, []float64{1.0}, &SectionInfo{
+	ind.addSection([]float64{1.0}, []float64{1.0}, &SectionInfo{
 		StartSeq: 4, Sign: 1, Width: 100, Height: 100})
-	ind.AddSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &SectionInfo{
+	ind.addSection([]float64{0.5, 2.0, 4.0}, []float64{2.0, 0.5, 0.2}, &SectionInfo{
 		StartSeq: 0, Sign: 1, Width: 100, Height: 100})
 
-	ind.AddSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &SectionInfo{
+	ind.addSection([]float64{2.0, 4.0, 0.25}, []float64{0.5, 0.2, 5.0}, &SectionInfo{
 		StartSeq: 1, Sign: -1, Width: 50, Height: 200})
-	ind.AddSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &SectionInfo{
+	ind.addSection([]float64{0.25, 1.0}, []float64{5.0, 1.0}, &SectionInfo{
 		StartSeq: 3, Sign: -1, Width: 400, Height: 20})
 
 	return ind

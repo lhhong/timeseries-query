@@ -1,12 +1,12 @@
 package query
 
 import (
-	repository "github.com/lhhong/timeseries-query/pkg/repository"
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 )
 
 type PartialMatch struct {
-	FirstSection *repository.SectionInfo
-	LastSection  *repository.SectionInfo
+	FirstSection *sectionindex.SectionInfo
+	LastSection  *sectionindex.SectionInfo
 	LastQWidth   int64
 	LastQHeight  float64
 	FirstQWidth  int64

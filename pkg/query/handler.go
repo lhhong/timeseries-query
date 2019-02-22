@@ -3,8 +3,9 @@ package query
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"log"
+
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/lhhong/timeseries-query/pkg/datautils"
@@ -52,15 +53,18 @@ func StartContinuousQuery(ind *sectionindex.Index, repo *repository.Repository, 
 	cs.Subscribe(sessionID, func(conn redis.Conn, dataChan chan []byte) {
 		defer cs.Unsubscribe(conn)
 		var nodeMatches []*sectionindex.Node
-		var partialMatches []*PartialMatch
-		sectionsMatched := 0
+		qs := &queryState{
+			sectionsMatched: 0,
+			nodeMatches:     nil,
+			partialMatches:  nil,
+		}
 		// TODO: timeout event if no final received
 		for {
 			data := <-dataChan
 			dec := gob.NewDecoder(bytes.NewReader(data))
 			var query Updates
 			dec.Decode(&query)
-			handleUpdate(ind, repo, &nodeMatches, &partialMatches, &sectionsMatched, query.Query)
+			handleUpdate(ind, qs, query.Query)
 			if query.IsFinal {
 				//log.Println("Received final query")
 				prepareFinalize(cs, sessionID, nodeMatches)
@@ -78,7 +82,7 @@ func prepareFinalize(cs *querycache.CacheStore, sessionID string, matches []*sec
 	cs.Publish(sessionID+"FINAL", buf.Bytes())
 }
 
-func handleUpdate(ind *sectionindex.Index, repo *repository.Repository, nodeMatches *[]*sectionindex.Node, partialMatches *[]*PartialMatch, sectionsMatched *int, query []repository.Values) {
+func handleUpdate(ind *sectionindex.Index, qs *queryState, query []repository.Values) {
 
 	//Replace with alternative smoothing, eg paper.simplify
 	//datautils.Smooth(query, 2, 1)
@@ -93,26 +97,36 @@ func handleUpdate(ind *sectionindex.Index, repo *repository.Repository, nodeMatc
 		return
 	}
 
-	if *sectionsMatched == 0 {
+	if qs.partialMatches != nil {
+		// TODO do query extension
+	}
+
+	if qs.sectionsMatched == 0 {
 
 		limits := getAllRatioLimits(sections[2].SectionInfo.Width, sections[1].SectionInfo.Width,
 			sections[2].SectionInfo.Height, sections[1].SectionInfo.Height)
 
 		node := ind.GetRootNode(sections[1].SectionInfo.Sign)
-		*nodeMatches = sectionindex.GetRelevantNodes(limits, []*sectionindex.Node{node})
+		qs.nodeMatches = sectionindex.GetRelevantNodes(limits, []*sectionindex.Node{node})
 
-		*sectionsMatched = 2
+		qs.sectionsMatched = 2
 	}
-	for len(sections)-2 > *sectionsMatched {
-		limits := getAllRatioLimits(sections[*sectionsMatched+1].SectionInfo.Width, sections[*sectionsMatched].SectionInfo.Width,
-			sections[*sectionsMatched+1].SectionInfo.Height, sections[*sectionsMatched].SectionInfo.Height)
-		*nodeMatches = sectionindex.GetRelevantNodes(limits, *nodeMatches)
-		*sectionsMatched++
+	for len(sections)-2 > qs.sectionsMatched {
+		limits := getAllRatioLimits(sections[qs.sectionsMatched+1].SectionInfo.Width, sections[qs.sectionsMatched].SectionInfo.Width,
+			sections[qs.sectionsMatched+1].SectionInfo.Height, sections[qs.sectionsMatched].SectionInfo.Height)
+		qs.nodeMatches = sectionindex.GetRelevantNodes(limits, qs.nodeMatches)
+		qs.sectionsMatched++
 	}
 
-	if sectionindex.GetTotalCount(*nodeMatches) <= CountToRetrieve {
-		sections := sectionindex.RetrieveAllSections(*nodeMatches)
-		_ = sections
+	if sectionindex.GetTotalCount(qs.nodeMatches) <= CountToRetrieve {
+		sections := sectionindex.RetrieveAllSections(qs.nodeMatches)
+		for _, s := range sections {
+
+			qs.partialMatches = append(qs.partialMatches, &PartialMatch{
+				FirstSection: s,
+				LastSection:  ind.GetNthSection(s, qs.sectionsMatched-1),
+			})
+		}
 	}
 }
 
@@ -234,20 +248,19 @@ func getPartialMatch(repo *repository.Repository, member repository.ClusterMembe
 	//TODO: Remove function or use sectionindex
 	return nil
 
-	// These will not run
-	sectionInfo, err := repo.GetOneSectionInfo(member.Groupname, member.Series, member.Smooth, member.StartSeq)
-	if err != nil {
-		log.Println("Error retriving section info")
-		log.Println(err)
-		return nil
-	}
+	// sectionInfo, err := repo.GetOneSectionInfo(member.Groupname, member.Series, member.Smooth, member.StartSeq)
+	// if err != nil {
+	// 	log.Println("Error retriving section info")
+	// 	log.Println(err)
+	// 	return nil
+	// }
 
-	return &PartialMatch{
-		FirstSection: sectionInfo,
-		LastSection:  sectionInfo,
-		FirstQWidth:  width,
-		FirstQHeight: height,
-		LastQWidth:   width,
-		LastQHeight:  height,
-	}
+	// return &PartialMatch{
+	// 	FirstSection: sectionInfo,
+	// 	LastSection:  sectionInfo,
+	// 	FirstQWidth:  width,
+	// 	FirstQHeight: height,
+	// 	LastQWidth:   width,
+	// 	LastQHeight:  height,
+	// }
 }

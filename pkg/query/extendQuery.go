@@ -1,6 +1,7 @@
 package query
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"github.com/lhhong/timeseries-query/pkg/common"
 	fmt "fmt"
 	"log"
@@ -167,34 +168,34 @@ func getRelevantClusters(points []repository.Values, centroids []*repository.Clu
 	return datautils.GetIndexOfRelevantCentroids(sections[0], centroids, membershipThreshold, fuzziness)
 }
 
-func getPrevSection(repo *repository.Repository, nextSection *repository.SectionInfo) *repository.SectionInfo {
+func getPrevSection(repo *repository.Repository, nextSection *sectionindex.SectionInfo) *sectionindex.SectionInfo {
 	return nil
 	//TODO Edit this function to use sectionindex
 
-	if nextSection.PrevSeq == -1 {
-		return nil
-	}
-	res, err := repo.GetOneSectionInfo(nextSection.Groupname, nextSection.Series, nextSection.Nsmooth, nextSection.PrevSeq)
-	if err != nil {
-		log.Println("Error getting prev section")
-		log.Println(err)
-	}
-	return res
+	// if nextSection.PrevSeq == -1 {
+	// 	return nil
+	// }
+	// res, err := repo.GetOneSectionInfo(nextSection.Groupname, nextSection.Series, nextSection.Nsmooth, nextSection.PrevSeq)
+	// if err != nil {
+	// 	log.Println("Error getting prev section")
+	// 	log.Println(err)
+	// }
+	// return res
 }
 
-func getNextSection(repo *repository.Repository, prevSection *repository.SectionInfo) *repository.SectionInfo {
+func getNextSection(repo *repository.Repository, prevSection *sectionindex.SectionInfo) *sectionindex.SectionInfo {
 	return nil
 	//TODO Edit this function to use sectionindex
 
-	if prevSection.NextSeq == -1 {
-		return nil
-	}
-	res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, prevSection.Nsmooth, prevSection.NextSeq)
-	if err != nil {
-		log.Println("Error getting next section")
-		log.Println(err)
-	}
-	return res
+	// if prevSection.NextSeq == -1 {
+	// 	return nil
+	// }
+	// res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, prevSection.Nsmooth, prevSection.NextSeq)
+	// if err != nil {
+	// 	log.Println("Error getting next section")
+	// 	log.Println(err)
+	// }
+	// return res
 }
 
 func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) common.Limits {
@@ -222,7 +223,7 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 	}
 }
 
-func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.SectionInfo, queryWidth int64, queryHeight float64) bool {
+func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *sectionindex.SectionInfo, queryWidth int64, queryHeight float64) bool {
 
 	l := getAllLimits(queryWidth, partialMatch.LastQWidth, partialMatch.LastSection.Width,
 		queryHeight, partialMatch.LastQHeight, partialMatch.LastSection.Height)

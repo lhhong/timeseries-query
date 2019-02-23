@@ -1,23 +1,22 @@
 package loader
 
-import (
-	"github.com/lhhong/timeseries-query/pkg/sectionindex"
-	"testing"
+// import (
+// 	"github.com/lhhong/timeseries-query/pkg/sectionindex"
+// 	"testing"
+// 
+// 	"github.com/lhhong/timeseries-query/pkg/repository"
+// )
 
-	"github.com/lhhong/timeseries-query/pkg/repository"
-)
-
-func TestIndexing(t *testing.T) {
-	repo := &repository.Repository{}
-	repo.LoadDb("dbuser", "user_password", "localhost", 3307, "timeseries")
-
-	repo.DeleteAllClusterMembers()
-	repo.DeleteAllSectionInfos()
-
-	ind := sectionindex.InitDefaultIndex()
-
-	CalcAndSaveIndexDetails(repo, ind, "test", "stocks")
-}
+// func TestIndexing(t *testing.T) {
+// 	repo := &repository.Repository{}
+// 	repo.LoadDb("dbuser", "user_password", "localhost", 3307, "timeseries")
+// 
+// 	repo.DeleteAllSectionInfos()
+// 
+// 	ind := sectionindex.InitDefaultIndex()
+// 
+//     CalcAndSaveIndexDetails(repo, ind, "test", "stocks")
+// }
 
 // func TestIndexingOld(t *testing.T) {
 // 	repo := &repository.Repository{}

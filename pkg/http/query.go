@@ -17,9 +17,9 @@ import (
 func getQueryRouter(indices *sectionindex.Indices, repo *repository.Repository, cs *querycache.CacheStore) *mux.Router {
 
 	queryRouter := mux.NewRouter().PathPrefix("/query/").Subrouter()
-	queryRouter.HandleFunc("/initializequery/{group}", initializeQuery(indices, repo, cs)).Methods("POST")
-	queryRouter.HandleFunc("/updatepoints", updatePoints(cs)).Methods("POST")
-	queryRouter.HandleFunc("/finalizequery", finalizeQuery(cs)).Methods("POST")
+	queryRouter.HandleFunc("/initializequery/{session}/{group}", initializeQuery(indices, repo, cs)).Methods("POST")
+	queryRouter.HandleFunc("/updatepoints/{session}", updatePoints(cs)).Methods("POST")
+	queryRouter.HandleFunc("/finalizequery/{session}", finalizeQuery(cs)).Methods("POST")
 
 	return queryRouter
 }
@@ -27,8 +27,7 @@ func getQueryRouter(indices *sectionindex.Indices, repo *repository.Repository, 
 func initializeQuery(indices *sectionindex.Indices, repo *repository.Repository, cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		sessionID := getAndRefreshSessionID(w, r)
-
+		sessionID := mux.Vars(r)["session"]
 		group := mux.Vars(r)["group"]
 
 		go query.StartContinuousQuery(indices.IndexOf[group], repo, cs, sessionID)
@@ -64,8 +63,7 @@ func getQueryValues(r *http.Request) []repository.Values {
 func updatePoints(cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		sessionID := getAndRefreshSessionID(w, r)
-
+		sessionID := mux.Vars(r)["session"]
 		queryValues := getQueryValues(r)
 
 		query.PublishUpdates(cs, sessionID, queryValues)
@@ -81,7 +79,7 @@ func updatePoints(cs *querycache.CacheStore) func(http.ResponseWriter, *http.Req
 func finalizeQuery(cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		sessionID := getAndRefreshSessionID(w, r)
+		sessionID := mux.Vars(r)["session"]
 		queryValues := getQueryValues(r)
 
 		start := time.Now()

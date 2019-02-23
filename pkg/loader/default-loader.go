@@ -26,6 +26,7 @@ func LoadData(cmd *cobra.Command, conf *config.AppConfig, repo *repository.Repos
 	valCol, _ := cmd.Flags().GetInt("value")
 
 	readCsvAndSave(repo, group, data, seriesCol, dateCol, valCol)
+	log.Println("Starting to load index")
 
 	loadIndex(group, conf.Env, repo)
 }
@@ -66,7 +67,7 @@ func readCsvAndSave(repo *repository.Repository, group string, data string, seri
 					log.Println(err)
 					continue
 				}
-				seq := t.Unix() * 1000
+				seq := t.Unix()
 				values = append(values, repository.RawData{
 					Groupname: group,
 					Series:    line[seriesCol],

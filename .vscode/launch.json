@@ -11,8 +11,10 @@
             "mode": "auto",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/cmd/server",
-            "env": {},
-            "args": []
+            "env": {
+                "TSQ_DATABASE_PORT": 3307,
+            },
+            "args": [],
         }
     ]
 }

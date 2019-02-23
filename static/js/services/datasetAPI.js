@@ -78,6 +78,7 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
     var self = this;
     Dataset_Resource.definition(function (resp) {
       self.dataDefinition = resp.dataDefinition;
+      sessionStorage.sessionId = resp.sessionId;
       $rootScope.$broadcast(Parameters.DATASET_EVENTS.DATASETS_DEFINITION_LOADED, resp.dataDefinition);
     });
   };

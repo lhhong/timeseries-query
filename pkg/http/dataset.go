@@ -15,6 +15,7 @@ type seriesResponse struct {
 
 type dataDefResponse struct {
 	DataDefinition []DataDefinition `json:"dataDefinition"`
+	SessionID string `json:"sessionId"`
 }
 
 // DataDefinition Exported for json unmarshal
@@ -78,7 +79,7 @@ func getSeries(repo *repository.Repository) func(http.ResponseWriter, *http.Requ
 func getDefinition(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		getAndRefreshSessionID(w, r)
+		sessionID := newSessionID()
 
 		definitions, err := repo.GetSeriesInfo("stocks")
 		if err != nil {
@@ -104,13 +105,7 @@ func getDefinition(repo *repository.Repository) func(http.ResponseWriter, *http.
 			resObject = append(resObject, *v)
 		}
 
-		res, err := json.Marshal(dataDefResponse{DataDefinition: resObject})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		json.NewEncoder(w).Encode(dataDefResponse{DataDefinition: resObject, SessionID: sessionID})
 	}
 }

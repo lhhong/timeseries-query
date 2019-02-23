@@ -423,7 +423,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
             scope.currentPath.strokeJoin = 'round';
 
             // TODO change stocks to appropriate group name
-            $http.post('/query/initializequery/stocks', {}).then(function successCallback(response) {
+            $http.post('/query/initializequery/' + sessionStorage.sessionId + '/stocks', {}).then(function successCallback(response) {
               // this callback will be called asynchronously
               // when the response is available
             }, function errorCallback(response) {
@@ -489,7 +489,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
                 scope.pointsLength = points.length
                 console.log("Update points")
                 console.log(JSON.parse(JSON.stringify(points)))
-                $http.post('/query/updatepoints', points).then(function successCallback(response) {
+                $http.post('/query/updatepoints/' + sessionStorage.sessionId, points).then(function successCallback(response) {
                   // this callback will be called asynchronously
                   // when the response is available
                 }, function errorCallback(response) {
@@ -504,7 +504,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
 
             var points = scope.extractPoints();
             console.log(points)
-            $http.post('/query/finalizequery', points).then(function successCallback(response) {
+            $http.post('/query/finalizequery/' + sessionStorage.sessionId, points).then(function successCallback(response) {
               DatasetAPI.updateTsqMatches(response.data)
             }, function errorCallback(response) {
             });

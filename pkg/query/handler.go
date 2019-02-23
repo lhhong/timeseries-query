@@ -122,7 +122,7 @@ func initialMatch(ind *sectionindex.Index, qs *QueryState, sections []*datautils
 
 	node := ind.GetRootNode(sections[1].SectionInfo.Sign)
 	qs.nodeMatches = sectionindex.GetRelevantNodes(limits, []*sectionindex.Node{node})
-
+	qs.FirstQSection = sections[0].SectionInfo
 	qs.sectionsMatched = 2
 }
 

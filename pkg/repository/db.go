@@ -22,8 +22,6 @@ func createTables(repo *Repository) {
 	repo.db.MustExec(seriesInfoCreateStmt)
 
 	repo.db.MustExec(sectionInfoCreateStmt)
-	repo.db.MustExec(clusterCentroidCreateStmt)
-	repo.db.MustExec(clusterMemberCreateStmt)
 }
 
 func getInsertionPlaceholder(numVar int, length int) string {

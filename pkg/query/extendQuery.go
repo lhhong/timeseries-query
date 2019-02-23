@@ -2,10 +2,11 @@ package query
 
 import (
 	"fmt"
-	"github.com/lhhong/timeseries-query/pkg/common"
-	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"log"
 	"math"
+
+	"github.com/lhhong/timeseries-query/pkg/common"
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 
 	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -24,7 +25,7 @@ func extendQuery(ind *sectionindex.Index, qs *QueryState, nextQuerySection *sect
 		if nextSection == nil {
 			continue
 		}
-		if !withinWidthAndHeight(partialMatch, qs.Info, nextSection, nextQuerySection.Width, nextQuerySection.Height) {
+		if !withinWidthAndHeight(partialMatch, qs.LastQSection, nextSection, nextQuerySection.Width, nextQuerySection.Height) {
 			continue
 		}
 		partialMatch.LastSection = nextSection
@@ -32,14 +33,71 @@ func extendQuery(ind *sectionindex.Index, qs *QueryState, nextQuerySection *sect
 		remainingMatches = append(remainingMatches, partialMatch)
 	}
 	qs.PartialMatches = remainingMatches
-	qs.Info.LastQWidth = nextQuerySection.Width
-	qs.Info.LastQHeight = nextQuerySection.Height
+	qs.LastQSection = nextQuerySection
 	qs.sectionsMatched++
 
 }
 
+func getRatioLimitsIfLongEnough(cmpQSection *sectionindex.SectionInfo, cmpDataSection *sectionindex.SectionInfo, dataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo) *common.Limits {
+	if dataSection == nil {
+		return nil
+	}
+	ratioLimits := getAllRatioLimits(qSection.Width, cmpQSection.Width, qSection.Height, cmpQSection.Height)
+	if float64(dataSection.Width)/float64(cmpDataSection.Width) < ratioLimits.WidthLower ||
+		dataSection.Height/cmpDataSection.Height < ratioLimits.HeightLower {
+		return nil
+	}
+	return &ratioLimits
+}
+
+func retrieveSeries(repo *repository.Repository, cache map[string][]repository.Values, group string, series string) []repository.Values {
+
+	//Common processing for first and last sections
+	key := fmt.Sprintf("%s-%s", group, series)
+	values, ok := cache[key]
+	if !ok {
+		var err error
+		values, err = repo.GetRawDataOfSmoothedSeries(group, series, 0)
+		if err != nil {
+			log.Println("Failed to retrieve raw data")
+			log.Println(err)
+			return nil
+		}
+
+		cache[key] = values
+	}
+	return values
+}
+
+func getBoundaryOrFilter(boundary int64, lastSeq int64, cmpDataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo,
+	cmpQSection *sectionindex.SectionInfo, data []repository.Values, limits *common.Limits) int64 { 
+
+	expectedWidth := float64(cmpDataSection.Width) * float64(qSection.Width) / float64(cmpQSection.Width)
+	var sectionData []repository.Values
+	if lastSeq > boundary {
+		// For first section
+		if lastSeq-int64(expectedWidth) > boundary {
+			boundary = lastSeq - int64(expectedWidth)
+		}
+		sectionData = datautils.ExtractInterval(data, boundary, lastSeq)
+	} else {
+		// For last section
+		if lastSeq+int64(expectedWidth) < boundary {
+			boundary = lastSeq + int64(expectedWidth)
+		}
+		sectionData = datautils.ExtractInterval(data, lastSeq, boundary)
+	}
+
+	_, dataHeight := getWidthAndHeight(sectionData)
+	heightRatio := dataHeight / cmpDataSection.Height
+	if heightRatio < limits.HeightLower || heightRatio > limits.HeightUpper {
+		return -1
+	}
+	return boundary
+}
+
 func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *QueryState, firstQSection, lastQSection *sectionindex.SectionInfo) []*Match {
-	
+
 	var matches []*Match
 	cachedSeries := make(map[string][]repository.Values)
 
@@ -49,52 +107,23 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 
 	for _, partialMatch := range qs.PartialMatches {
 		firstSection := ind.GetPrevSection(partialMatch.FirstSection)
-		if firstSection == nil {
+		firstLimits := getRatioLimitsIfLongEnough(qs.FirstQSection, partialMatch.FirstSection, firstSection, firstQSection)
+		if firstLimits == nil {
 			continue
 		}
-		firstLimits := getAllLimits(firstQSection.Width, qs.Info.FirstQWidth, partialMatch.FirstSection.Width,
-			firstQSection.Height, qs.Info.FirstQHeight, partialMatch.FirstSection.Height)
-		if firstSection.Width < int64(firstLimits.WidthLower) || firstSection.Height < firstLimits.HeightLower {
-			continue
-		}
-
 		lastSection := ind.GetNextSection(partialMatch.LastSection)
-		if lastSection == nil {
-			continue
-		}
-		lastLimits := getAllLimits(lastQSection.Width, qs.Info.LastQWidth, partialMatch.LastSection.Width,
-			lastQSection.Height, qs.Info.LastQHeight, partialMatch.LastSection.Height)
-		if lastSection.Width < int64(lastLimits.WidthLower) || lastSection.Height < lastLimits.HeightLower {
+		lastLimits := getRatioLimitsIfLongEnough(qs.LastQSection, partialMatch.LastSection, lastSection, lastQSection)
+		if lastLimits == nil {
 			continue
 		}
 
-		//Common processing for first and last sections
-		key := fmt.Sprintf("%s-%s", firstSection.Groupname, firstSection.Series)
-		values, ok := cachedSeries[key]
-		if !ok {
-			var err error
-			values, err = repo.GetRawDataOfSmoothedSeries(firstSection.Groupname, firstSection.Series, 0)
-			if err != nil {
-				log.Println("Failed to retrieve raw data")
-				log.Println(err)
-				continue
-			}
-
-			cachedSeries[key] = values
-		}
-
-		data := values
+		data := retrieveSeries(repo, cachedSeries, firstSection.Groupname, firstSection.Series)
 		//End common processing for first and last sections
 
-		firstEndSeq := firstSection.NextSeq
-		firstStartSeq := firstSection.StartSeq
-		firstExpectedWidth := float64(partialMatch.FirstSection.Width) * float64(firstQSection.Width) / float64(qs.Info.FirstQWidth)
-		if firstEndSeq-int64(firstExpectedWidth) > firstStartSeq {
-			firstStartSeq = firstEndSeq - int64(firstExpectedWidth)
-		}
-		firstSectionData := datautils.ExtractInterval(data, firstStartSeq, firstEndSeq)
-		_, firstDataHeight := getWidthAndHeight(firstSectionData)
-		if firstDataHeight < firstLimits.HeightLower || firstDataHeight > firstLimits.HeightUpper {
+		firstStartSeq := getBoundaryOrFilter(firstSection.StartSeq, firstSection.NextSeq, partialMatch.FirstSection, firstQSection, 
+			qs.FirstQSection, data, firstLimits)
+
+		if firstStartSeq == -1 {
 			continue
 		}
 
@@ -103,14 +132,9 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 			//End of data series
 			lastEndSeq = data[len(data)-1].Seq
 		}
-		lastStartSeq := lastSection.StartSeq
-		lastExpectedWidth := float64(partialMatch.LastSection.Width) * float64(lastQSection.Width) / float64(qs.Info.LastQWidth)
-		if lastStartSeq+int64(lastExpectedWidth) < lastEndSeq {
-			lastEndSeq = lastStartSeq + int64(lastExpectedWidth)
-		}
-		lastSectionData := datautils.ExtractInterval(data, lastStartSeq, lastEndSeq)
-		_, lastDataHeight := getWidthAndHeight(lastSectionData)
-		if lastDataHeight < lastLimits.HeightLower || lastDataHeight > lastLimits.HeightUpper {
+		lastEndSeq = getBoundaryOrFilter(lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, firstQSection, qs.LastQSection,
+			data, lastLimits)
+		if lastEndSeq == -1 {
 			continue
 		}
 
@@ -125,13 +149,6 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 	return matches
 }
 
-func getSign(section []repository.Values) int {
-	if section[len(section)-1].Value > section[0].Value {
-		return 1
-	}
-	return -1
-}
-
 func getWidthAndHeight(section []repository.Values) (int64, float64) {
 	if len(section) == 0 {
 		log.Println("Warning: Section length is 0 when getting width and height")
@@ -140,50 +157,6 @@ func getWidthAndHeight(section []repository.Values) (int64, float64) {
 	width := section[len(section)-1].Seq - section[0].Seq
 	height := datautils.DataHeight(section)
 	return width, height
-}
-
-func getRelevantClusters(points []repository.Values, centroids []*repository.ClusterCentroid) []int {
-
-	// TODO export to parameters
-	membershipThreshold := 0.2
-	fuzziness := 4.0
-	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
-
-	sections := datautils.ConstructSectionsFromPoints(points, divideSectionMinimumHeightData)
-	if len(sections) != 1 {
-		log.Printf("Error, query section has %d sections, supposed to only have 1", len(sections))
-	}
-	return datautils.GetIndexOfRelevantCentroids(sections[0], centroids, membershipThreshold, fuzziness)
-}
-
-func getPrevSection(repo *repository.Repository, nextSection *sectionindex.SectionInfo) *sectionindex.SectionInfo {
-	return nil
-	//TODO Edit this function to use sectionindex
-
-	// if nextSection.PrevSeq == -1 {
-	// 	return nil
-	// }
-	// res, err := repo.GetOneSectionInfo(nextSection.Groupname, nextSection.Series, nextSection.Nsmooth, nextSection.PrevSeq)
-	// if err != nil {
-	// 	log.Println("Error getting prev section")
-	// 	log.Println(err)
-	// }
-	// return res
-}
-
-func getNextSection(repo *repository.Repository, prevSection *sectionindex.SectionInfo) *sectionindex.SectionInfo {
-	return nil
-	//TODO Edit this function to use sectionindex
-
-	// if prevSection.NextSeq == -1 {
-	// 	return nil
-	// }
-	// res, err := repo.GetOneSectionInfo(prevSection.Groupname, prevSection.Series, prevSection.Nsmooth, prevSection.NextSeq)
-	// if err != nil {
-	// 	log.Println("Error getting next section")
-	// 	log.Println(err)
-	// }
-	// return res
 }
 
 func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) common.Limits {
@@ -211,10 +184,10 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 	}
 }
 
-func withinWidthAndHeight(partialMatch *PartialMatch, queryInfo QueryInfo, nextSection *sectionindex.SectionInfo, queryWidth int64, queryHeight float64) bool {
+func withinWidthAndHeight(partialMatch *PartialMatch, cmpQSection *sectionindex.SectionInfo, nextSection *sectionindex.SectionInfo, queryWidth int64, queryHeight float64) bool {
 
-	l := getAllLimits(queryWidth, queryInfo.LastQWidth, partialMatch.LastSection.Width,
-		queryHeight, queryInfo.LastQHeight, partialMatch.LastSection.Height)
+	l := getAllLimits(queryWidth, cmpQSection.Width, partialMatch.LastSection.Width,
+		queryHeight, cmpQSection.Height, partialMatch.LastSection.Height)
 
 	if float64(nextSection.Width) < l.WidthLower || float64(nextSection.Width) > l.WidthUpper {
 		return false
@@ -334,18 +307,3 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	return true
 }
 */
-
-func inRelevantClusters(repo *repository.Repository, nextSection *repository.SectionInfo, relevantClusters []int) bool {
-	for _, clusterIndex := range relevantClusters {
-		res, err := repo.ExistsClusterMember(nextSection.Groupname, nextSection.Sign, clusterIndex,
-			nextSection.Series, nextSection.Nsmooth, nextSection.StartSeq)
-		if err != nil {
-			log.Println("Failed to check if ClusterMember exists")
-			log.Println(err)
-		}
-		if res {
-			return true
-		}
-	}
-	return false
-}

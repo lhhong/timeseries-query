@@ -20,7 +20,6 @@ func getQueryRouter(indices *sectionindex.Indices, repo *repository.Repository, 
 	queryRouter.HandleFunc("/initializequery/{group}", initializeQuery(indices, repo, cs)).Methods("POST")
 	queryRouter.HandleFunc("/updatepoints", updatePoints(cs)).Methods("POST")
 	queryRouter.HandleFunc("/finalizequery", finalizeQuery(repo, cs)).Methods("POST")
-	queryRouter.HandleFunc("/instantquery", instantQuery(repo)).Methods("POST")
 
 	return queryRouter
 }
@@ -34,30 +33,6 @@ func initializeQuery(indices *sectionindex.Indices, repo *repository.Repository,
 
 		go query.StartContinuousQuery(indices.IndexOf[group], repo, cs, sessionID)
 
-	}
-}
-
-func instantQuery(repo *repository.Repository) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		log.Printf("\n\n Instant query called \n\n")
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			log.Println(err)
-		}
-
-		var reqValues []ReqValues
-		err = json.Unmarshal(body, &reqValues)
-		if err != nil {
-			log.Println(err)
-		}
-		queryValues := make([]repository.Values, len(reqValues))
-		for i, val := range reqValues {
-			queryValues[i] = repository.Values{Seq: int64(val.X), Value: val.Y}
-		}
-		res := query.HandleInstantQuery(repo, "stocks", queryValues)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(res)
 	}
 }
 

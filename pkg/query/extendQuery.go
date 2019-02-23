@@ -11,15 +11,15 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func extendQuery(ind *sectionindex.Index, qs *queryState, nextQuerySection *sectionindex.SectionInfo) {
+func extendQuery(ind *sectionindex.Index, qs *QueryState, nextQuerySection *sectionindex.SectionInfo) {
 
 	var remainingMatches []*PartialMatch
 
-	if len(qs.partialMatches) == 0 {
+	if len(qs.PartialMatches) == 0 {
 		return
 	}
 
-	for _, partialMatch := range qs.partialMatches {
+	for _, partialMatch := range qs.PartialMatches {
 		nextSection := ind.GetNextSection(partialMatch.LastSection)
 		if nextSection == nil {
 			continue
@@ -31,51 +31,16 @@ func extendQuery(ind *sectionindex.Index, qs *queryState, nextQuerySection *sect
 
 		remainingMatches = append(remainingMatches, partialMatch)
 	}
-	qs.partialMatches = remainingMatches
-	qs.lastQWidth = nextQuerySection.Width
-	qs.lastQHeight = nextQuerySection.Height
+	qs.PartialMatches = remainingMatches
+	qs.Info.LastQWidth = nextQuerySection.Width
+	qs.Info.LastQHeight = nextQuerySection.Height
 	qs.sectionsMatched++
 
-}
-
-func extendQuery_Old(repo *repository.Repository, partialMatches []*PartialMatch, nextQuerySection []repository.Values) []*PartialMatch {
-
-	var remainingMatches []*PartialMatch
-
-	if len(partialMatches) == 0 {
-		return remainingMatches
-	}
-
-	queryWidth, queryHeight := getWidthAndHeight(nextQuerySection)
-
-	//log.Printf("width: %d, height: %f", queryWidth, queryHeight)
-	//relevantClusters := getRelevantClusters(nextQuerySection, centroids)
-
-	for _, partialMatch := range partialMatches {
-		nextSection := getNextSection(repo, partialMatch.LastSection)
-		if nextSection == nil {
-			continue
-		}
-		if !withinWidthAndHeight(partialMatch, nextSection, queryWidth, queryHeight) {
-			continue
-		}
-		// if !inRelevantClusters(repo, nextSection, relevantClusters) {
-		// 	//log.Println("incorrect centroid for ", nextSection.Series)
-		// 	continue
-		// }
-		partialMatch.LastSection = nextSection
-		partialMatch.LastQHeight = queryHeight
-		partialMatch.LastQWidth = queryWidth
-
-		remainingMatches = append(remainingMatches, partialMatch)
-	}
-	return remainingMatches
 }
 
 func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch, firstQuerySection, lastQuerySection []repository.Values) []*Match {
 
 	var matches []*Match
-	//cachedSeries := make(map[string][][]repository.Values)
 	cachedSeries := make(map[string][]repository.Values)
 
 	if len(partialMatches) == 0 {

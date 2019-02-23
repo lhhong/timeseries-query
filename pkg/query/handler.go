@@ -27,7 +27,7 @@ func PublishUpdates(cs *querycache.CacheStore, sessionID string, query []reposit
 
 type PartialMatches []*PartialMatch
 
-func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessionID string, query []repository.Values) []*Match {
+func FinalizeQuery(cs *querycache.CacheStore, sessionID string, query []repository.Values) []*Match {
 
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
@@ -39,9 +39,9 @@ func FinalizeQuery(repo *repository.Repository, cs *querycache.CacheStore, sessi
 		defer cs.Unsubscribe(conn)
 		data := <-dataChan
 		dec := gob.NewDecoder(bytes.NewReader(data))
-		var matches []*PartialMatch
+		var matches []*Match
 		dec.Decode(&matches)
-		resChan <- finalize(repo, query, matches)
+		resChan <- matches
 	})
 	cs.Publish(sessionID, buf.Bytes())
 	res := <-resChan
@@ -66,18 +66,19 @@ func StartContinuousQuery(ind *sectionindex.Index, repo *repository.Repository, 
 			handleUpdate(ind, qs, query.Query)
 			if query.IsFinal {
 				//log.Println("Received final query")
-				prepareFinalize(cs, sessionID, qs)
+				matches := finalize(ind, repo, qs, query.Query)
+				sendMatches(cs, sessionID, matches)
 				return
 			}
 		}
 	})
 }
 
-func prepareFinalize(cs *querycache.CacheStore, sessionID string, qs *QueryState) {
+func sendMatches(cs *querycache.CacheStore, sessionID string, matches []*Match) {
 
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	enc.Encode(qs)
+	enc.Encode(matches)
 	cs.Publish(sessionID+"FINAL", buf.Bytes())
 }
 
@@ -145,7 +146,7 @@ func retrieveSections(ind *sectionindex.Index, qs *QueryState) {
 	}
 }
 
-func finalize(repo *repository.Repository, query []repository.Values, partialMatches []*PartialMatch) []*Match {
+func finalize(ind *sectionindex.Index, repo *repository.Repository, qs *QueryState, query []repository.Values) []*Match {
 
 	//TODO replace with alternative smoothing
 	//datautils.Smooth(query, 2, 1)
@@ -153,7 +154,7 @@ func finalize(repo *repository.Repository, query []repository.Values, partialMat
 
 	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 2.2)
 
-	matches := ExtendStartEnd(repo, partialMatches, sections[0].Points, sections[len(sections)-1].Points)
+	matches := extendStartEnd(ind, repo, qs, sections[0].SectionInfo, sections[len(sections)-1].SectionInfo)
 	if len(matches) < 1 {
 		log.Println("No match found")
 	}

@@ -19,7 +19,7 @@ func getQueryRouter(indices *sectionindex.Indices, repo *repository.Repository, 
 	queryRouter := mux.NewRouter().PathPrefix("/query/").Subrouter()
 	queryRouter.HandleFunc("/initializequery/{group}", initializeQuery(indices, repo, cs)).Methods("POST")
 	queryRouter.HandleFunc("/updatepoints", updatePoints(cs)).Methods("POST")
-	queryRouter.HandleFunc("/finalizequery", finalizeQuery(repo, cs)).Methods("POST")
+	queryRouter.HandleFunc("/finalizequery", finalizeQuery(cs)).Methods("POST")
 
 	return queryRouter
 }
@@ -78,7 +78,7 @@ func updatePoints(cs *querycache.CacheStore) func(http.ResponseWriter, *http.Req
 	}
 }
 
-func finalizeQuery(repo *repository.Repository, cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
+func finalizeQuery(cs *querycache.CacheStore) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		sessionID := getAndRefreshSessionID(w, r)
@@ -86,7 +86,7 @@ func finalizeQuery(repo *repository.Repository, cs *querycache.CacheStore) func(
 
 		start := time.Now()
 
-		matches := query.FinalizeQuery(repo, cs, sessionID, queryValues)
+		matches := query.FinalizeQuery(cs, sessionID, queryValues)
 
 		elapsed := time.Since(start)
 		log.Printf("Finalizing query took %s", elapsed)

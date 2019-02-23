@@ -14,6 +14,10 @@ func (ind *Index) GetNextSection(section *SectionInfo) *SectionInfo {
 	return ind.sectionInfoMap[section.getNextKey()]
 }
 
+func (ind *Index) GetPrevSection(section *SectionInfo) *SectionInfo {
+	return ind.sectionInfoMap[section.getPrevKey()]
+}
+
 func (ind *Index) GetNthSection(section *SectionInfo, n int) *SectionInfo {
 
 	cur := section

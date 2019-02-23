@@ -24,7 +24,7 @@ func extendQuery(ind *sectionindex.Index, qs *QueryState, nextQuerySection *sect
 		if nextSection == nil {
 			continue
 		}
-		if !withinWidthAndHeight(partialMatch, nextSection, nextQuerySection.Width, nextQuerySection.Height) {
+		if !withinWidthAndHeight(partialMatch, qs.Info, nextSection, nextQuerySection.Width, nextQuerySection.Height) {
 			continue
 		}
 		partialMatch.LastSection = nextSection
@@ -38,36 +38,32 @@ func extendQuery(ind *sectionindex.Index, qs *QueryState, nextQuerySection *sect
 
 }
 
-func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch, firstQuerySection, lastQuerySection []repository.Values) []*Match {
-
+func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *QueryState, firstQSection, lastQSection *sectionindex.SectionInfo) []*Match {
+	
 	var matches []*Match
 	cachedSeries := make(map[string][]repository.Values)
 
-	if len(partialMatches) == 0 {
+	if len(qs.PartialMatches) == 0 {
 		return matches
 	}
 
-	firstQueryWidth, firstQueryHeight := getWidthAndHeight(firstQuerySection)
-	lastQueryWidth, lastQueryHeight := getWidthAndHeight(lastQuerySection)
-
-	for _, partialMatch := range partialMatches {
-
-		firstSection := getPrevSection(repo, partialMatch.FirstSection)
+	for _, partialMatch := range qs.PartialMatches {
+		firstSection := ind.GetPrevSection(partialMatch.FirstSection)
 		if firstSection == nil {
 			continue
 		}
-		firstLimits := getAllLimits(firstQueryWidth, partialMatch.FirstQWidth, partialMatch.FirstSection.Width,
-			firstQueryHeight, partialMatch.FirstQHeight, partialMatch.FirstSection.Height)
+		firstLimits := getAllLimits(firstQSection.Width, qs.Info.FirstQWidth, partialMatch.FirstSection.Width,
+			firstQSection.Height, qs.Info.FirstQHeight, partialMatch.FirstSection.Height)
 		if firstSection.Width < int64(firstLimits.WidthLower) || firstSection.Height < firstLimits.HeightLower {
 			continue
 		}
 
-		lastSection := getNextSection(repo, partialMatch.LastSection)
+		lastSection := ind.GetNextSection(partialMatch.LastSection)
 		if lastSection == nil {
 			continue
 		}
-		lastLimits := getAllLimits(lastQueryWidth, partialMatch.LastQWidth, partialMatch.LastSection.Width,
-			lastQueryHeight, partialMatch.LastQHeight, partialMatch.LastSection.Height)
+		lastLimits := getAllLimits(lastQSection.Width, qs.Info.LastQWidth, partialMatch.LastSection.Width,
+			lastQSection.Height, qs.Info.LastQHeight, partialMatch.LastSection.Height)
 		if lastSection.Width < int64(lastLimits.WidthLower) || lastSection.Height < lastLimits.HeightLower {
 			continue
 		}
@@ -92,7 +88,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 
 		firstEndSeq := firstSection.NextSeq
 		firstStartSeq := firstSection.StartSeq
-		firstExpectedWidth := float64(partialMatch.FirstSection.Width) * float64(firstQueryWidth) / float64(partialMatch.FirstQWidth)
+		firstExpectedWidth := float64(partialMatch.FirstSection.Width) * float64(firstQSection.Width) / float64(qs.Info.FirstQWidth)
 		if firstEndSeq-int64(firstExpectedWidth) > firstStartSeq {
 			firstStartSeq = firstEndSeq - int64(firstExpectedWidth)
 		}
@@ -108,7 +104,7 @@ func ExtendStartEnd(repo *repository.Repository, partialMatches []*PartialMatch,
 			lastEndSeq = data[len(data)-1].Seq
 		}
 		lastStartSeq := lastSection.StartSeq
-		lastExpectedWidth := float64(partialMatch.LastSection.Width) * float64(lastQueryWidth) / float64(partialMatch.LastQWidth)
+		lastExpectedWidth := float64(partialMatch.LastSection.Width) * float64(lastQSection.Width) / float64(qs.Info.LastQWidth)
 		if lastStartSeq+int64(lastExpectedWidth) < lastEndSeq {
 			lastEndSeq = lastStartSeq + int64(lastExpectedWidth)
 		}
@@ -215,10 +211,10 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 	}
 }
 
-func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *sectionindex.SectionInfo, queryWidth int64, queryHeight float64) bool {
+func withinWidthAndHeight(partialMatch *PartialMatch, queryInfo QueryInfo, nextSection *sectionindex.SectionInfo, queryWidth int64, queryHeight float64) bool {
 
-	l := getAllLimits(queryWidth, partialMatch.LastQWidth, partialMatch.LastSection.Width,
-		queryHeight, partialMatch.LastQHeight, partialMatch.LastSection.Height)
+	l := getAllLimits(queryWidth, queryInfo.LastQWidth, partialMatch.LastSection.Width,
+		queryHeight, queryInfo.LastQHeight, partialMatch.LastSection.Height)
 
 	if float64(nextSection.Width) < l.WidthLower || float64(nextSection.Width) > l.WidthUpper {
 		return false

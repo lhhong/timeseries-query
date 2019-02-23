@@ -1,9 +1,9 @@
 package query
 
 import (
-	"github.com/lhhong/timeseries-query/pkg/sectionindex"
+	"fmt"
 	"github.com/lhhong/timeseries-query/pkg/common"
-	fmt "fmt"
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"log"
 	"math"
 
@@ -11,7 +11,34 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/repository"
 )
 
-func ExtendQuery(repo *repository.Repository, partialMatches []*PartialMatch, nextQuerySection []repository.Values) []*PartialMatch {
+func extendQuery(ind *sectionindex.Index, qs *queryState, nextQuerySection *sectionindex.SectionInfo) {
+
+	var remainingMatches []*PartialMatch
+
+	if len(qs.partialMatches) == 0 {
+		return
+	}
+
+	for _, partialMatch := range qs.partialMatches {
+		nextSection := ind.GetNextSection(partialMatch.LastSection)
+		if nextSection == nil {
+			continue
+		}
+		if !withinWidthAndHeight(partialMatch, nextSection, nextQuerySection.Width, nextQuerySection.Height) {
+			continue
+		}
+		partialMatch.LastSection = nextSection
+
+		remainingMatches = append(remainingMatches, partialMatch)
+	}
+	qs.partialMatches = remainingMatches
+	qs.lastQWidth = nextQuerySection.Width
+	qs.lastQHeight = nextQuerySection.Height
+	qs.sectionsMatched++
+
+}
+
+func extendQuery_Old(repo *repository.Repository, partialMatches []*PartialMatch, nextQuerySection []repository.Values) []*PartialMatch {
 
 	var remainingMatches []*PartialMatch
 

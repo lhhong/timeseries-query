@@ -97,10 +97,6 @@ func handleUpdate(ind *sectionindex.Index, qs *queryState, query []repository.Va
 		return
 	}
 
-	if qs.partialMatches != nil {
-		// TODO do query extension
-	}
-
 	if qs.sectionsMatched == 0 {
 
 		limits := getAllRatioLimits(sections[2].SectionInfo.Width, sections[1].SectionInfo.Width,
@@ -111,14 +107,14 @@ func handleUpdate(ind *sectionindex.Index, qs *queryState, query []repository.Va
 
 		qs.sectionsMatched = 2
 	}
-	for len(sections)-2 > qs.sectionsMatched {
+	for len(sections)-2 > qs.sectionsMatched && len(sections)-3 <= ind.NumLevels {
 		limits := getAllRatioLimits(sections[qs.sectionsMatched+1].SectionInfo.Width, sections[qs.sectionsMatched].SectionInfo.Width,
 			sections[qs.sectionsMatched+1].SectionInfo.Height, sections[qs.sectionsMatched].SectionInfo.Height)
 		qs.nodeMatches = sectionindex.GetRelevantNodes(limits, qs.nodeMatches)
 		qs.sectionsMatched++
 	}
 
-	if sectionindex.GetTotalCount(qs.nodeMatches) <= CountToRetrieve {
+	if sectionindex.GetTotalCount(qs.nodeMatches) <= CountToRetrieve || len(sections)-3 > ind.NumLevels {
 		sections := sectionindex.RetrieveAllSections(qs.nodeMatches)
 		for _, s := range sections {
 
@@ -128,6 +124,13 @@ func handleUpdate(ind *sectionindex.Index, qs *queryState, query []repository.Va
 			})
 		}
 	}
+
+	if qs.partialMatches != nil {
+		for len(sections)-2 > qs.sectionsMatched {
+			extendQuery(ind, qs, sections[qs.sectionsMatched+1].SectionInfo)
+		}
+	}
+
 }
 
 func handleUpdate_old(ind *sectionindex.Index, repo *repository.Repository, matches *[]*PartialMatch, sectionsMatched *int, query []repository.Values) {
@@ -171,7 +174,7 @@ func handleUpdate_old(ind *sectionindex.Index, repo *repository.Repository, matc
 		*sectionsMatched = 1
 	}
 	for len(sections)-2 > *sectionsMatched {
-		*matches = ExtendQuery(repo, *matches, sections[*sectionsMatched+1].Points)
+		*matches = extendQuery_Old(repo, *matches, sections[*sectionsMatched+1].Points)
 		*sectionsMatched++
 	}
 }
@@ -229,7 +232,7 @@ func HandleInstantQuery(repo *repository.Repository, groupname string, points []
 
 	for i := 2; i < len(sections)-1; i++ {
 		log.Printf("extending query, i=%d", i)
-		partialMatches = ExtendQuery(repo, partialMatches, sections[i].Points)
+		partialMatches = extendQuery_Old(repo, partialMatches, sections[i].Points)
 	}
 	matches := ExtendStartEnd(repo, partialMatches, sections[0].Points, sections[len(sections)-1].Points)
 	if len(matches) < 1 {

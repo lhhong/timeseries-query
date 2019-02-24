@@ -38,6 +38,6 @@ func (si *SectionInfo) getPrevKey() SectionInfoKey {
 	return SectionInfoKey{
 		Series:   si.Series,
 		Nsmooth:  si.Nsmooth,
-		StartSeq: si.NextSeq,
+		StartSeq: si.PrevSeq,
 	}
 }

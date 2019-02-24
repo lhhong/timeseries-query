@@ -169,11 +169,13 @@ func finalize(ind *sectionindex.Index, repo *repository.Repository, qs *QuerySta
 	//datautils.Smooth(query, 2, 1)
 	//datautils.Smooth(query, 3, 2)
 
-	if qs.partialMatches == nil {
-		retrieveSections(ind, qs)
-	}
 
 	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 2.2)
+
+	if qs.partialMatches == nil {
+		retrieveSections(ind, qs)
+		qs.lastQSection = sections[qs.sectionsMatched].SectionInfo
+	}
 
 	matches := extendStartEnd(ind, repo, qs, sections[0].SectionInfo, sections[len(sections)-1].SectionInfo)
 	if len(matches) < 1 {

@@ -485,7 +485,7 @@ QetchQuery.directive('queryCanvas', ['$http', 'QetchQuery_QueryAPI', 'QetchQuery
             // lhhong
             if (scope.currentPath && scope.currentPath.length > 200) {
               points = scope.extractPointsContinuous()
-              if (points.length > scope.pointsLength + 50) {
+              if (points.length > scope.pointsLength + 70) {
                 scope.pointsLength = points.length
                 console.log("Update points")
                 console.log(JSON.parse(JSON.stringify(points)))

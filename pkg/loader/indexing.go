@@ -31,20 +31,19 @@ func IndexAndSaveSeries(ind *sectionindex.Index, seriesInfo repository.SeriesInf
 	//TODO export to parameters
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 	minSmoothRatio := 0.4                  // minimum smooth iteration to index
-	var sectionInfos []*sectionindex.SectionInfo
 
 	smoothedValues := datautils.SmoothData(values)
 	minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
 	for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
+		var sectionInfos []*sectionindex.SectionInfo
 		values := smoothedValues[smoothIndex]
 		currentSections := datautils.ConstructSectionsFromPoints(values, divideSectionMinimumHeightData)
 		for _, section := range currentSections {
 			section.AppendInfo(seriesInfo.Groupname, seriesInfo.Series, smoothIndex)
 			sectionInfos = append(sectionInfos, section.SectionInfo)
 		}
+		ind.StoreSeries(sectionInfos)
 	}
-
-	ind.StoreSeries(sectionInfos)
 }
 
 func CalcAndSaveIndexDetails(repo *repository.Repository, ind *sectionindex.Index, env string, group string) {

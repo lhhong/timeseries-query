@@ -7,7 +7,7 @@ import (
 type QueryState struct {
 	sectionsMatched int
 	nodeMatches     []*sectionindex.Node
-	PartialMatches  []*PartialMatch
-	FirstQSection *sectionindex.SectionInfo
-	LastQSection *sectionindex.SectionInfo
+	partialMatches  []*PartialMatch
+	firstQSection   *sectionindex.SectionInfo
+	lastQSection    *sectionindex.SectionInfo
 }

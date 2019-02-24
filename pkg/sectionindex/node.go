@@ -28,13 +28,14 @@ func initNodeLazy(parent *Node, ind *Index) *Node {
 		level = parent.Level + 1
 	}
 
-	return &Node{
+	n := &Node{
 		Count:   0,
 		Level:   level,
 		updated: false,
 		parent:  parent,
 		ind:     ind,
 	}
+	return n
 }
 
 func (n *Node) propagateDescendents(descendent *[]*SectionInfo) {
@@ -124,12 +125,14 @@ func (n *Node) rebuildReferences(ind *Index, parent *Node) {
 }
 
 func (n *Node) traverseRelevantNodes(limits common.Limits) []*Node {
-	relevantIndices := n.ind.getRelevantNodeIndex(limits)
 	var relevantNodes []*Node
-	for _, i := range relevantIndices {
-		child := n.Children[i.heightIndex][i.widthIndex].N
-		if child != nil {
-			relevantNodes = append(relevantNodes, child)
+	if n.Children != nil {
+		relevantIndices := n.ind.getRelevantNodeIndex(limits)
+		for _, i := range relevantIndices {
+			child := n.Children[i.heightIndex][i.widthIndex].N
+			if child != nil {
+				relevantNodes = append(relevantNodes, child)
+			}
 		}
 	}
 	return relevantNodes

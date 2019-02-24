@@ -19,7 +19,6 @@ type Updates struct {
 }
 
 func PublishUpdates(cs *querycache.CacheStore, sessionID string, query []repository.Values) {
-	log.Println("Publishing updates")
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	enc.Encode(Updates{IsFinal: false, Query: query})
@@ -65,7 +64,6 @@ func StartContinuousQuery(ind *sectionindex.Index, repo *repository.Repository, 
 		// TODO: timeout event if no final received
 		for {
 			data := <-dataChan
-			log.Println("Received updates")
 			dec := gob.NewDecoder(bytes.NewReader(data))
 			var query Updates
 			dec.Decode(&query)
@@ -103,8 +101,7 @@ func handleUpdate(ind *sectionindex.Index, qs *QueryState, query []repository.Va
 		return
 	}
 
-	log.Println(len(sections))
-	log.Println(qs.partialMatches)
+	log.Printf("%d sections in update", len(sections))
 	if qs.partialMatches == nil {
 		if qs.sectionsMatched == 0 {
 			initialMatch(ind, qs, sections)
@@ -113,7 +110,7 @@ func handleUpdate(ind *sectionindex.Index, qs *QueryState, query []repository.Va
 			traverseNode(qs, sections)
 		}
 
-		log.Println(sectionindex.GetTotalCount(qs.nodeMatches))
+		log.Printf("%d matching sections from index", sectionindex.GetTotalCount(qs.nodeMatches))
 		if qs.nodeMatches != nil && sectionindex.GetTotalCount(qs.nodeMatches) <= CountToRetrieve || len(sections)-3 > ind.NumLevels {
 			log.Println("Retrieved sections")
 			retrieveSections(ind, qs)

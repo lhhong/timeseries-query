@@ -202,12 +202,12 @@ func getAllRatioLimits(queryWidth, cmpQueryWidth int64, queryHeight, cmpQueryHei
 
 	// TODO Export to parameters
 
-	widthRatioExponent := 0.3
-	widthRatioMultiplier := 1.8
+	widthRatioExponent := 0.15
+	widthRatioMultiplier := 2.2
 	widthMinimumCutoff := 0.3
 
-	heightRatioExponent := 0.3
-	heightRatioMultiplier := 1.0
+	heightRatioExponent := 0.15
+	heightRatioMultiplier := 0.8
 	heightMinimumCutoff := 0.3
 
 	widthLowerLimit, widthUpperLimit := getWidthOrHeightRatioLimits(float64(queryWidth), float64(cmpQueryWidth),

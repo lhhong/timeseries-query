@@ -1,6 +1,7 @@
 package query
 
 import (
+	"github.com/lhhong/timeseries-query/pkg/common"
 	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 )
 
@@ -10,4 +11,5 @@ type QueryState struct {
 	partialMatches  []*PartialMatch
 	firstQSection   *sectionindex.SectionInfo
 	lastQSection    *sectionindex.SectionInfo
+	limits          []common.Limits
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/lhhong/timeseries-query/pkg/common"
 	"github.com/lhhong/timeseries-query/pkg/datautils"
 	"github.com/lhhong/timeseries-query/pkg/querycache"
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -134,6 +135,7 @@ func initialMatch(ind *sectionindex.Index, qs *QueryState, sections []*datautils
 	qs.nodeMatches = ind.GetRelevantNodes(limits, []*sectionindex.Node{node})
 	qs.firstQSection = sections[1].SectionInfo
 	qs.sectionsMatched = 2
+	qs.limits = append(qs.limits, limits)
 }
 
 func traverseNode(ind *sectionindex.Index, qs *QueryState, sections []*datautils.Section) {
@@ -142,6 +144,19 @@ func traverseNode(ind *sectionindex.Index, qs *QueryState, sections []*datautils
 		sections[qs.sectionsMatched+1].SectionInfo.Height, sections[qs.sectionsMatched].SectionInfo.Height)
 	qs.nodeMatches = ind.GetRelevantNodes(limits, qs.nodeMatches)
 	qs.sectionsMatched++
+	qs.limits = append(qs.limits, limits)
+}
+
+func withinRatioLimit(limit common.Limits, cmpSection *sectionindex.SectionInfo, section *sectionindex.SectionInfo) bool {
+	widthRatio := float64(section.Width) / float64(cmpSection.Width)
+	heightRatio := section.Height / cmpSection.Height
+	if widthRatio >= limit.WidthLower && widthRatio <= limit.WidthUpper &&
+		heightRatio >= limit.HeightLower && heightRatio <= limit.HeightUpper {
+
+		return true
+	}
+	return false
+
 }
 
 func retrieveSections(ind *sectionindex.Index, qs *QueryState) {
@@ -149,15 +164,24 @@ func retrieveSections(ind *sectionindex.Index, qs *QueryState) {
 	sections := sectionindex.RetrieveAllSections(qs.nodeMatches)
 	for _, s := range sections {
 
-		lastSection := ind.GetNthSection(s, qs.sectionsMatched-1)
-
-		if lastSection != nil {
-			qs.partialMatches = append(qs.partialMatches, &PartialMatch{
-				FirstSection: s,
-				LastSection:  lastSection,
-			})
+		var next *sectionindex.SectionInfo
+		var lastSection *sectionindex.SectionInfo
+		prev := s
+		for i := 0; i < qs.sectionsMatched-1; i++ {
+			next = ind.GetNextSection(prev)
+			if next == nil || !withinRatioLimit(qs.limits[i], prev, next) {
+				goto Skip
+			}
+			prev = next
 		}
+		lastSection = next
+		qs.partialMatches = append(qs.partialMatches, &PartialMatch{
+			FirstSection: s,
+			LastSection:  lastSection,
+		})
+	Skip:
 	}
+	log.Printf("%d partial matches after retrieving", len(qs.partialMatches))
 }
 
 func finalize(ind *sectionindex.Index, repo *repository.Repository, qs *QueryState, query []repository.Values) []*Match {
@@ -165,7 +189,6 @@ func finalize(ind *sectionindex.Index, repo *repository.Repository, qs *QuerySta
 	//TODO replace with alternative smoothing
 	//datautils.Smooth(query, 2, 1)
 	//datautils.Smooth(query, 3, 2)
-
 
 	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 2.2)
 

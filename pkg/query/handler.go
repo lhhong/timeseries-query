@@ -107,7 +107,7 @@ func handleUpdate(ind *sectionindex.Index, qs *QueryState, query []repository.Va
 			initialMatch(ind, qs, sections)
 		}
 		for len(sections)-2 > qs.sectionsMatched && qs.sectionsMatched-1 < ind.NumLevels {
-			traverseNode(qs, sections)
+			traverseNode(ind, qs, sections)
 		}
 
 		log.Printf("%d matching sections from index", sectionindex.GetTotalCount(qs.nodeMatches))
@@ -131,16 +131,16 @@ func initialMatch(ind *sectionindex.Index, qs *QueryState, sections []*datautils
 		sections[2].SectionInfo.Height, sections[1].SectionInfo.Height)
 
 	node := ind.GetRootNode(sections[1].SectionInfo.Sign)
-	qs.nodeMatches = sectionindex.GetRelevantNodes(limits, []*sectionindex.Node{node})
+	qs.nodeMatches = ind.GetRelevantNodes(limits, []*sectionindex.Node{node})
 	qs.firstQSection = sections[1].SectionInfo
 	qs.sectionsMatched = 2
 }
 
-func traverseNode(qs *QueryState, sections []*datautils.Section) {
+func traverseNode(ind *sectionindex.Index, qs *QueryState, sections []*datautils.Section) {
 
 	limits := getAllRatioLimits(sections[qs.sectionsMatched+1].SectionInfo.Width, sections[qs.sectionsMatched].SectionInfo.Width,
 		sections[qs.sectionsMatched+1].SectionInfo.Height, sections[qs.sectionsMatched].SectionInfo.Height)
-	qs.nodeMatches = sectionindex.GetRelevantNodes(limits, qs.nodeMatches)
+	qs.nodeMatches = ind.GetRelevantNodes(limits, qs.nodeMatches)
 	qs.sectionsMatched++
 }
 

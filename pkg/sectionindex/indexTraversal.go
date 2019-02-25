@@ -144,3 +144,12 @@ func (ind *Index) getRelevantNodeIndex(limits common.Limits) []WidthHeightIndex 
 
 	return res
 }
+
+func (ind *Index) GetRelevantNodes(limits common.Limits, nodes []*Node) []*Node {
+	var res []*Node
+	relevantIndices := ind.getRelevantNodeIndex(limits)
+	for _, n := range nodes {
+		res = append(res, n.traverseRelevantNodes(relevantIndices)...)
+	}
+	return res
+}

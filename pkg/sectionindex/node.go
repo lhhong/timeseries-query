@@ -1,9 +1,5 @@
 package sectionindex
 
-import (
-	"github.com/lhhong/timeseries-query/pkg/common"
-)
-
 type Node struct {
 	Count          int
 	Level          int
@@ -124,11 +120,10 @@ func (n *Node) rebuildReferences(ind *Index, parent *Node) {
 
 }
 
-func (n *Node) traverseRelevantNodes(limits common.Limits) []*Node {
+func (n *Node) traverseRelevantNodes(childIndices []WidthHeightIndex) []*Node {
 	var relevantNodes []*Node
 	if n.Children != nil {
-		relevantIndices := n.ind.getRelevantNodeIndex(limits)
-		for _, i := range relevantIndices {
+		for _, i := range childIndices {
 			child := n.Children[i.heightIndex][i.widthIndex].N
 			if child != nil {
 				relevantNodes = append(relevantNodes, child)
@@ -136,14 +131,6 @@ func (n *Node) traverseRelevantNodes(limits common.Limits) []*Node {
 		}
 	}
 	return relevantNodes
-}
-
-func GetRelevantNodes(limits common.Limits, nodes []*Node) []*Node {
-	var res []*Node
-	for _, n := range nodes {
-		res = append(res, n.traverseRelevantNodes(limits)...)
-	}
-	return res
 }
 
 func GetTotalCount(nodes []*Node) int {
@@ -166,21 +153,3 @@ func RetrieveAllSections(nodes []*Node) []*SectionInfo {
 	ss := GetAllSectionSlices(nodes)
 	return ss.ToSlice()
 }
-
-// TODO Remove naive method if pointer approach works
-// func (n *node) retrieveSectionsNaive() []*SectionInfo {
-//
-// 	if n.level == 0 {
-// 		return n.values
-// 	}
-//
-// 	var res []*SectionInfo
-// 	for _, row := range n.children {
-// 		for _, n := range row {
-// 			if n != nil {
-// 				res = append(res, n.retrieveSectionsNaive()...)
-// 			}
-// 		}
-// 	}
-// 	return res
-// }

@@ -47,3 +47,10 @@ func (repo *Repository) GetSeriesInfo(groupname string) ([]SeriesInfo, error) {
 	err := repo.db.Select(&data, `SELECT * FROM SeriesInfo WHERE groupname = ?`, groupname)
 	return data, err
 }
+
+// GetAllSeriesInfo Retrieves all Series 
+func (repo *Repository) GetAllSeriesInfo() ([]SeriesInfo, error) {
+	data := []SeriesInfo{}
+	err := repo.db.Select(&data, `SELECT * FROM SeriesInfo`)
+	return data, err
+}

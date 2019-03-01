@@ -73,3 +73,13 @@ func (repo *Repository) GetRawDataOfSmoothedSeries(groupname string, series stri
 		groupname, series, smooth)
 	return data, err
 }
+
+// GetRawDataOfSmoothedSeriesInRange Retrieve array of Values given 1 specific time series within range of sequence number
+func (repo *Repository) GetRawDataOfSmoothedSeriesInRange(groupname string, series string, smooth int, from int64, to int64) ([]Values, error) {
+	data := []Values{}
+	err := repo.db.Select(&data, `SELECT seq, value FROM RawData
+		WHERE groupname = ? AND series = ? AND smooth = ? AND seq >= ? AND seq <= ?
+		ORDER BY seq`,
+		groupname, series, smooth, from, to)
+	return data, err
+}

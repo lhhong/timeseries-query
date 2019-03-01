@@ -53,6 +53,7 @@ func CalcAndSaveIndexDetails(repo *repository.Repository, ind *sectionindex.Inde
 	for i, seriesInfo := range seriesInfos {
 
 		values := seriesValues[i]
+		log.Printf("Indexing %s", seriesInfo.Series)
 
 		IndexAndSaveSeries(ind, seriesInfo, values)
 

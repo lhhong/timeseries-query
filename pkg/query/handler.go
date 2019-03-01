@@ -37,6 +37,7 @@ func FinalizeQuery(cs *querycache.CacheStore, sessionID string, query []reposito
 	cs.Subscribe(sessionID+"FINAL", func(conn redis.Conn, dataChan chan []byte) {
 		defer cs.Unsubscribe(conn)
 		data := <-dataChan
+		log.Println("Recev")
 		dec := gob.NewDecoder(bytes.NewReader(data))
 		var matches []*Match
 		dec.Decode(&matches)

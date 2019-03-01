@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Server",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -15,6 +15,31 @@
                 "TSQ_DATABASE_PORT": 3307,
             },
             "args": [],
+        },
+        {
+            "name": "Astro Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/cmd/server",
+            "env": {
+                "TSQ_DATABASE_PORT": 3308,
+                "TSQ_APP_SERIESGROUPS": ["astro-swift"],
+            },
+            "args": [],
+        },
+        {
+            "name": "Astro Indexer",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/cmd/loader",
+            "env": {
+                "TSQ_DATABASE_PORT": 3308,
+            },
+            "args": ["--index-only", "-n", "astro-swift"],
         }
     ]
 }

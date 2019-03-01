@@ -1,10 +1,10 @@
 package loader
 
 import (
-	"github.com/lhhong/timeseries-query/pkg/config"
-	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"bufio"
 	"encoding/csv"
+	"github.com/lhhong/timeseries-query/pkg/config"
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"io"
 	"log"
 	"os"
@@ -17,6 +17,18 @@ import (
 
 // LoadData Loads data from commands
 func LoadData(cmd *cobra.Command, conf *config.AppConfig, repo *repository.Repository) {
+
+	indexOnly, _ := cmd.Flags().GetBool("index-only")
+	if indexOnly {
+		group, _ := cmd.Flags().GetString("groupname")
+		loadIndex(group, conf.Env, repo)
+		return
+	}
+	swift, _ := cmd.Flags().GetBool("swift-data")
+	if swift {
+		LoadSwift(cmd, conf, repo)
+		return
+	}
 
 	group, _ := cmd.Flags().GetString("groupname")
 	data, _ := cmd.Flags().GetString("datafile")

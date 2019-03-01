@@ -59,7 +59,7 @@ func getSeries(repo *repository.Repository) func(http.ResponseWriter, *http.Requ
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		values, err := repo.GetRawDataOfSmoothedSeries(vars["gkey"], vars["skey"], 0)
+		values, err := repo.GetRawDataOfSmoothedSeries(vars["gkey"], vars["skey"])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

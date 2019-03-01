@@ -71,6 +71,7 @@ func readAndSaveSwiftSeries(repo *repository.Repository, group string, path stri
 		panic(err)
 	}
 	defer rows.Close()
+	index := 0
 	for rows.Next() {
 		err = rows.Scan(&yy)
 		if err != nil {
@@ -79,10 +80,11 @@ func readAndSaveSwiftSeries(repo *repository.Repository, group string, path stri
 		values = append(values, repository.RawData{
 			Groupname: group,
 			Series:    name,
-			Smooth:    0,
 			Seq:       int64(yy["TIME"].(float64)),
+			Index: index,
 			Value:     float64(yy["RATE"].([9]float32)[8]),
 		})
+		index++
 	}
 
 	err = rows.Err()

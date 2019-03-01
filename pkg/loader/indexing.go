@@ -133,7 +133,7 @@ func retrieveAllSeriesInGroup(repo *repository.Repository, group string) ([]repo
 			defer func() {
 				<-golimit
 			}()
-			values, err := repo.GetRawDataOfSmoothedSeries(group, seriesInfo.Series, 0)
+			values, err := repo.GetRawDataOfSmoothedSeries(group, seriesInfo.Series)
 			if err != nil {
 				log.Printf("Cannot retrve values for %s", seriesInfo.Series)
 				log.Println(err)

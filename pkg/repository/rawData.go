@@ -13,16 +13,16 @@ const NRawDataEle int = 5
 type RawData struct {
 	Groupname string
 	Series    string
-	Smooth    int //Smooth iteration
 	Seq       int64
+	Index    int //Smooth iteration
 	Value     float64
 }
 
 var rawDataCreateStmt = `CREATE TABLE IF NOT EXISTS RawData (
 		groupname VARCHAR(30),
 		series VARCHAR(30), 
-		smooth INT,
 		seq INT,
+		index INT,
 		value DOUBLE NOT NULL,
 		PRIMARY KEY (groupname, series, smooth, seq)
 	);`
@@ -31,12 +31,13 @@ var rawDataCreateStmt = `CREATE TABLE IF NOT EXISTS RawData (
 type Values struct {
 	Seq   int64   `json:"x"`
 	Value float64 `json:"y"`
+	Index float64 `json:"-"`
 }
 
 // SaveRawData Saves a single RawData into database
 func (repo *Repository) SaveRawData(rawData *RawData) error {
 	_, err := repo.db.Exec("INSERT INTO RawData VALUES (?, ?, ?, ?, ?)",
-		rawData.Groupname, rawData.Series, rawData.Smooth, rawData.Seq, rawData.Value)
+		rawData.Groupname, rawData.Series, rawData.Seq, rawData.Index, rawData.Value)
 	return err
 
 }
@@ -56,7 +57,7 @@ func (repo *Repository) BulkSaveRawData(valueArgs []interface{}) error {
 func (repo *Repository) BulkSaveRawDataUnsafe(data []RawData) error {
 	valueStrings := make([]string, 0, len(data))
 	for _, v := range data {
-		value := "(\"" + v.Groupname + "\",\"" + v.Series + "\"," + strconv.Itoa(v.Smooth) + "," + strconv.FormatInt(v.Seq, 10) + "," + strconv.FormatFloat(v.Value, 'g', -1, 64) + ")"
+		value := "(\"" + v.Groupname + "\",\"" + v.Series + "\"," + strconv.FormatInt(v.Seq, 10) + "," + strconv.Itoa(v.Index) + "," + strconv.FormatFloat(v.Value, 'g', -1, 64) + ")"
 		valueStrings = append(valueStrings, value)
 	}
 	stmt := fmt.Sprintf("INSERT INTO RawData VALUES %s", strings.Join(valueStrings, ","))
@@ -65,21 +66,21 @@ func (repo *Repository) BulkSaveRawDataUnsafe(data []RawData) error {
 }
 
 // GetRawDataOfSmoothedSeries Retrieve array of Values given 1 specific time series
-func (repo *Repository) GetRawDataOfSmoothedSeries(groupname string, series string, smooth int) ([]Values, error) {
+func (repo *Repository) GetRawDataOfSmoothedSeries(groupname string, series string) ([]Values, error) {
 	data := []Values{}
-	err := repo.db.Select(&data, `SELECT seq, value FROM RawData
-		WHERE groupname = ? AND series = ? AND smooth = ?
+	err := repo.db.Select(&data, `SELECT seq, value, index FROM RawData
+		WHERE groupname = ? AND series = ?
 		ORDER BY seq`,
-		groupname, series, smooth)
+		groupname, series)
 	return data, err
 }
 
 // GetRawDataOfSmoothedSeriesInRange Retrieve array of Values given 1 specific time series within range of sequence number
-func (repo *Repository) GetRawDataOfSmoothedSeriesInRange(groupname string, series string, smooth int, from int64, to int64) ([]Values, error) {
+func (repo *Repository) GetRawDataOfSmoothedSeriesInRange(groupname string, series string, from int64, to int64) ([]Values, error) {
 	data := []Values{}
-	err := repo.db.Select(&data, `SELECT seq, value FROM RawData
-		WHERE groupname = ? AND series = ? AND smooth = ? AND seq >= ? AND seq <= ?
+	err := repo.db.Select(&data, `SELECT seq, value, index FROM RawData
+		WHERE groupname = ? AND series = ? AND seq >= ? AND seq <= ?
 		ORDER BY seq`,
-		groupname, series, smooth, from, to)
+		groupname, series, from, to)
 	return data, err
 }

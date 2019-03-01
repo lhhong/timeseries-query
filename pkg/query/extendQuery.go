@@ -57,7 +57,7 @@ func retrieveSeries(repo *repository.Repository, cache map[string][]repository.V
 	values, ok := cache[key]
 	if !ok {
 		var err error
-		values, err = repo.GetRawDataOfSmoothedSeries(group, series, 0)
+		values, err = repo.GetRawDataOfSmoothedSeries(group, series)
 		if err != nil {
 			log.Println("Failed to retrieve raw data")
 			log.Println(err)

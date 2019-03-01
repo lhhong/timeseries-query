@@ -21,7 +21,6 @@ func createTables(repo *Repository) {
 	repo.db.MustExec(rawDataCreateStmt)
 	repo.db.MustExec(seriesInfoCreateStmt)
 
-	repo.db.MustExec(sectionInfoCreateStmt)
 }
 
 func getInsertionPlaceholder(numVar int, length int) string {

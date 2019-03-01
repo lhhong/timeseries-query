@@ -3,13 +3,14 @@ package loader
 import (
 	"bufio"
 	"encoding/csv"
-	"github.com/lhhong/timeseries-query/pkg/config"
-	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/lhhong/timeseries-query/pkg/config"
+	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 
 	"github.com/lhhong/timeseries-query/pkg/repository"
 	"github.com/spf13/cobra"
@@ -59,6 +60,7 @@ func readCsvAndSave(repo *repository.Repository, group string, data string, seri
 	batchSize := 50000
 	series := make(map[string]bool)
 	values := make([]repository.RawData, 0, batchSize)
+	index := 0
 	for {
 		values = values[:0]
 		for i := 0; i < batchSize; i++ {
@@ -69,6 +71,11 @@ func readCsvAndSave(repo *repository.Repository, group string, data string, seri
 				log.Fatal(err)
 				panic(err)
 			} else {
+				// For storing series info
+				if exists := series[line[seriesCol]]; !exists {
+					series[line[seriesCol]] = true
+					index = 0
+				}
 				value, err := strconv.ParseFloat(line[valCol], 64)
 				if err != nil {
 					log.Println(err)
@@ -83,12 +90,11 @@ func readCsvAndSave(repo *repository.Repository, group string, data string, seri
 				values = append(values, repository.RawData{
 					Groupname: group,
 					Series:    line[seriesCol],
-					Smooth:    0,
 					Seq:       seq,
+					Index:     index,
 					Value:     value,
 				})
-				// For storing series info
-				series[line[seriesCol]] = true
+				index++
 			}
 		}
 		bulkSave(values, repo)

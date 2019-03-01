@@ -15,7 +15,7 @@ type seriesResponse struct {
 
 type dataDefResponse struct {
 	DataDefinition []DataDefinition `json:"dataDefinition"`
-	SessionID string `json:"sessionId"`
+	SessionID      string           `json:"sessionId"`
 }
 
 // DataDefinition Exported for json unmarshal
@@ -59,7 +59,7 @@ func getSeries(repo *repository.Repository) func(http.ResponseWriter, *http.Requ
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		values, err := repo.GetRawDataOfSmoothedSeries(vars["gkey"], vars["skey"])
+		values, err := repo.GetRawDataOfSeries(vars["gkey"], vars["skey"])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

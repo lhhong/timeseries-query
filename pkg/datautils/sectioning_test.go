@@ -1,8 +1,6 @@
 package datautils
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -21,13 +19,6 @@ func TestFindCurveSections(t *testing.T) {
 
 	sections, _ = SortPositiveNegative(sections)
 
-	centroids, weights := Cluster(sections)
-
-	jsonByte, _ := json.Marshal(centroids)
-	fmt.Println(string(jsonByte))
-
-	jsonByte, _ = json.Marshal(weights)
-	fmt.Println(string(jsonByte))
 	//json.Marshal(sections)
 
 	// jsonByte, _ := json.Marshal(sections)

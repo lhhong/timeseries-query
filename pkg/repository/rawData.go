@@ -14,7 +14,7 @@ type RawData struct {
 	Groupname string
 	Series    string
 	Seq       int64
-	Index    int //Smooth iteration
+	Index     int //Smooth iteration
 	Value     float64
 }
 
@@ -65,8 +65,8 @@ func (repo *Repository) BulkSaveRawDataUnsafe(data []RawData) error {
 	return err
 }
 
-// GetRawDataOfSmoothedSeries Retrieve array of Values given 1 specific time series
-func (repo *Repository) GetRawDataOfSmoothedSeries(groupname string, series string) ([]Values, error) {
+// GetRawDataOfSeries Retrieve array of Values given 1 specific time series
+func (repo *Repository) GetRawDataOfSeries(groupname string, series string) ([]Values, error) {
 	data := []Values{}
 	err := repo.db.Select(&data, `SELECT seq, value, index FROM RawData
 		WHERE groupname = ? AND series = ?
@@ -75,8 +75,8 @@ func (repo *Repository) GetRawDataOfSmoothedSeries(groupname string, series stri
 	return data, err
 }
 
-// GetRawDataOfSmoothedSeriesInRange Retrieve array of Values given 1 specific time series within range of sequence number
-func (repo *Repository) GetRawDataOfSmoothedSeriesInRange(groupname string, series string, from int64, to int64) ([]Values, error) {
+// GetRawDataOfSeriesInRange Retrieve array of Values given 1 specific time series within range of sequence number
+func (repo *Repository) GetRawDataOfSeriesInRange(groupname string, series string, from int64, to int64) ([]Values, error) {
 	data := []Values{}
 	err := repo.db.Select(&data, `SELECT seq, value, index FROM RawData
 		WHERE groupname = ? AND series = ? AND seq >= ? AND seq <= ?

@@ -81,7 +81,7 @@ func readAndSaveSwiftSeries(repo *repository.Repository, group string, path stri
 			Groupname: group,
 			Series:    name,
 			Seq:       int64(yy["TIME"].(float64)),
-			Index: index,
+			Ind:       index,
 			Value:     float64(yy["RATE"].([9]float32)[8]),
 		})
 		index++

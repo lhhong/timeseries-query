@@ -23,7 +23,7 @@ func InitDefaultIndex() *Index {
 	//TODO determine tick values and numLevels
 	widthRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
 	heightRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
-	numLevels := 4
+	numLevels := 6
 
 	return InitIndex(numLevels, widthRatioTicks, heightRatioTicks)
 }

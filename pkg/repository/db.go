@@ -19,6 +19,7 @@ type Repository struct {
 func createTables(repo *Repository) {
 
 	repo.db.MustExec(rawDataCreateStmt)
+	repo.db.MustExec(rawDataIndexStmt)
 	repo.db.MustExec(seriesInfoCreateStmt)
 
 }

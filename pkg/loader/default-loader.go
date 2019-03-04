@@ -30,6 +30,11 @@ func LoadData(cmd *cobra.Command, conf *config.AppConfig, repo *repository.Repos
 		LoadSwift(cmd, conf, repo)
 		return
 	}
+	ecg, _ := cmd.Flags().GetBool("ecg-data")
+	if ecg {
+		LoadECG(cmd, conf, repo)
+		return
+	}
 
 	group, _ := cmd.Flags().GetString("groupname")
 	data, _ := cmd.Flags().GetString("datafile")
@@ -91,7 +96,7 @@ func readCsvAndSave(repo *repository.Repository, group string, data string, seri
 					Groupname: group,
 					Series:    line[seriesCol],
 					Seq:       seq,
-					Index:     index,
+					Ind:       index,
 					Value:     value,
 				})
 				index++

@@ -17,6 +17,7 @@ func rootCommand() *cobra.Command {
 
 	// this is where we will configure everything!
 	rootCmd.Flags().Bool("swift-data", false, "Load SWIFT astro dataset")
+	rootCmd.Flags().Bool("ecg-data", false, "Load ECG dataset")
 	rootCmd.Flags().Bool("index-only", false, "Index data from database")
 	rootCmd.Flags().String("dir", "", "directory of desired dataset dataset")
 	rootCmd.Flags().StringP("config", "c", "", "Configuration file to use")

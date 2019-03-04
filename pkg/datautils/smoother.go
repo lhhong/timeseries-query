@@ -9,9 +9,9 @@ func SmoothData(rawData []repository.Values) [][]repository.Values {
 	// TODO extract constants
 	minimumSignVarations := 10          //SMOOTH_MINIMUM_SIGN_VARIATIONS_NUM
 	variationRatio := 0.9               //SMOOTH_MIN_SIGN_VARIATION_RATIO
-	smoothedHeightHeightMinRatio := 0.5 //SMOOTH_SMOOTHED_HEIGHT_HEIGHT_MIN_RATIO
+	smoothedHeightHeightMinRatio := 0.7 //SMOOTH_SMOOTHED_HEIGHT_HEIGHT_MIN_RATIO
 	iterationsSteps := 6                //SMOOTH_ITERATIONS_STEPS
-	maximumAttepts := 100               //SMOOTH_MAXIMUM_ATTEMPTS
+	maximumAttepts := 60               //SMOOTH_MAXIMUM_ATTEMPTS
 
 	dataArray := make([][]repository.Values, 0, 20)
 	currentSmoothing := make([]repository.Values, len(rawData))

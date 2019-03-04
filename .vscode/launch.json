@@ -39,7 +39,34 @@
             "env": {
                 "TSQ_DATABASE_PORT": 3308,
             },
+            //"args": ["--dir", "/home/lhhong/fyp/data/swift-reduced/", "-n", "astro-swift", "--swift-data"],
             "args": ["--index-only", "-n", "astro-swift"],
+        },
+        {
+            "name": "ECG Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/cmd/server",
+            "env": {
+                "TSQ_DATABASE_PORT": 3308,
+                "TSQ_APP_SERIESGROUPS": ["ECG"],
+            },
+            "args": [],
+        },
+        {
+            "name": "ECG Indexer",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/cmd/loader",
+            "env": {
+                "TSQ_DATABASE_PORT": 3308,
+            },
+            //"args": ["--dir", "/home/lhhong/fyp/data/ecg-reduced/", "-n", "ECG", "--ecg-data"],
+            "args": ["--index-only", "-n", "ECG"],
         }
     ]
 }

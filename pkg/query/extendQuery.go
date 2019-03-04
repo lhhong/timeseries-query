@@ -50,6 +50,52 @@ func longEnough(ratioLimits common.Limits, dataSection *sectionindex.SectionInfo
 	return true
 }
 
+type indexRange struct {
+	StartIndex int
+	StartSeq   int64
+	EndIndex   int
+	EndSeq     int64
+}
+
+func retrieveSubSeries(repo *repository.Repository, cache map[string]indexedValues, group string, series string, startSeq int64, endSeq int64) []repository.Values {
+
+	key := fmt.Sprintf("%s-%s", group, series)
+	iv, ok := cache[key]
+	if !ok {
+		iv = indexedValues{}
+		cache[key] = iv
+	} else {
+		vals, ok := iv.retrieveValues(startSeq, endSeq)
+		if ok {
+			return vals
+		}
+	}
+	values, err := repo.GetRawDataOfSeriesInRange(group, series, startSeq, endSeq)
+	if err != nil {
+		return nil
+	}
+	if values[0].Ind != 0 {
+		first, err := repo.GetOneRawDataByIndex(group, series, values[0].Ind-1)
+		if err != nil {
+			return nil
+		}
+		values = append([]repository.Values{first}, values...)
+	}
+	last, err := repo.GetOneRawDataByIndex(group, series, values[len(values)-1].Ind+1)
+	if err != nil {
+		return nil
+	}
+	empty := repository.Values{}
+	// if exists, ie, not last element
+	if last != empty {
+		values = append(values, last)
+	}
+	iv.addValues(values)
+
+	return values
+
+}
+
 func retrieveSeries(repo *repository.Repository, cache map[string][]repository.Values, group string, series string) []repository.Values {
 
 	//Common processing for first and last sections
@@ -69,8 +115,8 @@ func retrieveSeries(repo *repository.Repository, cache map[string][]repository.V
 	return values
 }
 
-func getBoundaryOrFilter(boundary int64, lastSeq int64, cmpDataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo,
-	cmpQSection *sectionindex.SectionInfo, data []repository.Values, limits common.Limits) int64 {
+func getBoundaryOrFilter(repo *repository.Repository, boundary int64, lastSeq int64, cmpDataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo,
+	cmpQSection *sectionindex.SectionInfo, cache map[string]indexedValues, limits common.Limits) int64 {
 
 	expectedWidth := float64(cmpDataSection.Width) * float64(qSection.Width) / float64(cmpQSection.Width)
 	var sectionData []repository.Values
@@ -79,13 +125,19 @@ func getBoundaryOrFilter(boundary int64, lastSeq int64, cmpDataSection *sectioni
 		if lastSeq-int64(expectedWidth) > boundary {
 			boundary = lastSeq - int64(expectedWidth)
 		}
-		sectionData = datautils.ExtractInterval(data, boundary, lastSeq)
+		sectionData = retrieveSubSeries(repo, cache, cmpDataSection.Groupname, cmpDataSection.Series, boundary, lastSeq)
+		if sectionData == nil {
+			return -1
+		}
 	} else {
 		// For last section
 		if lastSeq+int64(expectedWidth) < boundary {
 			boundary = lastSeq + int64(expectedWidth)
 		}
-		sectionData = datautils.ExtractInterval(data, lastSeq, boundary)
+		sectionData = retrieveSubSeries(repo, cache, cmpDataSection.Groupname, cmpDataSection.Series, lastSeq, boundary)
+		if sectionData == nil {
+			return -1
+		}
 	}
 
 	_, dataHeight := getWidthAndHeight(sectionData)
@@ -99,7 +151,7 @@ func getBoundaryOrFilter(boundary int64, lastSeq int64, cmpDataSection *sectioni
 func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *QueryState, firstQSection, lastQSection *sectionindex.SectionInfo) []*Match {
 
 	var matches []*Match
-	cachedSeries := make(map[string][]repository.Values)
+	cachedSeries := make(map[string]indexedValues)
 
 	if len(qs.partialMatches) == 0 {
 		return matches
@@ -117,23 +169,19 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 			continue
 		}
 
-		data := retrieveSeries(repo, cachedSeries, firstSection.Groupname, firstSection.Series)
+		// data := retrieveSeries(repo, cachedSeries, firstSection.Groupname, firstSection.Series)
 		//End common processing for first and last sections
 
-		firstStartSeq := getBoundaryOrFilter(firstSection.StartSeq, firstSection.NextSeq, partialMatch.FirstSection, firstQSection, qs.firstQSection,
-			data, firstLimits)
+		firstStartSeq := getBoundaryOrFilter(repo, firstSection.StartSeq, firstSection.NextSeq, partialMatch.FirstSection, firstQSection, qs.firstQSection,
+			cachedSeries, firstLimits)
 
 		if firstStartSeq == -1 {
 			continue
 		}
 
-		lastEndSeq := lastSection.NextSeq
-		if lastEndSeq == -1 {
-			//End of data series
-			lastEndSeq = data[len(data)-1].Seq
-		}
-		lastEndSeq = getBoundaryOrFilter(lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
-			data, lastLimits)
+		lastEndSeq := lastSection.StartSeq + lastSection.Width
+		lastEndSeq = getBoundaryOrFilter(repo, lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
+			cachedSeries, lastLimits)
 		if lastEndSeq == -1 {
 			continue
 		}

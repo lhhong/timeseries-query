@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"errors"
 )
 
 // NRawDataEle Number of elements in RawData
@@ -14,7 +15,7 @@ type RawData struct {
 	Groupname string
 	Series    string
 	Seq       int64
-	Index     int //Smooth iteration
+	Ind       int //Smooth iteration
 	Value     float64
 }
 
@@ -22,22 +23,23 @@ var rawDataCreateStmt = `CREATE TABLE IF NOT EXISTS RawData (
 		groupname VARCHAR(30),
 		series VARCHAR(30), 
 		seq INT,
-		index INT,
+		ind INT,
 		value DOUBLE NOT NULL,
-		PRIMARY KEY (groupname, series, smooth, seq)
+		PRIMARY KEY (groupname, series, seq)
 	);`
+var rawDataIndexStmt = "CREATE UNIQUE INDEX IF NOT EXISTS rawdata_ind ON RawData(groupname, series, ind);"
 
 // Values x, y pair for each point of time series
 type Values struct {
 	Seq   int64   `json:"x"`
 	Value float64 `json:"y"`
-	Index float64 `json:"-"`
+	Ind   int     `json:"-"`
 }
 
 // SaveRawData Saves a single RawData into database
 func (repo *Repository) SaveRawData(rawData *RawData) error {
 	_, err := repo.db.Exec("INSERT INTO RawData VALUES (?, ?, ?, ?, ?)",
-		rawData.Groupname, rawData.Series, rawData.Seq, rawData.Index, rawData.Value)
+		rawData.Groupname, rawData.Series, rawData.Seq, rawData.Ind, rawData.Value)
 	return err
 
 }
@@ -57,7 +59,7 @@ func (repo *Repository) BulkSaveRawData(valueArgs []interface{}) error {
 func (repo *Repository) BulkSaveRawDataUnsafe(data []RawData) error {
 	valueStrings := make([]string, 0, len(data))
 	for _, v := range data {
-		value := "(\"" + v.Groupname + "\",\"" + v.Series + "\"," + strconv.FormatInt(v.Seq, 10) + "," + strconv.Itoa(v.Index) + "," + strconv.FormatFloat(v.Value, 'g', -1, 64) + ")"
+		value := "(\"" + v.Groupname + "\",\"" + v.Series + "\"," + strconv.FormatInt(v.Seq, 10) + "," + strconv.Itoa(v.Ind) + "," + strconv.FormatFloat(v.Value, 'g', -1, 64) + ")"
 		valueStrings = append(valueStrings, value)
 	}
 	stmt := fmt.Sprintf("INSERT INTO RawData VALUES %s", strings.Join(valueStrings, ","))
@@ -68,7 +70,7 @@ func (repo *Repository) BulkSaveRawDataUnsafe(data []RawData) error {
 // GetRawDataOfSeries Retrieve array of Values given 1 specific time series
 func (repo *Repository) GetRawDataOfSeries(groupname string, series string) ([]Values, error) {
 	data := []Values{}
-	err := repo.db.Select(&data, `SELECT seq, value, index FROM RawData
+	err := repo.db.Select(&data, `SELECT seq, value, ind FROM RawData
 		WHERE groupname = ? AND series = ?
 		ORDER BY seq`,
 		groupname, series)
@@ -78,9 +80,22 @@ func (repo *Repository) GetRawDataOfSeries(groupname string, series string) ([]V
 // GetRawDataOfSeriesInRange Retrieve array of Values given 1 specific time series within range of sequence number
 func (repo *Repository) GetRawDataOfSeriesInRange(groupname string, series string, from int64, to int64) ([]Values, error) {
 	data := []Values{}
-	err := repo.db.Select(&data, `SELECT seq, value, index FROM RawData
+	err := repo.db.Select(&data, `SELECT seq, value, ind FROM RawData
 		WHERE groupname = ? AND series = ? AND seq >= ? AND seq <= ?
 		ORDER BY seq`,
 		groupname, series, from, to)
 	return data, err
+}
+
+// GetOneRawData retrieves a single value
+func (repo *Repository) GetOneRawDataByIndex(groupname string, series string, index int) (Values, error) {
+	data := []Values{}
+	err := repo.db.Select(&data, `SELECT seq, value, ind FROM RawData
+		WHERE groupname = ? AND series = ? AND ind = ? 
+		LIMIT 1`,
+		groupname, series, index)
+	if len(data) == 1 {
+		return data[0], err
+	}
+	return Values{}, errors.New("data not found")
 }

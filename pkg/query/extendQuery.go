@@ -220,9 +220,9 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 	heightMinimumCutoff := 0.3
 
 	widthLowerLimit, widthUpperLimit := getWidthOrHeightLimits(float64(queryWidth), float64(cmpQueryWidth),
-		queryHeight, float64(cmpDataWidth), widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
+		queryHeight, cmpQueryHeight, float64(cmpDataWidth), widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
 	heightLowerLimit, heightUpperLimit := getWidthOrHeightLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
-		cmpDataHeight, heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
+		float64(cmpQueryWidth), cmpDataHeight, heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
 
 	return common.Limits{
 		WidthLower:  widthLowerLimit,
@@ -259,9 +259,9 @@ func getAllRatioLimits(queryWidth, cmpQueryWidth int64, queryHeight, cmpQueryHei
 	heightMinimumCutoff := 0.3
 
 	widthLowerLimit, widthUpperLimit := getWidthOrHeightRatioLimits(float64(queryWidth), float64(cmpQueryWidth),
-		queryHeight, widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
+		queryHeight, cmpQueryHeight, widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
 	heightLowerLimit, heightUpperLimit := getWidthOrHeightRatioLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
-		heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
+		float64(cmpQueryWidth), heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
 
 	return common.Limits{
 		WidthLower:  widthLowerLimit,
@@ -271,11 +271,11 @@ func getAllRatioLimits(queryWidth, cmpQueryWidth int64, queryHeight, cmpQueryHei
 	}
 }
 
-func getWidthOrHeightRatioLimits(queryLength float64, prevQueryLength float64, oppQueryLength float64,
+func getWidthOrHeightRatioLimits(queryLength float64, prevQueryLength float64, oppQueryLength float64, prevOppQueryLength float64,
 	ratioExponent float64, ratioMultiplier float64, minimumCutoff float64) (float64, float64) {
 
 	queryRatio := queryLength / prevQueryLength
-	ratioLimit := ratioMultiplier * math.Pow((oppQueryLength/queryLength), ratioExponent)
+	ratioLimit := ratioMultiplier * math.Pow((oppQueryLength + prevOppQueryLength)/(queryLength + prevQueryLength), ratioExponent)
 	lowerRatioLimit := queryRatio / (ratioLimit + 1)
 	lowerCutoffLimit := (queryRatio - minimumCutoff)
 	upperRatioLimit := queryRatio * (ratioLimit + 1)
@@ -285,11 +285,11 @@ func getWidthOrHeightRatioLimits(queryLength float64, prevQueryLength float64, o
 }
 
 // Refer to commented out implementation below for explanation
-func getWidthOrHeightLimits(queryLength float64, prevQueryLength float64, oppQueryLength float64,
+func getWidthOrHeightLimits(queryLength float64, prevQueryLength float64, oppQueryLength float64, prevOppQueryLength float64,
 	prevDataLength float64, ratioExponent float64, ratioMultiplier float64, minimumCutoff float64) (float64, float64) {
 
 	queryRatio := queryLength / prevQueryLength
-	ratioLimit := ratioMultiplier * math.Pow((oppQueryLength/queryLength), ratioExponent)
+	ratioLimit := ratioMultiplier * math.Pow((oppQueryLength + prevOppQueryLength)/(queryLength + prevQueryLength), ratioExponent)
 	lowerRatioLimit := queryRatio * prevDataLength / (ratioLimit + 1)
 	lowerCutoffLimit := (queryRatio - minimumCutoff) * prevDataLength
 	upperRatioLimit := queryRatio * prevDataLength * (ratioLimit + 1)
@@ -319,7 +319,7 @@ func withinWidthAndHeight(partialMatch *PartialMatch, nextSection *repository.Se
 	dataWidthRatio := float64(nextSection.Width) / float64(partialMatch.LastSection.Width)
 	dataHeightRatio := nextSection.Height / partialMatch.LastSection.Height
 
-	limitMultiplier := queryHeight / float64(queryWidth)
+	limitMultiplier := (queryHeight + partialMatch.PrevHeight) / float64(queryWidth + partialMatch.PrevWidth)
 
 	//TODO export to parameters
 	// Raise Power to shift values closer to one

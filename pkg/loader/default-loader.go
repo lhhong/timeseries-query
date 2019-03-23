@@ -111,7 +111,7 @@ SaveAndExit:
 
 func loadIndex(group string, env string, repo *repository.Repository) {
 	ind := sectionindex.InitDefaultIndex()
-	CalcAndSaveIndexDetails(repo, ind, env, group)
+	CalcAndSaveIndexDetailsOneByOne(repo, ind, env, group)
 }
 
 func saveSeries(series map[string]bool, group string, repo *repository.Repository) {

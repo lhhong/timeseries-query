@@ -63,7 +63,7 @@
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/cmd/loader",
             "env": {
-                "TSQ_DATABASE_PORT": 3308,
+                "TSQ_DATABASE_PORT": 3306,
             },
             //"args": ["--dir", "/home/lhhong/fyp/data/ecg-reduced/", "-n", "ECG", "--ecg-data"],
             "args": ["--index-only", "-n", "ECG"],

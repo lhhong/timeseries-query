@@ -3,12 +3,14 @@ package loader
 import (
 	"bufio"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/lhhong/timeseries-query/pkg/config"
 	"github.com/lhhong/timeseries-query/pkg/repository"
@@ -24,6 +26,8 @@ func LoadECG(cmd *cobra.Command, conf *config.AppConfig, repo *repository.Reposi
 	re := regexp.MustCompile("(.*)" + regexp.QuoteMeta(postfix))
 	var files []string
 	var paths []string
+	start := time.Now()
+
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		files = append(files, info.Name())
 		paths = append(paths, path)
@@ -40,9 +44,12 @@ func LoadECG(cmd *cobra.Command, conf *config.AppConfig, repo *repository.Reposi
 		}
 	}
 	saveSeries(series, group, repo)
+	elapsed := time.Since(start)
+
 	log.Println("Starting to load index")
 
 	loadIndex(group, conf.Env, repo)
+	log.Printf("Storing query to database took %s", elapsed)
 }
 
 func readAndSaveECGSeries(repo *repository.Repository, group string, path string, name string) map[string]bool {
@@ -63,7 +70,9 @@ func readAndSaveECGSeries(repo *repository.Repository, group string, path string
 		return nil
 	}
 
-	batchSize := 50000
+	batchSize := 10000
+	count := 0
+	ind := 0
 	series := make(map[string]bool)
 	var values []repository.RawData
 	for {
@@ -80,9 +89,10 @@ func readAndSaveECGSeries(repo *repository.Repository, group string, path string
 				continue
 			}
 			for i := 1; i < len(line); i++ {
-				seriesName := name + "_" + strconv.Itoa(i)
-				if exists := series[seriesName]; !exists {
-					series[seriesName] = true
+
+				seriesPartition := name + "_" + strconv.Itoa(i) + "_" + fmt.Sprintf("%03d", ind)
+				if exists := series[seriesPartition]; !exists {
+					series[seriesPartition] = true
 				}
 				v, err := strconv.ParseFloat(line[i], 64)
 				if err != nil {
@@ -91,15 +101,18 @@ func readAndSaveECGSeries(repo *repository.Repository, group string, path string
 				}
 				values = append(values, repository.RawData{
 					Groupname: group,
-					Series:    seriesName,
+					Series:    seriesPartition,
 					Seq:       x,
-					Ind:       int(x),
+					Ind:       count,
 					Value:     v,
 				})
-			} 
-			if len(values) > batchSize {
+			}
+			count++
+			if count >= batchSize {
 				bulkSave(values, repo)
 				values = values[:0]
+				count = 0
+				ind++
 			}
 		}
 	}

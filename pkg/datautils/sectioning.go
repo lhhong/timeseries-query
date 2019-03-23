@@ -81,7 +81,7 @@ func findCurveSectionsAbsoluteMinHeight(tangents []float64, points []repository.
 
 func findCurveSections(tangents []float64, points []repository.Values, minHeightPerc float64) []*Section {
 
-	sections := make([]*Section, 0, 20)
+	var sections []*Section
 
 	totalHeight := DataHeight(points)
 

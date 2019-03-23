@@ -1,0 +1,17 @@
+[database]
+hostname = "localhost"
+port = 3306
+username = "dbuser"
+password = "user_password"
+database = "timeseries"
+
+[httpServer]
+port = 8080
+
+[redis]
+hostname = "localhost"
+port = 6379
+
+[app]
+env = "benchmark"
+seriesGroups = ["ECG"]

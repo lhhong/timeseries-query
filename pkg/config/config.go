@@ -71,8 +71,15 @@ func GetConfig(cmd *cobra.Command) *Config {
 		panic(err)
 	}
 
+	setAllEnvProp(&c)
+
 	return &c
 
+}
+
+func setAllEnvProp(c *Config) {
+	env := c.App.Env
+	c.Redis.Env = env
 }
 
 func readConfigFromDefault() {

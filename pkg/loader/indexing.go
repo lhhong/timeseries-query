@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"time"
 	"log"
 	"sync"
 
@@ -44,6 +45,41 @@ func IndexAndSaveSeries(ind *sectionindex.Index, seriesInfo repository.SeriesInf
 		}
 		ind.StoreSeries(sectionInfos)
 	}
+}
+
+func CalcAndSaveIndexDetailsOneByOne(repo *repository.Repository, ind *sectionindex.Index, env string, group string) {
+
+	seriesInfos, err := repo.GetSeriesInfo(group)
+	if err != nil {
+		log.Println("Could not retrieve SeriesInfo")
+		log.Fatal(err)
+	}
+
+	var ioElapsed time.Duration
+	var indElapsed time.Duration
+	for _, seriesInfo := range seriesInfos {
+		ioStart := time.Now()
+		values, err := repo.GetRawDataOfSeries(group, seriesInfo.Series)
+		if err != nil {
+			log.Printf("Cannot retrve values for %s", seriesInfo.Series)
+			log.Println(err)
+			continue
+		}
+		ioElapsed += time.Since(ioStart)
+
+		log.Printf("Indexing %s", seriesInfo.Series)
+
+		indStart := time.Now()
+		IndexAndSaveSeries(ind, seriesInfo, values)
+		indElapsed += time.Since(indStart)
+	}
+
+	ioStart := time.Now()
+	ind.Persist(group, env)
+	ioElapsed += time.Since(ioStart)
+
+	log.Printf("indexing took %s", indElapsed)
+	log.Printf("io took %s", ioElapsed)
 }
 
 func CalcAndSaveIndexDetails(repo *repository.Repository, ind *sectionindex.Index, env string, group string) {

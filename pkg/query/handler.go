@@ -104,7 +104,7 @@ func handleUpdate(ind *sectionindex.Index, qs *QueryState, query []repository.Va
 	}
 
 	log.Printf("%d sections in update", len(sections))
-	if qs.partialMatches == nil {
+	if !qs.retrieved {
 		if qs.sectionsMatched == 0 {
 			initialMatch(ind, qs, sections)
 		}
@@ -183,6 +183,7 @@ func retrieveSections(ind *sectionindex.Index, qs *QueryState) {
 	Skip:
 	}
 	log.Printf("%d partial matches after retrieving", len(qs.partialMatches))
+	qs.retrieved = true
 }
 
 func finalize(ind *sectionindex.Index, repo *repository.Repository, qs *QueryState, query []repository.Values) []*Match {
@@ -193,11 +194,12 @@ func finalize(ind *sectionindex.Index, repo *repository.Repository, qs *QuerySta
 
 	sections := datautils.ConstructSectionsFromPointsAbsoluteMinHeight(query, 2.2)
 
-	if qs.partialMatches == nil {
+	if !qs.retrieved {
 		retrieveSections(ind, qs)
 		qs.lastQSection = sections[qs.sectionsMatched].SectionInfo
 	}
 
+	log.Println("Matches before matching tail ends: ", len(qs.partialMatches))
 	matches := extendStartEnd(ind, repo, qs, sections[0].SectionInfo, sections[len(sections)-1].SectionInfo)
 	if len(matches) < 1 {
 		log.Println("No match found")

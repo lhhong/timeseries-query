@@ -12,4 +12,5 @@ type QueryState struct {
 	firstQSection   *sectionindex.SectionInfo
 	lastQSection    *sectionindex.SectionInfo
 	limits          []common.Limits
+	retrieved       bool		
 }

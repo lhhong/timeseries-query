@@ -710,3 +710,57 @@ func TestIndex_getRelevantNodeIndex(t *testing.T) {
 		})
 	}
 }
+
+func TestInitLogNormalIndex(t *testing.T) {
+	type args struct {
+		numLevels int
+		width     int
+		height    int
+		stdDev    float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Index
+	}{
+		{
+			name: "width 5 index",
+			args: args{
+				numLevels: 3,
+				width:     5,
+				height:    5,
+				stdDev:    1.3,
+			},
+			want: &Index{
+				[]float64{0.3348382821230196, 0.7193902979809693, 1.3900660084054317, 2.986516337557246},
+				[]float64{0.3348382821230196, 0.7193902979809693, 1.3900660084054317, 2.986516337557246}, 
+				5, 
+				5, 
+				3,
+				nil,
+				nil,
+				nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := InitLogNormalIndex(tt.args.numLevels, tt.args.width, tt.args.height, tt.args.stdDev)
+			if !reflect.DeepEqual(got.WidthRatioTicks, tt.want.WidthRatioTicks) {
+				t.Errorf("InitLogNormalIndex().WidthRatioTicks = %v, want %v", got.WidthRatioTicks, tt.want.WidthRatioTicks)
+			}
+			if !reflect.DeepEqual(got.HeightRatioTicks, tt.want.HeightRatioTicks) {
+				t.Errorf("InitLogNormalIndex().HeightRatioTicks = %v, want %v", got.HeightRatioTicks, tt.want.HeightRatioTicks)
+			}
+			if !reflect.DeepEqual(got.NumWidth, tt.want.NumWidth) {
+				t.Errorf("InitLogNormalIndex().NumWidth = %v, want %v", got.NumWidth, tt.want.NumWidth)
+			}
+			if !reflect.DeepEqual(got.NumHeight, tt.want.NumHeight) {
+				t.Errorf("InitLogNormalIndex().NumHeight = %v, want %v", got.NumHeight, tt.want.NumHeight)
+			}
+			if !reflect.DeepEqual(got.NumLevels, tt.want.NumLevels) {
+				t.Errorf("InitLogNormalIndex().NumLevels = %v, want %v", got.NumLevels, tt.want.NumLevels)
+			}
+		})
+	}
+}

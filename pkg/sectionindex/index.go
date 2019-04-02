@@ -1,6 +1,7 @@
 package sectionindex
 
 import (
+	"math"
 	"encoding/gob"
 	"fmt"
 	"log"
@@ -18,14 +19,27 @@ type Index struct {
 	sectionInfoMap   map[SectionInfoKey]*SectionInfo
 }
 
+func InitLogNormalIndex(numLevels int, width int, height int, stdDev float64) *Index {
+	var widthRatioTicks []float64
+	for i := 1; i < width; i++ {
+		widthRatioTicks = append(widthRatioTicks, math.Exp(stdDev * math.Sqrt2 * math.Erfinv(2 *(float64(i)/float64(width)) - 1)))
+	}
+	var heightRatioTicks []float64
+	for i := 1; i < height; i++ {
+		heightRatioTicks = append(heightRatioTicks, math.Exp(stdDev * math.Sqrt2 * math.Erfinv(2 *(float64(i)/float64(height)) - 1)))
+	}
+	return InitIndex(numLevels, widthRatioTicks, heightRatioTicks);
+}
+
 func InitDefaultIndex() *Index {
 
-	//TODO determine tick values and numLevels
-	widthRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
-	heightRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
-	numLevels := 6
+	// TODO determine tick values and numLevels
+	// widthRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
+	// heightRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
+	// numLevels := 6
 
-	return InitIndex(numLevels, widthRatioTicks, heightRatioTicks)
+	// return InitIndex(numLevels, widthRatioTicks, heightRatioTicks)
+	return InitLogNormalIndex(7, 7, 7, 1.3)
 }
 
 func InitIndex(numLevels int, widthRatioTicks []float64, heightRatioTicks []float64) *Index {

@@ -1,34 +1,40 @@
 package sectionindex
 
 import (
-	"math"
 	"encoding/gob"
 	"fmt"
 	"log"
+	"math"
 	"os"
 )
 
+type SeriesSmooth struct {
+	Series string
+	Smooth int
+}
+
 type Index struct {
-	WidthRatioTicks  []float64
-	HeightRatioTicks []float64
-	NumWidth         int
-	NumHeight        int
-	NumLevels        int
-	PosRoot          *Node
-	NegRoot          *Node
-	sectionInfoMap   map[SectionInfoKey]*SectionInfo
+	WidthRatioTicks   []float64
+	HeightRatioTicks  []float64
+	NumWidth          int
+	NumHeight         int
+	NumLevels         int
+	PosRoot           *Node
+	NegRoot           *Node
+	sectionInfoMap    map[SectionInfoKey]*SectionInfo
+	SeriesSmoothIndex []SeriesSmooth
 }
 
 func InitLogNormalIndex(numLevels int, width int, height int, stdDev float64) *Index {
 	var widthRatioTicks []float64
 	for i := 1; i < width; i++ {
-		widthRatioTicks = append(widthRatioTicks, math.Exp(stdDev * math.Sqrt2 * math.Erfinv(2 *(float64(i)/float64(width)) - 1)))
+		widthRatioTicks = append(widthRatioTicks, math.Exp(stdDev*math.Sqrt2*math.Erfinv(2*(float64(i)/float64(width))-1)))
 	}
 	var heightRatioTicks []float64
 	for i := 1; i < height; i++ {
-		heightRatioTicks = append(heightRatioTicks, math.Exp(stdDev * math.Sqrt2 * math.Erfinv(2 *(float64(i)/float64(height)) - 1)))
+		heightRatioTicks = append(heightRatioTicks, math.Exp(stdDev*math.Sqrt2*math.Erfinv(2*(float64(i)/float64(height))-1)))
 	}
-	return InitIndex(numLevels, widthRatioTicks, heightRatioTicks);
+	return InitIndex(numLevels, widthRatioTicks, heightRatioTicks)
 }
 
 func InitDefaultIndex() *Index {
@@ -59,6 +65,22 @@ func InitIndex(numLevels int, widthRatioTicks []float64, heightRatioTicks []floa
 	negRoot := initNodeLazy(nil, ind)
 	ind.NegRoot = negRoot
 	return ind
+}
+
+func (ind *Index) GetNextSeriesSmoothIndex() int {
+	return len(ind.SeriesSmoothIndex)
+}
+
+func (ind *Index) AddSeriesSmooth(series string, smooth int) {
+	ind.SeriesSmoothIndex = append(ind.SeriesSmoothIndex, SeriesSmooth{
+		Series: series,
+		Smooth: smooth,
+	})
+}
+
+func (ind *Index) GetSeriesSmooth(index int) (series string, smooth int) {
+	ss := ind.SeriesSmoothIndex[index]
+	return ss.Series, ss.Smooth
 }
 
 func (ind *Index) addSection(widthRatios []float64, heightRatios []float64, section *SectionInfo) {

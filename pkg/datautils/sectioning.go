@@ -27,10 +27,8 @@ func extractTangents(points []repository.Values) []float64 {
 	return tangents
 }
 
-func (s *Section) AppendInfo(groupname string, series string, smooth int) {
-	s.SectionInfo.Groupname = groupname
-	s.SectionInfo.Series = series
-	s.SectionInfo.Nsmooth = smooth
+func (s *Section) AppendInfo(seriesSmooth int) {
+	s.SectionInfo.SeriesSmooth = seriesSmooth
 }
 
 func newSection(sign int, startSeq int64, prevSeq int64) *Section {

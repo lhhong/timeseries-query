@@ -88,32 +88,30 @@ func readAndSaveECGSeries(repo *repository.Repository, group string, path string
 				log.Println(err)
 				continue
 			}
-			for i := 1; i < len(line); i++ {
 
-				seriesPartition := name + "_" + strconv.Itoa(i) + "_" + fmt.Sprintf("%03d", ind)
-				if exists := series[seriesPartition]; !exists {
-					series[seriesPartition] = true
-				}
-				v, err := strconv.ParseFloat(line[i], 64)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				values = append(values, repository.RawData{
-					Groupname: group,
-					Series:    seriesPartition,
-					Seq:       x,
-					Ind:       count,
-					Value:     v,
-				})
+			seriesPartition := name + "_" + fmt.Sprintf("%03d", ind)
+			if exists := series[seriesPartition]; !exists {
+				series[seriesPartition] = true
 			}
-			count++
-			if count >= batchSize {
-				bulkSave(values, repo)
-				values = values[:0]
-				count = 0
-				ind++
+			v, err := strconv.ParseFloat(line[1], 64)
+			if err != nil {
+				log.Println(err)
+				continue
 			}
+			values = append(values, repository.RawData{
+				Groupname: group,
+				Series:    seriesPartition,
+				Seq:       x,
+				Ind:       count,
+				Value:     v,
+			})
+		}
+		count++
+		if count >= batchSize {
+			bulkSave(values, repo)
+			values = values[:0]
+			count = 0
+			ind++
 		}
 	}
 	bulkSave(values, repo)

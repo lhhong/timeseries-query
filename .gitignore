@@ -1,4 +1,5 @@
 **/*.gob
+**/*.gob.bu
 docker/data/
 build/
 **/debug

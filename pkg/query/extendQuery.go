@@ -115,7 +115,7 @@ func retrieveSeries(repo *repository.Repository, cache map[string][]repository.V
 	return values
 }
 
-func getBoundaryOrFilter(repo *repository.Repository, boundary int64, lastSeq int64, cmpDataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo,
+func getBoundaryOrFilter(repo *repository.Repository, group string, series string, boundary int64, lastSeq int64, cmpDataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo,
 	cmpQSection *sectionindex.SectionInfo, cache map[string]indexedValues, limits common.Limits) int64 {
 
 	expectedWidth := float64(cmpDataSection.Width) * float64(qSection.Width) / float64(cmpQSection.Width)
@@ -125,7 +125,7 @@ func getBoundaryOrFilter(repo *repository.Repository, boundary int64, lastSeq in
 		if lastSeq-int64(expectedWidth) > boundary {
 			boundary = lastSeq - int64(expectedWidth)
 		}
-		sectionData = retrieveSubSeries(repo, cache, cmpDataSection.Groupname, cmpDataSection.Series, boundary, lastSeq)
+		sectionData = retrieveSubSeries(repo, cache, group, series, boundary, lastSeq)
 		if sectionData == nil {
 			return -1
 		}
@@ -134,7 +134,7 @@ func getBoundaryOrFilter(repo *repository.Repository, boundary int64, lastSeq in
 		if lastSeq+int64(expectedWidth) < boundary {
 			boundary = lastSeq + int64(expectedWidth)
 		}
-		sectionData = retrieveSubSeries(repo, cache, cmpDataSection.Groupname, cmpDataSection.Series, lastSeq, boundary)
+		sectionData = retrieveSubSeries(repo, cache, group, series, lastSeq, boundary)
 		if sectionData == nil {
 			return -1
 		}
@@ -172,7 +172,9 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 		// data := retrieveSeries(repo, cachedSeries, firstSection.Groupname, firstSection.Series)
 		//End common processing for first and last sections
 
-		firstStartSeq := getBoundaryOrFilter(repo, firstSection.StartSeq, firstSection.NextSeq, partialMatch.FirstSection, firstQSection, qs.firstQSection,
+		series, _ := ind.GetSeriesSmooth(partialMatch.FirstSection.SeriesSmooth)
+
+		firstStartSeq := getBoundaryOrFilter(repo, qs.groupName, series, firstSection.StartSeq, firstSection.NextSeq, partialMatch.FirstSection, firstQSection, qs.firstQSection,
 			cachedSeries, firstLimits)
 
 		if firstStartSeq == -1 {
@@ -180,16 +182,17 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 		}
 
 		lastEndSeq := lastSection.StartSeq + lastSection.Width
-		lastEndSeq = getBoundaryOrFilter(repo, lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
+		lastEndSeq = getBoundaryOrFilter(repo, qs.groupName, series, lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
 			cachedSeries, lastLimits)
 		if lastEndSeq == -1 {
 			continue
 		}
 
+		series, smooth := ind.GetSeriesSmooth(firstSection.SeriesSmooth)
 		matches = append(matches, &Match{
-			Groupname: firstSection.Groupname,
-			Series:    firstSection.Series,
-			Smooth:    firstSection.Nsmooth,
+			Groupname: qs.groupName,
+			Series:    series,
+			Smooth:    smooth,
 			StartSeq:  firstStartSeq,
 			EndSeq:    lastEndSeq,
 		})
@@ -250,11 +253,11 @@ func getAllRatioLimits(queryWidth, cmpQueryWidth int64, queryHeight, cmpQueryHei
 
 	// TODO Export to parameters
 
-	widthRatioExponent := 0.15
+	widthRatioExponent := 0.13
 	widthRatioMultiplier := 2.2
 	widthMinimumCutoff := 0.3
 
-	heightRatioExponent := 0.15
+	heightRatioExponent := 0.08
 	heightRatioMultiplier := 0.8
 	heightMinimumCutoff := 0.3
 

@@ -1,6 +1,6 @@
 [database]
 hostname = "localhost"
-port = 3306
+port = 3307
 username = "dbuser"
 password = "user_password"
 database = "timeseries"
@@ -13,5 +13,6 @@ hostname = "localhost"
 port = 6379
 
 [app]
-env = "benchmark"
-seriesGroups = ["ECG2"]
+env = "demo"
+seriesGroups = ["ECG"]
+

@@ -11,7 +11,7 @@ func SmoothData(rawData []repository.Values) [][]repository.Values {
 	variationRatio := 0.9               //SMOOTH_MIN_SIGN_VARIATION_RATIO
 	smoothedHeightHeightMinRatio := 0.7 //SMOOTH_SMOOTHED_HEIGHT_HEIGHT_MIN_RATIO
 	iterationsSteps := 6                //SMOOTH_ITERATIONS_STEPS
-	maximumAttepts := 60               //SMOOTH_MAXIMUM_ATTEMPTS
+	maximumAttepts := 3                 //SMOOTH_MAXIMUM_ATTEMPTS
 
 	dataArray := make([][]repository.Values, 0, 20)
 	currentSmoothing := make([]repository.Values, len(rawData))

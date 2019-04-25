@@ -161,6 +161,8 @@ func LoadStorage(group string, env string) *Index {
 	if ind == nil {
 		return nil
 	}
+	log.Println("Positive section count: ", ind.PosRoot.Count)
+	log.Println("Negative section count: ", ind.NegRoot.Count)
 	ind.rebuildReferences()
 	return ind
 }

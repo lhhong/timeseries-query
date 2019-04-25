@@ -153,48 +153,87 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 		return matches
 	}
 
+	matchChan := make(chan *Match, 4)
+	resChan := make(chan []*Match, 1)
+	token := make(chan bool, 4)
+	countChan := make(chan bool, 4)
+	go func(matchChan chan *Match, resChan chan []*Match, countChan chan bool) {
+		var res []*Match
+		count := 0
+		for {
+			select {
+			case match := <- matchChan:
+				res = append(res, match)
+			case <- countChan:
+				count++
+			}
+			if count >= len(qs.partialMatches) {
+				break
+			}
+		}
+		resChan <- res
+		log.Println("Channel updated")
+	}(matchChan, resChan, countChan)
+
 	firstLimits := getAllRatioLimits(firstQSection.Width, qs.firstQSection.Width, firstQSection.Height, qs.firstQSection.Height)
 	lastLimits := getAllRatioLimits(lastQSection.Width, qs.lastQSection.Width, lastQSection.Height, qs.lastQSection.Height)
 	for _, partialMatch := range qs.partialMatches {
-		firstSection := ind.GetPrevSection(partialMatch.FirstSection)
-		if !longEnough(firstLimits, firstSection, partialMatch.FirstSection) {
-			continue
-		}
-		lastSection := ind.GetNextSection(partialMatch.LastSection)
-		if !longEnough(lastLimits, lastSection, partialMatch.LastSection) {
-			continue
-		}
-
-		// data := retrieveSeries(repo, cachedSeries, firstSection.Groupname, firstSection.Series)
-		//End common processing for first and last sections
-		series, smooth := ind.GetSeriesSmooth(partialMatch.FirstSection.SeriesSmooth)
-
-		firstStartSeq := firstSection.StartSeq
-		if !withinRatioLimit(firstLimits, partialMatch.FirstSection, firstSection) {
-			firstStartSeq = getBoundaryOrFilter(repo, qs.groupName, series, firstSection.StartSeq, firstSection.StartSeq + firstSection.Width, 
-				partialMatch.FirstSection, firstQSection, qs.firstQSection, cachedSeries, firstLimits)
-			if firstStartSeq == -1 {
-				continue
+		token <- true
+		go func(partialMatch *PartialMatch, matchChan chan *Match, token chan bool, countChan chan bool) {
+			firstSection := ind.GetPrevSection(partialMatch.FirstSection)
+			if !longEnough(firstLimits, firstSection, partialMatch.FirstSection) {
+				<- token
+				countChan <- true
+				return
 			}
-		}
-
-		lastEndSeq := lastSection.StartSeq + lastSection.Width
-		if !withinRatioLimit(lastLimits, partialMatch.LastSection, lastSection) {
-			lastEndSeq = getBoundaryOrFilter(repo, qs.groupName, series, lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
-				cachedSeries, lastLimits)
-			if lastEndSeq == -1 {
-				continue
+			lastSection := ind.GetNextSection(partialMatch.LastSection)
+			if !longEnough(lastLimits, lastSection, partialMatch.LastSection) {
+				<- token
+				countChan <- true
+				return
 			}
-		}
 
-		matches = append(matches, &Match{
-			Groupname: qs.groupName,
-			Series:    series,
-			Smooth:    smooth,
-			StartSeq:  firstStartSeq,
-			EndSeq:    lastEndSeq,
-		})
+			// data := retrieveSeries(repo, cachedSeries, firstSection.Groupname, firstSection.Series)
+			//End common processing for first and last sections
+			series, smooth := ind.GetSeriesSmooth(partialMatch.FirstSection.SeriesSmooth)
+
+			firstStartSeq := firstSection.StartSeq
+			if !withinRatioLimit(firstLimits, partialMatch.FirstSection, firstSection) {
+				firstStartSeq = getBoundaryOrFilter(repo, qs.groupName, series, firstSection.StartSeq, firstSection.StartSeq + firstSection.Width, 
+					partialMatch.FirstSection, firstQSection, qs.firstQSection, cachedSeries, firstLimits)
+				if firstStartSeq == -1 {
+					<-token
+					countChan <- true
+					return
+				}
+			}
+
+			lastEndSeq := lastSection.StartSeq + lastSection.Width
+			if !withinRatioLimit(lastLimits, partialMatch.LastSection, lastSection) {
+				lastEndSeq = getBoundaryOrFilter(repo, qs.groupName, series, lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
+					cachedSeries, lastLimits)
+				if lastEndSeq == -1 {
+					<-token
+					countChan <- true
+					return
+				}
+			}
+
+			// matches = append(matches, &Match{
+			matchChan <- &Match{
+				Groupname: qs.groupName,
+				Series:    series,
+				Smooth:    smooth,
+				StartSeq:  firstStartSeq,
+				EndSeq:    lastEndSeq,
+			}
+			<-token
+			countChan <- true
+		}(partialMatch, matchChan, token, countChan)
 	}
+
+	matches = <-resChan
+	log.Println("received results")
 	return matches
 }
 

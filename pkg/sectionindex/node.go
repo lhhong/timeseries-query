@@ -3,12 +3,12 @@ package sectionindex
 type Node struct {
 	Count          int
 	Level          int
-	updated        bool
+	//updated        bool
 	ind            *Index
 	parent         *Node
 	Children       [][]child
-	descendents    []*[]*SectionInfo
-	allValuesCache []*SectionInfo
+	//descendents    []*[]*SectionInfo
+	//allValuesCache []*SectionInfo
 	Values         []*SectionInfo
 }
 
@@ -27,20 +27,20 @@ func initNodeLazy(parent *Node, ind *Index) *Node {
 	n := &Node{
 		Count:   0,
 		Level:   level,
-		updated: false,
+		//updated: false,
 		parent:  parent,
 		ind:     ind,
 	}
 	return n
 }
 
-func (n *Node) propagateDescendents(descendent *[]*SectionInfo) {
-	n.descendents = append(n.descendents, descendent)
-	n.updated = true
-	if n.parent != nil {
-		n.parent.propagateDescendents(descendent)
-	}
-}
+//  func (n *Node) propagateDescendents(descendent *[]*SectionInfo) {
+//  	n.descendents = append(n.descendents, descendent)
+//  	n.updated = true
+//  	if n.parent != nil {
+//  		n.parent.propagateDescendents(descendent)
+//  	}
+//  }
 
 func (n *Node) initChildrenTable() {
 
@@ -56,12 +56,12 @@ func (n *Node) initChildrenTable() {
 func (n *Node) addSection(indexLink []WidthHeightIndex, section *SectionInfo) {
 
 	n.Count++
-	n.updated = true
+	// n.updated = true
 
 	if len(indexLink) == 0 {
-		if n.Values == nil {
-			n.propagateDescendents(&(n.Values))
-		}
+		//  if n.Values == nil {
+		//  	n.propagateDescendents(&(n.Values))
+		//  }
 		n.Values = append(n.Values, section)
 	} else {
 		if n.Children == nil {
@@ -78,21 +78,33 @@ func (n *Node) addSection(indexLink []WidthHeightIndex, section *SectionInfo) {
 
 func (n *Node) retrieveSections() []*SectionInfo {
 
-	if n.updated {
-		var res []*SectionInfo
-		for _, desc := range n.descendents {
-			res = append(res, *desc...)
-		}
-		n.allValuesCache = res
-		n.updated = false
-		n.allValuesCache = res
+	//  if n.updated {
+	//  	var res []*SectionInfo
+	//  	for _, desc := range n.descendents {
+	//  		res = append(res, *desc...)
+	//  	}
+	//  	n.allValuesCache = res
+	//  	n.updated = false
+	//  	n.allValuesCache = res
+	//  }
+	//  return n.allValuesCache
+	var res []*SectionInfo
+	if n.Values != nil {
+		res = append(res, n.Values...)
 	}
-	return n.allValuesCache
+	for _, row := range n.Children {
+		for _, cell := range row {
+			if cell.N != nil {
+				res = append(res, cell.N.retrieveSections()...)
+			}
+		}
+	}
+	return res
 }
 
-func (n *Node) GetSectionSlices() SectionSlices {
-	return n.descendents
-}
+//  func (n *Node) GetSectionSlices() SectionSlices {
+//  	return n.descendents
+//  }
 
 func (n *Node) getCount() int {
 	return n.Count
@@ -107,7 +119,7 @@ func (n *Node) rebuildReferences(ind *Index, parent *Node) {
 		for _, v := range n.Values {
 			n.ind.sectionInfoMap[v.getKey()] = v
 		}
-		n.propagateDescendents(&(n.Values))
+		// n.propagateDescendents(&(n.Values))
 	}
 
 	for _, row := range n.Children {
@@ -141,15 +153,20 @@ func GetTotalCount(nodes []*Node) int {
 	return count
 }
 
-func GetAllSectionSlices(nodes []*Node) SectionSlices {
-	var ss SectionSlices
-	for _, n := range nodes {
-		ss = append(ss, n.GetSectionSlices()...)
-	}
-	return ss
-}
+//  func GetAllSectionSlices(nodes []*Node) SectionSlices {
+//  	var ss SectionSlices
+//  	for _, n := range nodes {
+//  		ss = append(ss, n.GetSectionSlices()...)
+//  	}
+//  	return ss
+//  }
 
 func RetrieveAllSections(nodes []*Node) []*SectionInfo {
-	ss := GetAllSectionSlices(nodes)
-	return ss.ToSlice()
+	// ss := GetAllSectionSlices(nodes)
+	// return ss.ToSlice()
+	var res []*SectionInfo
+	for _, n := range nodes {
+		res = append(res, n.retrieveSections()...)
+	}
+	return res
 }

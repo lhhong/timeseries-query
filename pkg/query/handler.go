@@ -1,10 +1,10 @@
 package query
 
 import (
-	"time"
 	"bytes"
 	"encoding/gob"
 	"log"
+	"time"
 
 	"github.com/lhhong/timeseries-query/pkg/sectionindex"
 
@@ -99,7 +99,7 @@ func handleUpdate(ind *sectionindex.Index, qs *QueryState, query []repository.Va
 	//datautils.Smooth(query, 3, 2)
 
 	//TODO dynamically tweak this value
-	CountToRetrieve := 300
+	CountToRetrieve := 40000
 
 	start = time.Now()
 
@@ -133,7 +133,7 @@ func handleUpdate(ind *sectionindex.Index, qs *QueryState, query []repository.Va
 		if qs.nodeMatches != nil && sectionindex.GetTotalCount(qs.nodeMatches) <= CountToRetrieve || len(sections)-3 > ind.NumLevels {
 
 			start = time.Now()
-			
+
 			retrieveSections(ind, qs)
 			log.Println("Retrieved sections")
 			qs.lastQSection = sections[qs.sectionsMatched].SectionInfo
@@ -147,7 +147,7 @@ func handleUpdate(ind *sectionindex.Index, qs *QueryState, query []repository.Va
 	if qs.partialMatches != nil {
 		prevSectionMatched := qs.sectionsMatched
 		for len(sections)-2 > qs.sectionsMatched {
-			
+
 			start = time.Now()
 
 			extendQuery(ind, qs, sections[qs.sectionsMatched+1].SectionInfo)

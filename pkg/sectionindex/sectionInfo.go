@@ -1,17 +1,16 @@
 package sectionindex
 
 type SectionInfo struct {
-	SeriesSmooth int
+	SeriesSmooth int32
 	StartSeq  int64
-	Sign      int
+	Sign      int8
 	Height    float64
 	Width     int64
-	NextSeq   int64
 	PrevSeq   int64
 }
 
 type SectionInfoKey struct {
-	SeriesSmooth int
+	SeriesSmooth int32
 	StartSeq int64
 }
 
@@ -25,7 +24,7 @@ func (si *SectionInfo) getKey() SectionInfoKey {
 func (si *SectionInfo) getNextKey() SectionInfoKey {
 	return SectionInfoKey{
 		SeriesSmooth : si.SeriesSmooth,
-		StartSeq: si.NextSeq,
+		StartSeq: si.StartSeq + si.Width,
 	}
 }
 

@@ -13,7 +13,7 @@ func tangent(v1, v2 repository.Values) float64 {
 	return (v2.Value - v1.Value) / float64(v2.Seq-v1.Seq)
 }
 
-func sign(val float64) int {
+func sign(val float64) int8 {
 	if val > 0 {
 		return 1
 	} else if val < 0 {

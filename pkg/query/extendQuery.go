@@ -59,38 +59,22 @@ type indexRange struct {
 
 func retrieveSubSeries(repo *repository.Repository, cache map[string]indexedValues, group string, series string, startSeq int64, endSeq int64) []repository.Values {
 
-	key := fmt.Sprintf("%s-%s", group, series)
-	iv, ok := cache[key]
-	if !ok {
-		iv = indexedValues{}
-		cache[key] = iv
-	} else {
-		vals, ok := iv.retrieveValues(startSeq, endSeq)
-		if ok {
-			return vals
-		}
-	}
+	// key := fmt.Sprintf("%s-%s", group, series)
+	// iv, ok := cache[key]
+	// if !ok {
+	// 	iv = indexedValues{}
+	// 	cache[key] = iv
+	// } else {
+	// 	vals, ok := iv.retrieveValues(startSeq, endSeq)
+	// 	if ok {
+	// 		return vals
+	// 	}
+	// }
 	values, err := repo.GetRawDataOfSeriesInRange(group, series, startSeq, endSeq)
 	if err != nil {
 		return nil
 	}
-	if values[0].Ind != 0 {
-		first, err := repo.GetOneRawDataByIndex(group, series, values[0].Ind-1)
-		if err != nil {
-			return nil
-		}
-		values = append([]repository.Values{first}, values...)
-	}
-	last, err := repo.GetOneRawDataByIndex(group, series, values[len(values)-1].Ind+1)
-	if err != nil {
-		return nil
-	}
-	empty := repository.Values{}
-	// if exists, ie, not last element
-	if last != empty {
-		values = append(values, last)
-	}
-	iv.addValues(values)
+	// iv.addValues(values)
 
 	return values
 
@@ -123,20 +107,32 @@ func getBoundaryOrFilter(repo *repository.Repository, group string, series strin
 	if lastSeq > boundary {
 		// For first section
 		if lastSeq-int64(expectedWidth) > boundary {
-			boundary = lastSeq - int64(expectedWidth)
+			boundary = lastSeq - int64(1.3 * expectedWidth)
 		}
 		sectionData = retrieveSubSeries(repo, cache, group, series, boundary, lastSeq)
 		if sectionData == nil {
 			return -1
 		}
+		for i, s := range sectionData {
+			if s.Seq > lastSeq - int64(expectedWidth) {
+				sectionData = sectionData[i:]
+				break
+			}
+		}
 	} else {
 		// For last section
 		if lastSeq+int64(expectedWidth) < boundary {
-			boundary = lastSeq + int64(expectedWidth)
+			boundary = lastSeq + int64(1.3 * expectedWidth)
 		}
 		sectionData = retrieveSubSeries(repo, cache, group, series, lastSeq, boundary)
 		if sectionData == nil {
 			return -1
+		}
+		for i, s := range sectionData {
+			if s.Seq > lastSeq + int64(expectedWidth) {
+				sectionData = sectionData[:i]
+				break
+			}
 		}
 	}
 
@@ -171,24 +167,26 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 
 		// data := retrieveSeries(repo, cachedSeries, firstSection.Groupname, firstSection.Series)
 		//End common processing for first and last sections
+		series, smooth := ind.GetSeriesSmooth(partialMatch.FirstSection.SeriesSmooth)
 
-		series, _ := ind.GetSeriesSmooth(partialMatch.FirstSection.SeriesSmooth)
-
-		firstStartSeq := getBoundaryOrFilter(repo, qs.groupName, series, firstSection.StartSeq, firstSection.NextSeq, partialMatch.FirstSection, firstQSection, qs.firstQSection,
-			cachedSeries, firstLimits)
-
-		if firstStartSeq == -1 {
-			continue
+		firstStartSeq := firstSection.StartSeq
+		if !withinRatioLimit(firstLimits, partialMatch.FirstSection, firstSection) {
+			firstStartSeq = getBoundaryOrFilter(repo, qs.groupName, series, firstSection.StartSeq, firstSection.StartSeq + firstSection.Width, 
+				partialMatch.FirstSection, firstQSection, qs.firstQSection, cachedSeries, firstLimits)
+			if firstStartSeq == -1 {
+				continue
+			}
 		}
 
 		lastEndSeq := lastSection.StartSeq + lastSection.Width
-		lastEndSeq = getBoundaryOrFilter(repo, qs.groupName, series, lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
-			cachedSeries, lastLimits)
-		if lastEndSeq == -1 {
-			continue
+		if !withinRatioLimit(lastLimits, partialMatch.LastSection, lastSection) {
+			lastEndSeq = getBoundaryOrFilter(repo, qs.groupName, series, lastEndSeq, lastSection.StartSeq, partialMatch.LastSection, lastQSection, qs.lastQSection,
+				cachedSeries, lastLimits)
+			if lastEndSeq == -1 {
+				continue
+			}
 		}
 
-		series, smooth := ind.GetSeriesSmooth(firstSection.SeriesSmooth)
 		matches = append(matches, &Match{
 			Groupname: qs.groupName,
 			Series:    series,

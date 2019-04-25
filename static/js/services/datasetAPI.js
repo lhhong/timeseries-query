@@ -43,6 +43,11 @@ Dataset.service('DatasetAPI', ['$rootScope', 'Data_Utils', 'Dataset_Resource', '
     for (i in matches) {
       matches.match = 0
     }
+    matches.sort((a, b) => {
+      if (a.series < b.series) return -1; 
+      if (a.series > b.series) return 1; 
+      return 0;
+    })
     this.tsqMatches = matches
 
     $rootScope.$broadcast(Parameters.DATASET_EVENTS.TSQ_MATCHES_LOADED, matches)

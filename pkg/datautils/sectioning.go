@@ -27,11 +27,11 @@ func extractTangents(points []repository.Values) []float64 {
 	return tangents
 }
 
-func (s *Section) AppendInfo(seriesSmooth int) {
+func (s *Section) AppendInfo(seriesSmooth int32) {
 	s.SectionInfo.SeriesSmooth = seriesSmooth
 }
 
-func newSection(sign int, startSeq int64, prevSeq int64) *Section {
+func newSection(sign int8, startSeq int64, prevSeq int64) *Section {
 	return &Section{
 		Points:   make([]repository.Values, 0, 15),
 		Tangents: make([]float64, 0, 15),
@@ -39,7 +39,6 @@ func newSection(sign int, startSeq int64, prevSeq int64) *Section {
 			Sign:     sign,
 			StartSeq: startSeq,
 			PrevSeq:  prevSeq,
-			NextSeq:  -1,
 		},
 	}
 }
@@ -50,10 +49,6 @@ func finalizeSection(pt repository.Values, sections []*Section, lastSectHeight f
 	lastSect.Points = append(lastSect.Points, pt)
 	lastSect.SectionInfo.Height = lastSectHeight
 	lastSect.SectionInfo.Width = pt.Seq - lastSect.SectionInfo.StartSeq
-	if len(sections) > 1 {
-		lastLastSect := sections[len(sections)-2]
-		lastLastSect.SectionInfo.NextSeq = lastSect.SectionInfo.StartSeq
-	}
 }
 
 func ConstructSectionsFromPoints(points []repository.Values, minHeightPerc float64) []*Section {

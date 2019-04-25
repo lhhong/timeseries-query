@@ -91,7 +91,7 @@ func (ind *Index) getIndexLink(widthRatios []float64, heightRatios []float64) []
 	return whIndex
 }
 
-func (ind *Index) GetRootNode(sign int) *Node {
+func (ind *Index) GetRootNode(sign int8) *Node {
 	if sign >= 0 {
 		return ind.PosRoot
 	} else {

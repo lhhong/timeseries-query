@@ -31,7 +31,7 @@ func IndexAndSaveSeries(ind *sectionindex.Index, seriesInfo repository.SeriesInf
 
 	//TODO export to parameters
 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
-	minSmoothRatio := 0.35                 // minimum smooth iteration to index
+	minSmoothRatio := 0.3                  // minimum smooth iteration to index
 
 	var startSmooth, startSection, startStore time.Time
 	var smoothTime, sectionTime, storeTime time.Duration

@@ -1,20 +1,4 @@
-# mysql:
-#   image: yobasystems/alpine-mariadb
-#   command: ['--max_allowed_packet=2G']
-#   environment:
-#     MYSQL_ROOT_PASSWORD: root_password
-#     MYSQL_DATABASE: timeseries
-#     MYSQL_USER: dbuser
-#     MYSQL_PASSWORD: user_password
-#   expose:
-#     - "3306"
-#   ports:
-#     - "3306:3306"
-#   volumes:
-#     - ./data/mysql:/var/lib/mysql
-#   restart: always
-
-mysql-index-test:
+mysql:
   image: yobasystems/alpine-mariadb
   command: ['--max_allowed_packet=2G']
   environment:
@@ -25,10 +9,27 @@ mysql-index-test:
   expose:
     - "3306"
   ports:
-    - "3307:3306"
+    - "3306:3306"
   volumes:
-    - ./data/mysql-index-test:/var/lib/mysql
+    - ./data/mysql:/var/lib/mysql
+  command: --innodb_read_only=1 --innodb_buffer_pool_size=1G
   restart: always
+
+  # mysql-index-test:
+  #   image: yobasystems/alpine-mariadb
+  #   command: ['--max_allowed_packet=2G']
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root_password
+  #     MYSQL_DATABASE: timeseries
+  #     MYSQL_USER: dbuser
+  #     MYSQL_PASSWORD: user_password
+  #   expose:
+  #     - "3306"
+  #   ports:
+  #     - "3307:3306"
+  #   volumes:
+  #     - ./data/mysql-index-test:/var/lib/mysql
+  #   restart: always
   # 
   # mysql-query-test:
   #   image: yobasystems/alpine-mariadb

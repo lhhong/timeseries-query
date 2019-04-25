@@ -8,28 +8,28 @@ import (
 func getTestTraversalIndex() *Index {
 	ind := InitDefaultIndex()
 	ind.addSection([]float64{1}, []float64{1}, &SectionInfo{
-		Series:   "Test Series",
+		SeriesSmooth:   0,
 		StartSeq: 0,
 		Sign:     1,
-		NextSeq:  3,
+		Width:  3,
 	})
 	ind.addSection([]float64{1}, []float64{1}, &SectionInfo{
-		Series:   "Test Series",
+		SeriesSmooth:   0,
 		StartSeq: 3,
 		Sign:     1,
-		NextSeq:  6,
+		Width:  3,
 	})
 	ind.addSection([]float64{1}, []float64{1}, &SectionInfo{
-		Series:   "Test Series",
+		SeriesSmooth:   0,
 		StartSeq: 6,
 		Sign:     1,
-		NextSeq:  8,
+		Width:  2,
 	})
 	ind.addSection([]float64{1}, []float64{1}, &SectionInfo{
-		Series:   "Test Series",
+		SeriesSmooth:   0,
 		StartSeq: 8,
 		Sign:     1,
-		NextSeq:  -1,
+		Width:  1,
 	})
 	return ind
 }
@@ -50,18 +50,18 @@ func TestIndex_GetNthSection(t *testing.T) {
 			index: getTestTraversalIndex(),
 			args: args{
 				section: &SectionInfo{
-					Series:   "Test Series",
+					SeriesSmooth: 0,
 					StartSeq: 0,
 					Sign:     1,
-					NextSeq:  3,
+					Width:  3,
 				},
 				n: 3,
 			},
 			want: &SectionInfo{
-					Series:   "Test Series",
+					SeriesSmooth:   0,
 					StartSeq: 8,
 					Sign:     1,
-					NextSeq:  -1,
+					Width:  1,
 			},
 		},
 		{
@@ -69,10 +69,10 @@ func TestIndex_GetNthSection(t *testing.T) {
 			index: getTestTraversalIndex(),
 			args: args{
 				section: &SectionInfo{
-					Series:   "Test Series",
+					SeriesSmooth:   0,
 					StartSeq: 0,
 					Sign:     1,
-					NextSeq:  3,
+					Width:  3,
 				},
 				n: 4,
 			},

@@ -67,8 +67,8 @@ func InitIndex(numLevels int, widthRatioTicks []float64, heightRatioTicks []floa
 	return ind
 }
 
-func (ind *Index) GetNextSeriesSmoothIndex() int {
-	return len(ind.SeriesSmoothIndex)
+func (ind *Index) GetNextSeriesSmoothIndex() int32 {
+	return int32(len(ind.SeriesSmoothIndex))
 }
 
 func (ind *Index) AddSeriesSmooth(series string, smooth int) {
@@ -78,7 +78,7 @@ func (ind *Index) AddSeriesSmooth(series string, smooth int) {
 	})
 }
 
-func (ind *Index) GetSeriesSmooth(index int) (series string, smooth int) {
+func (ind *Index) GetSeriesSmooth(index int32) (series string, smooth int) {
 	ss := ind.SeriesSmoothIndex[index]
 	return ss.Series, ss.Smooth
 }

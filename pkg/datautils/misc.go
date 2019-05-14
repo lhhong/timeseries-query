@@ -9,11 +9,11 @@ func min(x, y int) int {
 	return y
 }
 
-func tangent(v1, v2 repository.Values) float64 {
-	return (v2.Value - v1.Value) / float64(v2.Seq-v1.Seq)
+func tangent(v1, v2 repository.Values) float32 {
+	return (v2.Value - v1.Value) / float32(v2.Seq-v1.Seq)
 }
 
-func sign(val float64) int8 {
+func sign(val float32) int8 {
 	if val > 0 {
 		return 1
 	} else if val < 0 {
@@ -40,7 +40,7 @@ func countSignVariations(data []repository.Values) int {
 	return variations
 }
 
-func DataHeight(data []repository.Values) float64 {
+func DataHeight(data []repository.Values) float32 {
 	miny := data[0].Value
 	maxy := data[0].Value
 	for _, v := range data {

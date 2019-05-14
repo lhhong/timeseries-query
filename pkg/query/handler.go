@@ -186,7 +186,7 @@ func traverseNode(ind *sectionindex.Index, qs *QueryState, sections []*datautils
 }
 
 func withinRatioLimit(limit common.Limits, cmpSection *sectionindex.SectionInfo, section *sectionindex.SectionInfo) bool {
-	widthRatio := float64(section.Width) / float64(cmpSection.Width)
+	widthRatio := float32(section.Width) / float32(cmpSection.Width)
 	heightRatio := section.Height / cmpSection.Height
 	if widthRatio >= limit.WidthLower && widthRatio <= limit.WidthUpper &&
 		heightRatio >= limit.HeightLower && heightRatio <= limit.HeightUpper {

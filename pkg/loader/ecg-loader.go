@@ -83,21 +83,23 @@ func readAndSaveECGSeries(repo *repository.Repository, group string, path string
 			log.Fatal(err)
 			panic(err)
 		} else {
-			x, err := strconv.ParseInt(line[0], 10, 64)
+			x64, err := strconv.ParseInt(line[0], 10, 32)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
+			x := int32(x64)
 
 			seriesPartition := name + "_" + fmt.Sprintf("%03d", ind)
 			if exists := series[seriesPartition]; !exists {
 				series[seriesPartition] = true
 			}
-			v, err := strconv.ParseFloat(line[1], 64)
+			v64, err := strconv.ParseFloat(line[1], 32)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
+			v := float32(v64)
 			values = append(values, repository.RawData{
 				Groupname: group,
 				Series:    seriesPartition,

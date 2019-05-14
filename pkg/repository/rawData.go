@@ -14,9 +14,9 @@ const NRawDataEle int = 5
 type RawData struct {
 	Groupname string
 	Series    string
-	Seq       int64
+	Seq       int32
 	Ind       int //Smooth iteration
-	Value     float64
+	Value     float32
 }
 
 var rawDataCreateStmt = `CREATE TABLE IF NOT EXISTS RawData (
@@ -31,8 +31,8 @@ var rawDataIndexStmt = "CREATE UNIQUE INDEX IF NOT EXISTS rawdata_ind ON RawData
 
 // Values x, y pair for each point of time series
 type Values struct {
-	Seq   int64   `json:"x"`
-	Value float64 `json:"y"`
+	Seq   int32   `json:"x"`
+	Value float32 `json:"y"`
 	Ind   int     `json:"-"`
 }
 
@@ -59,7 +59,7 @@ func (repo *Repository) BulkSaveRawData(valueArgs []interface{}) error {
 func (repo *Repository) BulkSaveRawDataUnsafe(data []RawData) error {
 	valueStrings := make([]string, 0, len(data))
 	for _, v := range data {
-		value := "(\"" + v.Groupname + "\",\"" + v.Series + "\"," + strconv.FormatInt(v.Seq, 10) + "," + strconv.Itoa(v.Ind) + "," + strconv.FormatFloat(v.Value, 'g', -1, 64) + ")"
+		value := "(\"" + v.Groupname + "\",\"" + v.Series + "\"," + strconv.Itoa(int(v.Seq)) + "," + strconv.Itoa(v.Ind) + "," + strconv.FormatFloat(float64(v.Value), 'g', -1, 64) + ")"
 		valueStrings = append(valueStrings, value)
 	}
 	stmt := fmt.Sprintf("INSERT INTO RawData VALUES %s", strings.Join(valueStrings, ","))
@@ -78,7 +78,7 @@ func (repo *Repository) GetRawDataOfSeries(groupname string, series string) ([]V
 }
 
 // GetRawDataOfSeriesInRange Retrieve array of Values given 1 specific time series within range of sequence number
-func (repo *Repository) GetRawDataOfSeriesInRange(groupname string, series string, from int64, to int64) ([]Values, error) {
+func (repo *Repository) GetRawDataOfSeriesInRange(groupname string, series string, from int32, to int32) ([]Values, error) {
 	data := []Values{}
 	err := repo.db.Select(&data, `SELECT seq, value, ind FROM RawData
 		WHERE groupname = ? AND series = ? AND seq >= ? AND seq <= ?

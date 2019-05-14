@@ -30,8 +30,8 @@ import (
 func IndexAndSaveSeries(ind *sectionindex.Index, seriesInfo repository.SeriesInfo, values []repository.Values) (time.Duration, time.Duration, time.Duration) {
 
 	//TODO export to parameters
-	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
-	minSmoothRatio := 0.3                  // minimum smooth iteration to index
+	divideSectionMinimumHeightData := float32(0.01) //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
+	minSmoothRatio := float32(0.4)                  // minimum smooth iteration to index
 
 	var startSmooth, startSection, startStore time.Time
 	var smoothTime, sectionTime, storeTime time.Duration
@@ -40,7 +40,7 @@ func IndexAndSaveSeries(ind *sectionindex.Index, seriesInfo repository.SeriesInf
 	smoothedValues := datautils.SmoothData(values)
 	smoothTime = time.Since(startSmooth)
 
-	minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
+	minSmoothIndex := int(float32(len(smoothedValues)) * minSmoothRatio)
 	if minSmoothIndex == 0 {
 		minSmoothIndex = 1
 	}
@@ -130,13 +130,13 @@ func CalcAndSaveIndexDetails(repo *repository.Repository, ind *sectionindex.Inde
 }
 
 // func getSmoothedPosNegSections(seriesInfo repository.SeriesInfo, values []repository.Values) ([]*datautils.Section, []*datautils.Section) {
-// 
+//
 // 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 // 	minSmoothRatio := 0.4                  // minimum smooth iteration to index
-// 
+//
 // 	posSections := make([]*datautils.Section, 0, 10)
 // 	negSections := make([]*datautils.Section, 0, 10)
-// 
+//
 // 	smoothedValues := datautils.SmoothData(values)
 // 	minSmoothIndex := int(float64(len(smoothedValues)) * minSmoothRatio)
 // 	for smoothIndex := minSmoothIndex; smoothIndex < len(smoothedValues); smoothIndex++ {
@@ -151,16 +151,16 @@ func CalcAndSaveIndexDetails(repo *repository.Repository, ind *sectionindex.Inde
 // 	}
 // 	return posSections, negSections
 // }
-// 
+//
 // func retrieveSmoothedPosNegSectionsForAllSeries(seriesInfos []repository.SeriesInfo, seriesValues [][]repository.Values) ([]*datautils.Section, []*datautils.Section) {
-// 
+//
 // 	// TODO move to parameters
 // 	divideSectionMinimumHeightData := 0.01 //DIVIDE_SECTION_MINIMUM_HEIGHT_DATA
 // 	minSmoothRatio := 0.4                  // minimum smooth iteration to index
-// 
+//
 // 	estAvgSmoothing := 4
 // 	estAvgSections := 50
-// 
+//
 // 	posSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 // 	negSections := make([]*datautils.Section, 0, len(seriesValues)*estAvgSections*estAvgSmoothing/2)
 // 	for seriesIndex, values := range seriesValues {

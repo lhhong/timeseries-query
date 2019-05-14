@@ -43,7 +43,7 @@ func longEnough(ratioLimits common.Limits, dataSection *sectionindex.SectionInfo
 	if dataSection == nil {
 		return false
 	}
-	if float64(dataSection.Width)/float64(cmpDataSection.Width) < ratioLimits.WidthLower ||
+	if float32(dataSection.Width)/float32(cmpDataSection.Width) < ratioLimits.WidthLower ||
 		dataSection.Height/cmpDataSection.Height < ratioLimits.HeightLower {
 		return false
 	}
@@ -52,12 +52,12 @@ func longEnough(ratioLimits common.Limits, dataSection *sectionindex.SectionInfo
 
 type indexRange struct {
 	StartIndex int
-	StartSeq   int64
+	StartSeq   int32
 	EndIndex   int
-	EndSeq     int64
+	EndSeq     int32
 }
 
-func retrieveSubSeries(repo *repository.Repository, cache map[string]indexedValues, group string, series string, startSeq int64, endSeq int64) []repository.Values {
+func retrieveSubSeries(repo *repository.Repository, cache map[string]indexedValues, group string, series string, startSeq int32, endSeq int32) []repository.Values {
 
 	// key := fmt.Sprintf("%s-%s", group, series)
 	// iv, ok := cache[key]
@@ -99,37 +99,37 @@ func retrieveSeries(repo *repository.Repository, cache map[string][]repository.V
 	return values
 }
 
-func getBoundaryOrFilter(repo *repository.Repository, group string, series string, boundary int64, lastSeq int64, cmpDataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo,
-	cmpQSection *sectionindex.SectionInfo, cache map[string]indexedValues, limits common.Limits) int64 {
+func getBoundaryOrFilter(repo *repository.Repository, group string, series string, boundary int32, lastSeq int32, cmpDataSection *sectionindex.SectionInfo, qSection *sectionindex.SectionInfo,
+	cmpQSection *sectionindex.SectionInfo, cache map[string]indexedValues, limits common.Limits) int32 {
 
-	expectedWidth := float64(cmpDataSection.Width) * float64(qSection.Width) / float64(cmpQSection.Width)
+	expectedWidth := float32(cmpDataSection.Width) * float32(qSection.Width) / float32(cmpQSection.Width)
 	var sectionData []repository.Values
 	if lastSeq > boundary {
 		// For first section
-		if lastSeq-int64(expectedWidth) > boundary {
-			boundary = lastSeq - int64(1.3 * expectedWidth)
+		if lastSeq-int32(expectedWidth) > boundary {
+			boundary = lastSeq - int32(1.3 * expectedWidth)
 		}
 		sectionData = retrieveSubSeries(repo, cache, group, series, boundary, lastSeq)
 		if sectionData == nil {
 			return -1
 		}
 		for i, s := range sectionData {
-			if s.Seq > lastSeq - int64(expectedWidth) {
+			if s.Seq > lastSeq - int32(expectedWidth) {
 				sectionData = sectionData[i:]
 				break
 			}
 		}
 	} else {
 		// For last section
-		if lastSeq+int64(expectedWidth) < boundary {
-			boundary = lastSeq + int64(1.3 * expectedWidth)
+		if lastSeq+int32(expectedWidth) < boundary {
+			boundary = lastSeq + int32(1.3 * expectedWidth)
 		}
 		sectionData = retrieveSubSeries(repo, cache, group, series, lastSeq, boundary)
 		if sectionData == nil {
 			return -1
 		}
 		for i, s := range sectionData {
-			if s.Seq > lastSeq + int64(expectedWidth) {
+			if s.Seq > lastSeq + int32(expectedWidth) {
 				sectionData = sectionData[:i]
 				break
 			}
@@ -237,7 +237,7 @@ func extendStartEnd(ind *sectionindex.Index, repo *repository.Repository, qs *Qu
 	return matches
 }
 
-func getWidthAndHeight(section []repository.Values) (int64, float64) {
+func getWidthAndHeight(section []repository.Values) (int32, float32) {
 	if len(section) == 0 {
 		log.Println("Warning: Section length is 0 when getting width and height")
 		return 0, 0
@@ -247,7 +247,7 @@ func getWidthAndHeight(section []repository.Values) (int64, float64) {
 	return width, height
 }
 
-func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cmpQueryHeight, cmpDataHeight float64) common.Limits {
+func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int32, queryHeight, cmpQueryHeight, cmpDataHeight float32) common.Limits {
 
 	// TODO Export to parameters
 
@@ -260,24 +260,24 @@ func getAllLimits(queryWidth, cmpQueryWidth, cmpDataWidth int64, queryHeight, cm
 	heightMinimumCutoff := 0.3
 
 	widthLowerLimit, widthUpperLimit := getWidthOrHeightLimits(float64(queryWidth), float64(cmpQueryWidth),
-		queryHeight, cmpQueryHeight, float64(cmpDataWidth), widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
-	heightLowerLimit, heightUpperLimit := getWidthOrHeightLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
-		float64(cmpQueryWidth), cmpDataHeight, heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
+		float64(queryHeight), float64(cmpQueryHeight), float64(cmpDataWidth), float64(widthRatioExponent), float64(widthRatioMultiplier), float64(widthMinimumCutoff))
+	heightLowerLimit, heightUpperLimit := getWidthOrHeightLimits(float64(queryHeight), float64(cmpQueryHeight), float64(queryWidth),
+		float64(cmpQueryWidth), float64(cmpDataHeight), float64(heightRatioExponent), float64(heightRatioMultiplier), float64(heightMinimumCutoff))
 
 	return common.Limits{
-		WidthLower:  widthLowerLimit,
-		WidthUpper:  widthUpperLimit,
-		HeightLower: heightLowerLimit,
-		HeightUpper: heightUpperLimit,
+		WidthLower:  float32(widthLowerLimit),
+		WidthUpper:  float32(widthUpperLimit),
+		HeightLower: float32(heightLowerLimit),
+		HeightUpper: float32(heightUpperLimit),
 	}
 }
 
-func withinWidthAndHeight(partialMatch *PartialMatch, cmpQSection *sectionindex.SectionInfo, nextSection *sectionindex.SectionInfo, queryWidth int64, queryHeight float64) bool {
+func withinWidthAndHeight(partialMatch *PartialMatch, cmpQSection *sectionindex.SectionInfo, nextSection *sectionindex.SectionInfo, queryWidth int32, queryHeight float32) bool {
 
 	l := getAllLimits(queryWidth, cmpQSection.Width, partialMatch.LastSection.Width,
 		queryHeight, cmpQSection.Height, partialMatch.LastSection.Height)
 
-	if float64(nextSection.Width) < l.WidthLower || float64(nextSection.Width) > l.WidthUpper {
+	if float32(nextSection.Width) < l.WidthLower || float32(nextSection.Width) > l.WidthUpper {
 		return false
 	}
 	if nextSection.Height < l.HeightLower || nextSection.Height > l.HeightUpper {
@@ -286,7 +286,7 @@ func withinWidthAndHeight(partialMatch *PartialMatch, cmpQSection *sectionindex.
 	return true
 }
 
-func getAllRatioLimits(queryWidth, cmpQueryWidth int64, queryHeight, cmpQueryHeight float64) common.Limits {
+func getAllRatioLimits(queryWidth, cmpQueryWidth int32, queryHeight, cmpQueryHeight float32) common.Limits {
 
 	// TODO Export to parameters
 
@@ -299,15 +299,15 @@ func getAllRatioLimits(queryWidth, cmpQueryWidth int64, queryHeight, cmpQueryHei
 	heightMinimumCutoff := 0.3
 
 	widthLowerLimit, widthUpperLimit := getWidthOrHeightRatioLimits(float64(queryWidth), float64(cmpQueryWidth),
-		queryHeight, cmpQueryHeight, widthRatioExponent, widthRatioMultiplier, widthMinimumCutoff)
-	heightLowerLimit, heightUpperLimit := getWidthOrHeightRatioLimits(queryHeight, cmpQueryHeight, float64(queryWidth),
-		float64(cmpQueryWidth), heightRatioExponent, heightRatioMultiplier, heightMinimumCutoff)
+		float64(queryHeight), float64(cmpQueryHeight), float64(widthRatioExponent), float64(widthRatioMultiplier), float64(widthMinimumCutoff))
+	heightLowerLimit, heightUpperLimit := getWidthOrHeightRatioLimits(float64(queryHeight), float64(cmpQueryHeight), float64(queryWidth),
+		float64(cmpQueryWidth), float64(heightRatioExponent), float64(heightRatioMultiplier), float64(heightMinimumCutoff))
 
 	return common.Limits{
-		WidthLower:  widthLowerLimit,
-		WidthUpper:  widthUpperLimit,
-		HeightLower: heightLowerLimit,
-		HeightUpper: heightUpperLimit,
+		WidthLower:  float32(widthLowerLimit),
+		WidthUpper:  float32(widthUpperLimit),
+		HeightLower: float32(heightLowerLimit),
+		HeightUpper: float32(heightUpperLimit),
 	}
 }
 

@@ -4,11 +4,11 @@ import "github.com/lhhong/timeseries-query/pkg/repository"
 
 type indexedValues struct {
 	Store   []repository.Values
-	Indexes map[int64]int
+	Indexes map[int32]int
 	Exists  []*indexRange
 }
 
-func (iv *indexedValues) retrieveValues(startSeq int64, endSeq int64) ([]repository.Values, bool) {
+func (iv *indexedValues) retrieveValues(startSeq int32, endSeq int32) ([]repository.Values, bool) {
 	startIndex, endIndex := iv.locateRange(startSeq, endSeq)
 	if startIndex == -1 && endIndex == -1 {
 		return nil, false
@@ -27,7 +27,7 @@ func (iv *indexedValues) retrieveValues(startSeq int64, endSeq int64) ([]reposit
 	return iv.Store[start : end+1], true
 }
 
-func (iv *indexedValues) locateRange(startSeq int64, endSeq int64) (int, int) {
+func (iv *indexedValues) locateRange(startSeq int32, endSeq int32) (int, int) {
 	for _, ir := range iv.Exists {
 		if ir.StartSeq <= startSeq && ir.EndSeq >= endSeq {
 			return ir.StartIndex, ir.EndIndex
@@ -46,7 +46,7 @@ func (iv *indexedValues) addValues(values []repository.Values) {
 	if len(iv.Store) == 0 {
 		//Index not initialized yet
 		toInsert = 0
-		iv.Indexes = make(map[int64]int)
+		iv.Indexes = make(map[int32]int)
 	}
 	processed := false
 	for i, ir := range iv.Exists {

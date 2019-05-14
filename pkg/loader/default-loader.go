@@ -81,17 +81,18 @@ func readCsvAndSave(repo *repository.Repository, group string, data string, seri
 					series[line[seriesCol]] = true
 					index = 0
 				}
-				value, err := strconv.ParseFloat(line[valCol], 64)
+				value64, err := strconv.ParseFloat(line[valCol], 32)
 				if err != nil {
 					log.Println(err)
 					continue
 				}
+				value := float32(value64)
 				t, err := time.Parse("2006-01-02", line[dateCol])
 				if err != nil {
 					log.Println(err)
 					continue
 				}
-				seq := t.Unix()
+				seq := int32(t.Unix())
 				values = append(values, repository.RawData{
 					Groupname: group,
 					Series:    line[seriesCol],

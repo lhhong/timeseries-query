@@ -80,9 +80,9 @@ func readAndSaveSwiftSeries(repo *repository.Repository, group string, path stri
 		values = append(values, repository.RawData{
 			Groupname: group,
 			Series:    name,
-			Seq:       int64(yy["TIME"].(float64)),
+			Seq:       int32(yy["TIME"].(float64)),
 			Ind:       index,
-			Value:     float64(yy["RATE"].([9]float32)[8]),
+			Value:     float32(yy["RATE"].([9]float32)[8]),
 		})
 		index++
 	}

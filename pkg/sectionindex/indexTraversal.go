@@ -40,7 +40,7 @@ func (ind *Index) traverse(IndexLink []WidthHeightIndex, sign int) *Node {
 	return n
 }
 
-func (ind *Index) RetrieveSections(widthRatios []float64, heightRatios []float64, sign int) []*SectionInfo {
+func (ind *Index) RetrieveSections(widthRatios []float32, heightRatios []float32, sign int) []*SectionInfo {
 	IndexLink := ind.getIndexLink(widthRatios, heightRatios)
 	node := ind.traverse(IndexLink, sign)
 	return node.retrieveSections()
@@ -52,13 +52,13 @@ func (ind *Index) RetrieveSections(widthRatios []float64, heightRatios []float64
 //  	return node.GetSectionSlices()
 //  }
 
-func (ind *Index) GetCount(widthRatios []float64, heightRatios []float64, sign int) int {
+func (ind *Index) GetCount(widthRatios []float32, heightRatios []float32, sign int) int {
 	IndexLink := ind.getIndexLink(widthRatios, heightRatios)
 	node := ind.traverse(IndexLink, sign)
 	return node.getCount()
 }
 
-func (ind *Index) getWidthHeightIndex(widthRatio float64, heightRatio float64) WidthHeightIndex {
+func (ind *Index) getWidthHeightIndex(widthRatio float32, heightRatio float32) WidthHeightIndex {
 	wh := WidthHeightIndex{
 		widthIndex:  ind.NumWidth - 1,
 		heightIndex: ind.NumHeight - 1,
@@ -78,7 +78,7 @@ func (ind *Index) getWidthHeightIndex(widthRatio float64, heightRatio float64) W
 	return wh
 }
 
-func (ind *Index) getIndexLink(widthRatios []float64, heightRatios []float64) []WidthHeightIndex {
+func (ind *Index) getIndexLink(widthRatios []float32, heightRatios []float32) []WidthHeightIndex {
 	if len(widthRatios) != len(heightRatios) {
 		log.Println("Error, width ratio and height ratio slices should be same length")
 		return nil

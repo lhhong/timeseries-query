@@ -8,8 +8,8 @@ import (
 func SmoothData(rawData []repository.Values) [][]repository.Values {
 	// TODO extract constants
 	minimumSignVarations := 10          //SMOOTH_MINIMUM_SIGN_VARIATIONS_NUM
-	variationRatio := 0.9               //SMOOTH_MIN_SIGN_VARIATION_RATIO
-	smoothedHeightHeightMinRatio := 0.8 //SMOOTH_SMOOTHED_HEIGHT_HEIGHT_MIN_RATIO
+	variationRatio := float32(0.9)               //SMOOTH_MIN_SIGN_VARIATION_RATIO
+	smoothedHeightHeightMinRatio := float32(0.8) //SMOOTH_SMOOTHED_HEIGHT_HEIGHT_MIN_RATIO
 	iterationsSteps := 6                //SMOOTH_ITERATIONS_STEPS
 	maximumAttepts := 30                 //SMOOTH_MAXIMUM_ATTEMPTS
 
@@ -43,7 +43,7 @@ func SmoothData(rawData []repository.Values) [][]repository.Values {
 				Smooth(currentSmoothing, 1<<siIdx /* 2 ^ siIdx */, space)
 				currentSignVariationNum = countSignVariations(currentSmoothing)
 				if currentSignVariationNum < minimumSignVarations ||
-					float64(currentSignVariationNum)/float64(lastSignVariationNum) < variationRatio ||
+					float32(currentSignVariationNum)/float32(lastSignVariationNum) < variationRatio ||
 					(DataHeight(currentSmoothing)/origDataHeight < smoothedHeightHeightMinRatio) {
 					smoothed = true
 					break
@@ -77,7 +77,7 @@ func Smooth(data []repository.Values, iterations int, space int) {
 					count++
 				}
 			}
-			data[i].Value = valuesSum / float64(count)
+			data[i].Value = valuesSum / float32(count)
 		}
 	}
 }

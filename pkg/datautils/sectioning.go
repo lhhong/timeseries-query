@@ -12,12 +12,12 @@ import (
 // Section contains points, tangents and info of a single section
 type Section struct {
 	Points      []repository.Values
-	Tangents    []float64
+	Tangents    []float32
 	SectionInfo *sectionindex.SectionInfo
 }
 
-func extractTangents(points []repository.Values) []float64 {
-	tangents := make([]float64, len(points)-1)
+func extractTangents(points []repository.Values) []float32 {
+	tangents := make([]float32, len(points)-1)
 	if len(points) < 2 {
 		return tangents
 	}
@@ -31,10 +31,10 @@ func (s *Section) AppendInfo(seriesSmooth int32) {
 	s.SectionInfo.SeriesSmooth = seriesSmooth
 }
 
-func newSection(sign int8, startSeq int64, prevSeq int64) *Section {
+func newSection(sign int8, startSeq int32, prevSeq int32) *Section {
 	return &Section{
 		Points:   make([]repository.Values, 0, 15),
-		Tangents: make([]float64, 0, 15),
+		Tangents: make([]float32, 0, 15),
 		SectionInfo: &sectionindex.SectionInfo{
 			Sign:     sign,
 			StartSeq: startSeq,
@@ -43,7 +43,7 @@ func newSection(sign int8, startSeq int64, prevSeq int64) *Section {
 	}
 }
 
-func finalizeSection(pt repository.Values, sections []*Section, lastSectHeight float64) {
+func finalizeSection(pt repository.Values, sections []*Section, lastSectHeight float32) {
 
 	lastSect := sections[len(sections)-1]
 	lastSect.Points = append(lastSect.Points, pt)
@@ -51,28 +51,28 @@ func finalizeSection(pt repository.Values, sections []*Section, lastSectHeight f
 	lastSect.SectionInfo.Width = pt.Seq - lastSect.SectionInfo.StartSeq
 }
 
-func ConstructSectionsFromPoints(points []repository.Values, minHeightPerc float64) []*Section {
+func ConstructSectionsFromPoints(points []repository.Values, minHeightPerc float32) []*Section {
 
 	tangents := extractTangents(points)
 
 	return findCurveSections(tangents, points, minHeightPerc)
 }
 
-func ConstructSectionsFromPointsAbsoluteMinHeight(points []repository.Values, minHeight float64) []*Section {
+func ConstructSectionsFromPointsAbsoluteMinHeight(points []repository.Values, minHeight float32) []*Section {
 
 	tangents := extractTangents(points)
 
 	return findCurveSectionsAbsoluteMinHeight(tangents, points, minHeight)
 }
 
-func findCurveSectionsAbsoluteMinHeight(tangents []float64, points []repository.Values, minHeight float64) []*Section {
+func findCurveSectionsAbsoluteMinHeight(tangents []float32, points []repository.Values, minHeight float32) []*Section {
 
 	totalHeight := DataHeight(points)
 
 	return findCurveSections(tangents, points, minHeight/totalHeight)
 }
 
-func findCurveSections(tangents []float64, points []repository.Values, minHeightPerc float64) []*Section {
+func findCurveSections(tangents []float32, points []repository.Values, minHeightPerc float32) []*Section {
 
 	var sections []*Section
 
@@ -154,7 +154,7 @@ func SortPositiveNegative(sections []*Section) ([]*Section, []*Section) {
 	return positive, negative
 }
 
-func ExtractInterval(values []repository.Values, start int64, end int64) []repository.Values {
+func ExtractInterval(values []repository.Values, start int32, end int32) []repository.Values {
 
 	var extracted []repository.Values
 	for _, v := range values {

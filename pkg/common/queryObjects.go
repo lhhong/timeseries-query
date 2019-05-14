@@ -1,8 +1,8 @@
 package common
 
 type Limits struct {
-	WidthLower  float64
-	WidthUpper  float64
-	HeightLower float64
-	HeightUpper float64
+	WidthLower  float32
+	WidthUpper  float32
+	HeightLower float32
+	HeightUpper float32
 }

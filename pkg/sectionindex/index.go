@@ -14,8 +14,8 @@ type SeriesSmooth struct {
 }
 
 type Index struct {
-	WidthRatioTicks   []float64
-	HeightRatioTicks  []float64
+	WidthRatioTicks   []float32
+	HeightRatioTicks  []float32
 	NumWidth          int
 	NumHeight         int
 	NumLevels         int
@@ -26,13 +26,13 @@ type Index struct {
 }
 
 func InitLogNormalIndex(numLevels int, width int, height int, stdDev float64) *Index {
-	var widthRatioTicks []float64
+	var widthRatioTicks []float32
 	for i := 1; i < width; i++ {
-		widthRatioTicks = append(widthRatioTicks, math.Exp(stdDev*math.Sqrt2*math.Erfinv(2*(float64(i)/float64(width))-1)))
+		widthRatioTicks = append(widthRatioTicks, float32(math.Exp(stdDev*math.Sqrt2*math.Erfinv(2*(float64(i)/float64(width))-1))))
 	}
-	var heightRatioTicks []float64
+	var heightRatioTicks []float32
 	for i := 1; i < height; i++ {
-		heightRatioTicks = append(heightRatioTicks, math.Exp(stdDev*math.Sqrt2*math.Erfinv(2*(float64(i)/float64(height))-1)))
+		heightRatioTicks = append(heightRatioTicks, float32(math.Exp(stdDev*math.Sqrt2*math.Erfinv(2*(float64(i)/float64(height))-1))))
 	}
 	return InitIndex(numLevels, widthRatioTicks, heightRatioTicks)
 }
@@ -40,15 +40,15 @@ func InitLogNormalIndex(numLevels int, width int, height int, stdDev float64) *I
 func InitDefaultIndex() *Index {
 
 	// TODO determine tick values and numLevels
-	// widthRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
-	// heightRatioTicks := []float64{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
+	// widthRatioTicks := []float32{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
+	// heightRatioTicks := []float32{0.3, 0.6, 0.9, 1.1, 1.8, 3.0}
 	// numLevels := 6
 
 	// return InitIndex(numLevels, widthRatioTicks, heightRatioTicks)
 	return InitLogNormalIndex(7, 7, 7, 1.3)
 }
 
-func InitIndex(numLevels int, widthRatioTicks []float64, heightRatioTicks []float64) *Index {
+func InitIndex(numLevels int, widthRatioTicks []float32, heightRatioTicks []float32) *Index {
 
 	numWidth := len(widthRatioTicks) + 1
 	numHeight := len(heightRatioTicks) + 1
@@ -83,7 +83,7 @@ func (ind *Index) GetSeriesSmooth(index int32) (series string, smooth int) {
 	return ss.Series, ss.Smooth
 }
 
-func (ind *Index) addSection(widthRatios []float64, heightRatios []float64, section *SectionInfo) {
+func (ind *Index) addSection(widthRatios []float32, heightRatios []float32, section *SectionInfo) {
 
 	IndexLink := ind.getIndexLink(widthRatios, heightRatios)
 	if section.Sign >= 0 {
@@ -103,13 +103,13 @@ func (ind *Index) rebuildReferences() {
 
 func (ind *Index) StoreSeries(sections []*SectionInfo) {
 
-	var widthRatios, heightRatios [][]float64
+	var widthRatios, heightRatios [][]float32
 	var prevSection *SectionInfo
 	for _, section := range sections {
 
 		if prevSection != nil {
-			widthRatio := float64(section.Width) / float64(prevSection.Width)
-			heightRatio := float64(section.Height) / float64(prevSection.Height)
+			widthRatio := float32(section.Width) / float32(prevSection.Width)
+			heightRatio := float32(section.Height) / float32(prevSection.Height)
 
 			for i := len(widthRatios) - 1; i >= 0 && i >= len(widthRatios)-ind.NumLevels; i-- {
 				widthRatios[i] = append(widthRatios[i], widthRatio)
@@ -117,8 +117,8 @@ func (ind *Index) StoreSeries(sections []*SectionInfo) {
 			}
 		}
 
-		widthRatios = append(widthRatios, []float64{})
-		heightRatios = append(heightRatios, []float64{})
+		widthRatios = append(widthRatios, []float32{})
+		heightRatios = append(heightRatios, []float32{})
 
 		prevSection = section
 	}

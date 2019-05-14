@@ -35,8 +35,8 @@ func initializeQuery(indices *sectionindex.Indices, repo *repository.Repository,
 }
 
 type ReqValues struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
 }
 
 func getQueryValues(r *http.Request) []repository.Values {
@@ -53,7 +53,7 @@ func getQueryValues(r *http.Request) []repository.Values {
 	}
 	queryValues := make([]repository.Values, len(reqValues))
 	for i, val := range reqValues {
-		queryValues[i] = repository.Values{Seq: int64(val.X), Value: val.Y}
+		queryValues[i] = repository.Values{Seq: int32(val.X), Value: val.Y}
 	}
 
 	return queryValues
